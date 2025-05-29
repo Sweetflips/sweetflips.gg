@@ -1,1 +1,1 @@
-<span style={{ color: '#fff' }}>$20,000</span>
+<b className="text-4xl text-white sm:text-2xl md:text-3xl lg:text-4xl xl:text-4xl">$20,000</b>
