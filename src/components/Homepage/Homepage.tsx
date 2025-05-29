@@ -4,8 +4,6 @@ import TopLeaderboard from "@/components/TopLeaderboard/TopLeaderboard";
 import HomeBanner from "@/components/HomeBanner/HomeBanner";
 import Footer from "@/components/Footer/Footer";
 import RegisterBlocks from "@/components/RegisterBlocks/RegisterBlocks";
-import BannerVideo from "@/components/BannerVideo/BannerVideo";
-import BannerImage from "@/components/BannerImage/BannerImage";
 import GiveAwayCounter from "../GiveAwayCounter/GiveAwayCounter";
 import Image from 'next/image';
 
@@ -42,7 +40,16 @@ const Homepage: React.FC = () => {
   />
   </div>
         <div className="col-span-12 xl:col-span-8">
-          <BannerVideo />
+          {/* Replace BannerVideo with the SweetflipsxRazed banner video */}
+          <video
+            src="/videos/SweetflipsxRazed_Banner.webm"
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full rounded-xl mb-4"
+            poster="/images/banner/raze_banner_poster.jpg"
+          />
           <HomeBanner />
           <RegisterBlocks />
           <GiveAwayCounter />
