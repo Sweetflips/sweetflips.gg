@@ -4,7 +4,6 @@ import DropdownMessage from "./DropdownMessage";
 import DropdownNotification from "./DropdownNotification";
 import DropdownUser from "./DropdownUser";
 import Image from "next/image";
-import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import { User, Shield } from "lucide-react";
