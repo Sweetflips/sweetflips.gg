@@ -5,6 +5,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const API_URL = process.env.BASE_RAZED_API_URL as string;
     const REFERRAL_KEY = process.env.AUTH_RAZED as string;
 
+    if (!API_URL || !REFERRAL_KEY) {
+      return res.status(500).json({ error: "Missing BASE_RAZED_API_URL or AUTH_RAZED in environment variables" });
+    }
+
     const now = new Date();
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth();

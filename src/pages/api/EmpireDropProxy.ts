@@ -8,7 +8,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const PRIVATE_KEY = process.env.PRIVATE_KEY_EMPIREDROP as string;
 
     if (!API_URL || !PRIVATE_KEY) {
-      return res.status(500).json({ error: "Missing API_URL or PRIVATE_KEY in environment variables" });
+      return res.status(500).json({ error: "Missing BASE_EMPIREDROP_API_URL or PRIVATE_KEY_EMPIREDROP in environment variables" });
     }
     const currentDate = DateTime.now().setZone('Europe/Amsterdam');
     const currentYear = currentDate.year;
