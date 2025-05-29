@@ -33,24 +33,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const afterTimestamp = Math.floor(DateTime.fromISO(afterDate, { zone: 'Europe/Amsterdam' }).toSeconds());
     const beforeTimestamp = Math.floor(DateTime.fromISO(beforeDate, { zone: 'Europe/Amsterdam' }).toSeconds());
 
-// console.log("Current Unix Timestamps:");
-// console.log("After Timestamp:", afterTimestamp);
-// console.log("Before Timestamp:", beforeTimestamp);
-
-    const data = {
-      start_timestamp: afterTimestamp,
-      end_timestamp: beforeTimestamp,
-    };
-
+    // Use query parameters for GET request
+    const urlWithParams = `${API_URL}?start_timestamp=${afterTimestamp}&end_timestamp=${beforeTimestamp}`;
     const config = {
       method: 'get',
-      url: API_URL,
+      url: urlWithParams,
       headers: {
         'Content-Type': 'application/json',
         'X-Private-Key': PRIVATE_KEY,
       },
-      data: data, 
-      maxBodyLength: Infinity, 
+      maxBodyLength: Infinity,
     };
 
     const response = await axios(config);
