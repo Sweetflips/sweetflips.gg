@@ -1,0 +1,24 @@
+# dependencies
+/node_modules
+.next
+.prisma/client
+.env
+
+# testing
+
+# next.js
+
+# production
+/build
+
+# misc
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+
+# vercel
+.vercel
