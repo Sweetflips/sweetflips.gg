@@ -1,7 +1,5 @@
 "use client";
 import React from "react";
-import { withAuth } from '@/components/withAuth';
-import YoutubeSlider from "@/components/YoutubeSlider/YoutubeSlider";
 import TopLeaderboard from "@/components/TopLeaderboard/TopLeaderboard";
 import HomeBanner from "@/components/HomeBanner/HomeBanner";
 import Footer from "@/components/Footer/Footer";
@@ -49,7 +47,6 @@ const Homepage: React.FC = () => {
           <RegisterBlocks />
           <GiveAwayCounter />
           <TopLeaderboard />
-          {/* <YoutubeSlider /> */}
           <div className="mt-4"><Footer /></div>
         </div>
       </div>
