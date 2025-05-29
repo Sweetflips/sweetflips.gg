@@ -3,9 +3,14 @@ import { prisma } from "../../../lib/prisma";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "GET") {
-    const counter = await prisma.giveawayCounter.findUnique({ where: { id: 1 } });
+    let counter = await prisma.giveawayCounter.findUnique({ where: { id: 1 } });
 
-    if (!counter) return res.status(404).json({ error: "Not found" });
+    // If not found, create it automatically
+    if (!counter) {
+      counter = await prisma.giveawayCounter.create({
+        data: { id: 1, amount: 0 }
+      });
+    }
 
     return res.status(200).json({ amount: counter.amount });
   }
