@@ -1,0 +1,1 @@
+<span style={{ color: '#fff' }}>$20,000</span>
