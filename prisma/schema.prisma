@@ -20,3 +20,11 @@ model FortuneWheel {
   created_at        DateTime @default(now())
   spin_outcome      String?
 }
+
+model StreamSchedule {
+  id        Int      @id @default(autoincrement())
+  title     String
+  startTime DateTime
+  endTime   DateTime
+  createdAt DateTime @default(now())
+}
