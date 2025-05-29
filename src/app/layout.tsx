@@ -5,7 +5,6 @@ import "@/css/satoshi.css";
 import "@/css/style.css";
 import React, { useEffect, useState } from "react";
 import Loader from "@/components/common/Loader";
-import { AuthProvider } from "@/contexts/AuthContext";
 import "slick-carousel/slick/slick.css"; 
 import "slick-carousel/slick/slick-theme.css";
 import { Analytics } from "@vercel/analytics/react"
@@ -27,12 +26,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body suppressHydrationWarning={true}>
-      <AuthProvider>
         <div className="dark:text-bodydark SidebarBg">
           {loading ? <Loader /> : children}
           <Analytics/>
         </div>
-        </AuthProvider>
       </body>
     </html>
   );
