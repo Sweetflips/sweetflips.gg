@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
-import Footer from "@/components/Footer/Footer";
+// import Footer from "@/components/Footer/Footer"; // Removed Footer import
 
 // Countdown Timer component
 function CountdownTimer() {
@@ -109,7 +109,7 @@ export default function RaffleInfo() {
         </div>
       </div>
 
-      <Footer />
+      {/* <Footer /> */} {/* Removed Footer component instance */}
     </DefaultLayout>
   );
 }

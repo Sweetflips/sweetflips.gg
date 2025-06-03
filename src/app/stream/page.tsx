@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
-import Footer from "@/components/Footer/Footer";
+// import Footer from "@/components/Footer/Footer"; // Removed Footer import
 import Image from "next/image";
 import BotrixLeaderboard from "@/components/BotrixLeaderboard/BotrixLeaderboard";
 import BigWins from "@/components/BigWins/BigWins";
@@ -41,7 +41,7 @@ export default function Stream() {
         </div>
         <h2 className="text-4xl font-bold text-center text-white">Big Wins!</h2>
         <BigWins />
-        <Footer />
+        {/* <Footer /> */} {/* Removed Footer component instance */}
       </DefaultLayout>
     </>
   );

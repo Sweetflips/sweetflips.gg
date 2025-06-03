@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Slider from "react-slick";
+import Image from "next/image"; // Import next/image
 import "@/css/YoutubeSlider.css";
 
 interface InstagramMedia {
@@ -109,10 +110,13 @@ const InstagramSlider: React.FC = () => {
         {media.map((item) => (
           <div key={item.id} className="media-slide">
             <a href={`https://www.instagram.com/p/${item.id}`} target="_blank" rel="noopener noreferrer">
-              <img
+              <Image
                 src={item.thumbnailUrl}
                 alt={item.caption}
                 className="thumbnail"
+                width={391} // Approximate width for 16:9 aspect ratio at height 220
+                height={220}
+                objectFit="cover" // Corresponds to the CSS object-fit: cover
               />
               <h4>{item.caption}</h4>
             </a>

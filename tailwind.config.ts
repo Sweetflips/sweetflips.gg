@@ -16,52 +16,52 @@ const config: Config = {
       "2xsm": "375px",
       xsm: "425px",
       "3xl": "2000px",
-      "1604": "1604px", // Add this line to define the custom breakpoint at 1452px
+      "1604": "1604px",
       ...defaultTheme.screens,
     },
     extend: {
       colors: {
         darkblack: "#000000",
-        gold: "#FEC80F",
+        gold: "#FEC80F", // Accent color
         current: "currentColor",
         transparent: "transparent",
         white: "#FFFFFF",
-        black: "#1C2434",
-        red: "#FB5454",
-        sweetflipsPanel: "#21083f",
-        sweetflipsbg: "#41295a",
-        "black-2": "#010101",
-        body: "#64748B",
-        bodydark: "#AEB7C0",
-        bodydark1: "#DEE4EE",
-        bodydark2: "#8A99AF",
-        primary: "#3C50E0",
-        secondary: "#80CAEE",
-        stroke: "#E2E8F0",
-        gray: "#EFF4FB",
-        graydark: "#333A48",
-        "gray-2": "#F7F9FC",
-        "gray-3": "#FAFAFA",
-        whiten: "#F1F5F9",
-        whiter: "#F5F7FD",
-        boxdark: "#24303F",
-        "boxdark-2": "#1A222C",
-        strokedark: "#2E3A47",
-        "form-strokedark": "#3d4d60",
-        "form-input": "#1d2a39",
-        "meta-1": "#DC3545",
-        "meta-2": "#EFF2F7",
-        "meta-3": "#10B981",
-        "meta-4": "#313D4A",
-        "meta-5": "#259AE6",
-        "meta-6": "#FFBA00",
-        "meta-7": "#FF6766",
-        "meta-8": "#F0950C",
-        "meta-9": "#E5E7EB",
-        "meta-10": "#0FADCF",
-        success: "#219653",
-        danger: "#D34053",
-        warning: "#FFA70B",
+        black: "#1C2434", // Dark text/bg
+        red: "#FB5454", // General red, could be for accents or specific UI states
+        sweetflipsPanel: "#21083f", // Dark purple, thematic
+        sweetflipsbg: "#41295a",   // Deep purple, thematic
+        // "black-2": "#010101", // Removed previously
+        body: "#64748B", // Slate gray for body text
+        bodydark: "#AEB7C0", // Light gray for dark mode text/elements
+        bodydark1: "#DEE4EE", // Light gray for dark mode text/elements
+        bodydark2: "#8A99AF", // Light gray for dark mode text/elements
+        primary: "#9925FE", // Primary purple
+        // secondary: "#80CAEE", // Removed
+        stroke: "#E2E8F0", // Light gray for borders
+        gray: "#EFF4FB",    // Very light gray
+        graydark: "#333A48", // Dark gray for dark mode UI
+        "gray-2": "#F7F9FC", // Very light gray
+        "gray-3": "#FAFAFA", // Very light gray
+        whiten: "#F1F5F9",  // Off-white
+        whiter: "#F5F7FD",  // Off-white
+        boxdark: "#24303F", // Dark blue/gray for dark mode boxes
+        "boxdark-2": "#1A222C", // Darker blue/gray for dark mode boxes
+        strokedark: "#2E3A47", // Dark mode stroke
+        "form-strokedark": "#3d4d60", // Dark mode form stroke
+        "form-input": "#1d2a39",    // Dark mode form input bg
+        "meta-1": "#DC3545", // Red for status/tags
+        "meta-2": "#EFF2F7", // Light Gray for status/tags
+        "meta-3": "#10B981", // Green for status/tags (accent)
+        "meta-4": "#313D4A", // Dark Gray/Blue for status/tags
+        // "meta-5": "#259AE6", // Removed
+        "meta-6": "#FFBA00", // Orange/Yellow for status/tags (accent)
+        "meta-7": "#FF6766", // Light Red for status/tags
+        "meta-8": "#F0950C", // Orange for status/tags
+        "meta-9": "#E5E7EB", // Light Gray for status/tags
+        // "meta-10": "#0FADCF", // Removed
+        success: "#219653", // Semantic success color
+        danger: "#D34053",  // Semantic danger color
+        warning: "#FFA70B", // Semantic warning color
       },
       fontSize: {
         "title-xxl": ["44px", "55px"],

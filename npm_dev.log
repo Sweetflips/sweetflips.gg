@@ -1,0 +1,43 @@
+
+> Sweetflips@1.3.3 dev
+> next dev
+
+  ▲ Next.js 14.2.26
+  - Local:        http://localhost:3000
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 2.3s
+ ✓ Compiled /api/giveaway-counter in 416ms (65 modules)
+Modified DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/testdb?schema=public&sslmode=require
+ ⨯ PrismaClientInitializationError:
+Invalid `prisma.giveawayCounter.findUnique()` invocation:
+
+
+Can't reach database server at `localhost:5432`
+
+Please make sure your database server is running at `localhost:5432`.
+    at Wn.handleRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:7835)
+    at Wn.handleAndLogRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:6858)
+    at Wn.request (/app/node_modules/@prisma/client/runtime/library.js:121:6565)
+    at async l (/app/node_modules/@prisma/client/runtime/library.js:130:10067)
+    at async handler (webpack-internal:///(api)/./src/pages/api/giveaway-counter.ts:9:25)
+    at async K (/app/node_modules/next/dist/compiled/next-server/pages-api.runtime.dev.js:21:2871)
+    at async U.render (/app/node_modules/next/dist/compiled/next-server/pages-api.runtime.dev.js:21:3955)
+    at async DevServer.runApi (/app/node_modules/next/dist/server/next-server.js:603:9)
+    at async NextNodeServer.handleCatchallRenderRequest (/app/node_modules/next/dist/server/next-server.js:269:37)
+    at async DevServer.handleRequestImpl (/app/node_modules/next/dist/server/base-server.js:818:17)
+    at async /app/node_modules/next/dist/server/dev/next-dev-server.js:339:20
+    at async Span.traceAsyncFn (/app/node_modules/next/dist/trace/trace.js:154:20)
+    at async DevServer.handleRequest (/app/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
+    at async invokeRender (/app/node_modules/next/dist/server/lib/router-server.js:178:21)
+    at async handleRequest (/app/node_modules/next/dist/server/lib/router-server.js:355:24) {
+  clientVersion: '6.5.0',
+  errorCode: undefined,
+  retryable: undefined,
+  page: '/api/giveaway-counter'
+}
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 2.6s (271 modules)
+ GET /api/giveaway-counter 500 in 3540ms
+[?25h

@@ -88,29 +88,29 @@ const SignInPage = () => {
 
   return (<DefaultLayout>
         {/* <Breadcrumb pageName="Login" /> */}
-        <div className="rounded-xl FooterBg shadow-default">
+        <div className="rounded-xl FooterBg shadow-lg"> {/* Changed shadow-default to shadow-lg */}
           <div className="flex flex-wrap items-center">
             <div className="hidden w-full xl:block xl:w-1/2">
-              <div className="px-26 py-17.5 text-center">
+              <div className="px-12 py-10 text-center"> {/* Changed padding */}
                 <Link className="mb-5.5 inline-block" href="/">
                   <Image
                     className=""
                     src={"/images/logo/site_logo.png"}
                     alt="Logo"
-                    width={528}
-                    height={96}
+                    width={320}
+                    height={58} // Re-added proportional height
                   />
                 </Link>
               </div>
             </div>
             <div className="w-full xl:w-1/2 xl:border-l-2">
-              <div className="w-full p-4 sm:p-12.5 xl:p-17.5">
-                <h2 className="mb-9 text-2xl font-bold text-white sm:text-title-xl2 dark:text-white">
+              <div className="w-full p-6 sm:p-10"> {/* Changed padding */}
+                <h2 className="mb-6 text-2xl font-bold text-white sm:text-title-xl2 dark:text-white"> {/* Changed mb-9 to mb-6 */}
                   Login
                 </h2>
                 <form onSubmit={handleSubmit}>
-                  <div className="mb-4">
-                    <label className="mb-2.5 block font-medium text-white dark:text-white">
+                  <div className="mb-4"> {/* Spacing between input groups remains mb-4 */}
+                    <label className="mb-1.5 block font-medium text-white dark:text-white"> {/* Changed mb-2.5 to mb-1.5 */}
                       Username/Email
                     </label>
                     <div className="relative">
@@ -119,7 +119,8 @@ const SignInPage = () => {
                         placeholder="Gebruikersnaam"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 text-white outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                        // Added focus:ring-2 focus:ring-primary/50, removed focus-visible:shadow-none, changed py-4 to py-3
+                        className="w-full rounded-lg border border-stroke bg-transparent py-3 pl-6 pr-10 text-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/50 dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                       />
                       <span className="absolute right-4 top-4">
                         <svg
@@ -140,8 +141,8 @@ const SignInPage = () => {
                       </span>
                     </div>
                   </div>
-                  <div className="mb-6">
-                    <label className="mb-2.5 block font-medium text-white dark:text-white">
+                  <div className="mb-4"> {/* Changed mb-6 to mb-4 */}
+                    <label className="mb-1.5 block font-medium text-white dark:text-white"> {/* Changed mb-2.5 to mb-1.5 */}
                       Password
                     </label>
                     <div className="relative">
@@ -150,7 +151,8 @@ const SignInPage = () => {
                         placeholder="Wachtwoord"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                        // Added focus:ring-2 focus:ring-primary/50, removed focus-visible:shadow-none, changed py-4 to py-3
+                        className="w-full rounded-lg border border-stroke bg-transparent py-3 pl-6 pr-10 outline-none focus:border-primary focus:ring-2 focus:ring-primary/50 dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                       />
                       <span className="absolute right-4 top-4">
                         <svg
@@ -175,17 +177,23 @@ const SignInPage = () => {
                       </span>
                     </div>
                   </div>
-                  <div className="mb-5">
+                  <div className="mb-4"> {/* Changed mb-5 to mb-4 */}
                     <input
                       type="submit"
                       value="Sign In"
-                      className="w-full cursor-pointer rounded-lg border border-sweetflipsbg bg-[#9925FE] p-4 text-white transition hover:bg-opacity-90"
+                      // Updated classes for Sign In button, changed p-4 to py-3 px-4
+                      className="w-full cursor-pointer rounded-lg border border-transparent bg-primary py-3 px-4 text-white transition-all duration-300 ease-in-out hover:bg-opacity-90 hover:shadow-[0_0_15px_rgba(153,37,254,0.7)] focus:outline-none focus:ring-2 focus:ring-primary/50"
                     />
                   </div>
                 </form>
                 <div>
                 <div className='flex flex-col items-center'>
-      <button className='w-[100%] cursor-pointer rounded-lg bg-[#46B624] p-4 text-white transition hover:bg-opacity-70 flex-row flex font-extrabold text-xl justify-center items-center' onClick={redirectToKick}><Image
+      {/* Updated classes for Login with Kick button, changed p-4 to py-3 px-4 */}
+      <button
+        className='w-[100%] cursor-pointer rounded-lg bg-[#46B624] py-3 px-4 text-white transition-all duration-300 ease-in-out hover:bg-opacity-80 hover:shadow-[0_0_15px_rgba(70,182,36,0.7)] focus:outline-none focus:ring-2 focus:ring-[#46B624]/50 flex-row flex font-extrabold text-xl justify-center items-center'
+        onClick={redirectToKick}
+      >
+        <Image
                                               src="/images/logo/kick_logo.webp"
                                               alt="Sign in with Kick"
                                               className='mr-2'

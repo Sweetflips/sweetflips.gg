@@ -39,7 +39,7 @@ const ProfilePage = () => {
     } else {
       setActiveSection('details');
     }
-  }, []);
+  }, [fetchUser]);
 
   const handleTabClick = (section: 'details' | 'orders' | 'tokens') => {
     setActiveSection(section);

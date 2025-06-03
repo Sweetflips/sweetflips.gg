@@ -4,7 +4,7 @@ import { withAuth } from '@/components/withAuth';
 import YoutubeSlider from "@/components/YoutubeSlider/YoutubeSlider";
 import TopLeaderboard from "@/components/TopLeaderboard/TopLeaderboard";
 import HomeBanner from "@/components/HomeBanner/HomeBanner";
-import Footer from "@/components/Footer/Footer";
+// import Footer from "@/components/Footer/Footer"; // Removed Footer import
 import RegisterBlocks from "@/components/RegisterBlocks/RegisterBlocks";
 import BannerVideo from "@/components/BannerVideo/BannerVideo";
 import BannerImage from "@/components/BannerImage/BannerImage";
@@ -54,7 +54,7 @@ const Homepage: React.FC = () => {
           <GiveAwayCounter />
           <TopLeaderboard />
           {/* <YoutubeSlider /> */}
-          <div className="mt-4"><Footer /></div>
+          {/* <div className="mt-4"><Footer /></div> */} {/* Removed Footer component instance */}
         </div>
       </div>
     </>

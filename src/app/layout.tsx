@@ -24,12 +24,11 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <body suppressHydrationWarning={true}>
+      <body suppressHydrationWarning={true} className="flex flex-col min-h-screen dark:text-bodydark SidebarBg"> {/* Moved classes here */}
       <AuthProvider>
   <TokenProvider>
-    <div className="dark:text-bodydark SidebarBg">
-      {loading ? <Loader /> : children}
-    </div>
+    {/* Removed intermediate div */}
+    {loading ? <Loader /> : children}
   </TokenProvider>
 </AuthProvider>
       </body>

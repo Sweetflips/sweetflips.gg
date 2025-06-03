@@ -73,7 +73,10 @@ export default function ClientShopPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {products.map((product) => (
-            <div key={product.id} className="bg-[#1b1324] border border-purple-700 rounded-xl p-4 shadow-lg">
+            <div
+              key={product.id}
+              className="bg-[#1b1324] border border-purple-700 rounded-xl p-4 shadow-lg shadow-inner transition-all duration-300 ease-in-out hover:shadow-[0_0_15px_rgba(153,37,254,0.4)]"
+            >
               <Image
                 src={product.image}
                 alt={product.name}
@@ -89,13 +92,13 @@ export default function ClientShopPage() {
                 type="number"
                 value={quantities[product.id] || 1}
                 onChange={(e) => handleQuantityChange(product.id, parseInt(e.target.value))}
-                className="w-full px-3 py-1 rounded bg-[#2a1b3d] text-white mb-3"
+                className="w-full px-3 py-1 rounded-lg bg-[#2a1b3d] text-white mb-3 border border-transparent focus:border-primary focus:ring-2 focus:ring-primary/50"
                 min={1}
               />
 
               <button
                 onClick={() => handleBuy(product)}
-                className="w-full bg-[#9925FE] hover:bg-purple-700 text-white py-2 rounded transition"
+                className="w-full bg-primary hover:bg-opacity-90 text-white py-2 rounded-lg transition-all duration-300 ease-in-out hover:shadow-[0_0_15px_rgba(153,37,254,0.7)] focus:outline-none focus:ring-2 focus:ring-primary/50"
               >
                 Buy Now
               </button>
