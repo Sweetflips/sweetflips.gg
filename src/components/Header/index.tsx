@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
+import { usePathname } from 'next/navigation';
 import { User, Shield, Menu as MenuIcon } from "lucide-react"; // Renamed Menu to MenuIcon to avoid conflict
 import ShopTokenBar from '@/components/ShopTokenBar/ShopTokenBar';
 import React from "react";
@@ -15,6 +16,7 @@ const Header = () => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // State for mobile menu
+  const pathname = usePathname(); // Add this line
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -55,7 +57,7 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-999 flex w-full bg-[#130C1A] shadow-md">
       <div className="flex flex-grow items-center justify-between px-4 py-4 md:px-6 2xl:px-11">
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-4 lg:mr-6">
           {/* Hamburger button for sidebar (now removed)
           <button
             aria-controls="sidebar"
@@ -118,7 +120,7 @@ const Header = () => {
         </div>
 
         {/* <!-- Desktop Header Navigation --> */}
-        <nav className="hidden lg:flex items-center w-full max-w-screen-lg mx-auto gap-1 xl:gap-2"> {/* Removed justify-around */}
+        <nav className="hidden lg:flex items-center flex-grow justify-center mx-auto gap-1 xl:gap-2 px-2 sm:px-4"> {/* Removed justify-around */}
           {menuGroups[0]?.menuItems.map((item, index) => (
             <HeaderNavItem
               key={index}
@@ -223,14 +225,51 @@ const Header = () => {
         <div className="lg:hidden absolute top-full left-0 w-full bg-[#1A1123] shadow-xl py-3"> {/* Slightly different bg for dropdown, increased padding */}
           <nav className="flex flex-col px-3 space-y-1"> {/* Adjusted padding and spacing */}
             {menuGroups[0]?.menuItems.map((item, index) => (
-              <HeaderNavItem
-                key={index}
-                label={item.label}
-                route={item.route}
-                external={item.external}
-                icon={item.icon}
-                isMobile={true} // Add this prop
-              />
+              <React.Fragment key={index}>
+                <HeaderNavItem
+                  label={item.label}
+                  route={item.route} // Parent might be non-interactive if route is '#'
+                  external={item.external}
+                  icon={item.icon}
+                  isMobile={true}
+                />
+                {/* Render children directly underneath if they exist */}
+                {item.children && item.children.length > 0 && (
+                  <div className="ml-6 pl-3 py-1 space-y-1 border-l border-gray-500 dark:border-gray-700"> {/* Indentation and styling for submenu block */}
+                    {item.children.map((childItem, childIndex) => {
+                      const childKey = `${index}-${childIndex}-child`;
+                      const isActive = pathname === childItem.route;
+                      const subItemClasses = `block px-3 py-1.5 rounded-md text-xs font-medium ${isActive ? 'text-primary bg-gray-700 dark:bg-gray-600' : 'text-gray-300 dark:text-gray-400 hover:text-primary hover:bg-gray-700 dark:hover:bg-gray-600'} transition-colors duration-150 ease-in-out`;
+
+                      if (childItem.external) {
+                        return (
+                          <a
+                            key={childKey}
+                            href={childItem.route}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={subItemClasses}
+                          >
+                            {childItem.label}
+                          </a>
+                        );
+                      }
+                      return (
+                        <Link
+                          key={childKey}
+                          href={childItem.route}
+                          passHref
+                          legacyBehavior
+                        >
+                          <a className={subItemClasses}>
+                            {childItem.label}
+                          </a>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </React.Fragment>
             ))}
             {/* Mobile Auth Links and ShopTokenBar - styled more like HeaderNavItem */}
             {isLoggedIn && (
