@@ -57,7 +57,7 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-999 flex w-full bg-[#130C1A] shadow-md">
       <div className="flex flex-grow items-center justify-between px-4 py-4 md:px-6 2xl:px-11">
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-4 lg:mr-6">
           {/* Hamburger button for sidebar (now removed)
           <button
             aria-controls="sidebar"
@@ -120,7 +120,7 @@ const Header = () => {
         </div>
 
         {/* <!-- Desktop Header Navigation --> */}
-        <nav className="hidden lg:flex items-center max-w-screen-lg lg:ml-6 xl:ml-10 mr-auto gap-1 xl:gap-2"> {/* Removed justify-around */}
+        <nav className="hidden lg:flex items-center max-w-screen-lg mx-auto gap-1 xl:gap-2"> {/* Removed justify-around */}
           {menuGroups[0]?.menuItems.map((item, index) => (
             <HeaderNavItem
               key={index}

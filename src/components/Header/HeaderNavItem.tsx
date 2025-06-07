@@ -99,7 +99,7 @@ const HeaderNavItem: React.FC<React.PropsWithChildren<HeaderNavItemProps>> = ({ 
           {!isMobile && underlineDiv} {/* Underline for desktop parent items */}
         </button>
         {isDropdownOpen && (
-          <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-md shadow-lg bg-[#241035] ring-1 ring-black ring-opacity-5 focus:outline-none z-50 py-1 flex flex-col"> {/* Changed background color */}
+          <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-md shadow-lg bg-[#1A1123]/95 ring-1 ring-black ring-opacity-5 focus:outline-none z-50 py-1 flex flex-col"> {/* Changed background color */}
             {/* Iterate over React children */}
             {childrenArray.map((child, index) => {
               if (!React.isValidElement(child)) return null; // Skip invalid elements
@@ -108,12 +108,16 @@ const HeaderNavItem: React.FC<React.PropsWithChildren<HeaderNavItemProps>> = ({ 
               // This might need adjustment based on how children are structured in Header/index.tsx
               const childProps = child.props as any; // Type assertion, be cautious
               const childIsActive = pathname === childProps.href;
+              // Base classes for all submenu items
               let childLinkClasses = "block px-4 py-2 text-sm w-full text-left transition-colors duration-150 ease-in-out";
 
               if (childIsActive) {
-                childLinkClasses += " bg-primary text-white";
+                // Active state: Uses bg-purple-600 (#7E22CE) with white text
+                childLinkClasses += " bg-purple-600 text-white";
               } else {
-                childLinkClasses += " text-white hover:bg-primary hover:text-white";
+                // Inactive state: text-gray-200 (#E5E7EB) for resting,
+                // On hover: bg-purple-700 (#6B21A8) with white text
+                childLinkClasses += " text-gray-200 hover:bg-purple-700 hover:text-white";
               }
 
               // We need to clone the element to add/modify props like className and onClick

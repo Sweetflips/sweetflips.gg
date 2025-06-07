@@ -421,11 +421,11 @@ return targetDate.toISO(); // ISO in UTC
       <div className="flex items-center justify-center overflow-x-auto">
         <div className="w-full md:w-10/12 lg:w-8/12 xl:w-7/12">
           {/* Table Header (Only visible on larger screens) */}
-          <div className="bg-gray-800 hidden grid-cols-4 rounded-lg p-2 text-center font-bold sm:grid">
-            <div className="px-4 py-2">Rank</div>
-            <div className="px-4 py-2">Name</div>
-            <div className="px-4 py-2">Wager</div>
-            <div className="px-4 py-2">Reward</div>
+          <div className="bg-gray-800 hidden sm:grid grid-cols-4 rounded-lg text-center font-bold">
+            <div className="px-3 py-2">Rank</div>
+            <div className="px-3 py-2">Name</div>
+            <div className="px-3 py-2">Wager</div>
+            <div className="px-3 py-2">Reward</div>
           </div>
 
           {/* Leaderboard rows */}
@@ -436,14 +436,14 @@ return targetDate.toISO(); // ISO in UTC
                 className="Leaderboard__card relative my-2 rounded-lg p-1 shadow-lg md:my-4"
               >
                 {/* Row Content (Rank First on Desktop, Single Row on Mobile) */}
-                <div className="Leaderboard__card-inner grid grid-cols-3 gap-4 text-center sm:grid-cols-4">
+                <div className="Leaderboard__card-inner grid grid-cols-3 text-center sm:grid-cols-4">
                   {/* Rank in the first column on Desktop, hidden on mobile */}
-                  <div className="hidden py-2 font-bold sm:block">
+                  <div className="hidden sm:block px-3 py-2 font-bold">
                     {index + 4}
                   </div>
-                  <div className="py-2 font-bold">{user.username}</div>
-                  <div className="py-2">{formatCurrency(user.wagered)}</div>
-                  <div className="text-red-400 px-4 py-2">
+                  <div className="px-3 py-2 font-bold">{user.username}</div>
+                  <div className="px-3 py-2">{formatCurrency(user.wagered)}</div>
+                  <div className="text-red-400 px-3 py-2"> {/* Ensure existing text color class is maintained if needed */}
                     {formatRewardCurrency(user.reward!)}
                   </div>
                 </div>
