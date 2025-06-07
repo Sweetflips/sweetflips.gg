@@ -8,7 +8,16 @@ interface OGOptions {
   image?: string;
 }
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://sweetflips.gg";
+const VERCEL_URL = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined;
+const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+let baseUrl = VERCEL_URL || NEXT_PUBLIC_BASE_URL || "https://sweetflips.gg";
+
+// Ensure no trailing slash
+if (baseUrl.endsWith('/')) {
+  baseUrl = baseUrl.slice(0, -1);
+}
+
+const BASE_URL = baseUrl;
 
 export const createMetadata = ({
   title,

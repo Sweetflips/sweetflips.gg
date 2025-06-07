@@ -26,8 +26,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const clientId = process.env.NEXT_PUBLIC_KICK_CLIENT_ID!;
   const clientSecret = process.env.KICK_CLIENT_SECRET!;
-  const redirectUri = process.env.NEXT_PUBLIC_KICK_REDIRECT_URI!;
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL!;
+
+  const VERCEL_URL = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined;
+  const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+  let baseUrl = VERCEL_URL || NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+  // Ensure no trailing slash
+  if (baseUrl.endsWith('/')) {
+    baseUrl = baseUrl.slice(0, -1);
+  }
+
+  const redirectUri = `${baseUrl}/api/auth/callback`;
 
   try {
     // Exchange code for tokens
@@ -38,7 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         grant_type: 'authorization_code',
         client_id: clientId,
         client_secret: clientSecret,
-        redirect_uri: redirectUri,
+        redirect_uri: redirectUri, // Uses the new redirectUri
         code: code as string,
         code_verifier: codeVerifier,
       }),
@@ -73,7 +82,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Save user to DB via internal API
-    const saveRes = await fetch(`${baseUrl}/api/save-user`, {
+    const saveRes = await fetch(`${baseUrl}/api/save-user`, { // Uses the new baseUrl
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
