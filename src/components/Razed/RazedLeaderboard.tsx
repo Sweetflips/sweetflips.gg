@@ -421,11 +421,13 @@ return targetDate.toISO(); // ISO in UTC
       <div className="flex items-center justify-center overflow-x-auto">
         <div className="w-full md:w-10/12 lg:w-8/12 xl:w-7/12">
           {/* Table Header (Only visible on larger screens) */}
-          <div className="bg-gray-800 hidden sm:grid grid-cols-4 rounded-lg text-center font-bold">
-            <div className="px-3 py-2">Rank</div>
-            <div className="px-3 py-2">Name</div>
-            <div className="px-3 py-2">Wager</div>
-            <div className="px-3 py-2">Reward</div>
+          <div className="max-w-[1000px] mx-auto"> {/* This is the new wrapper */}
+            <div className="bg-gray-800 hidden sm:grid grid-cols-4 rounded-lg text-center font-bold">
+              <div className="px-3 py-2">Rank</div>
+              <div className="px-3 py-2">Name</div>
+              <div className="px-3 py-2">Wager</div>
+              <div className="px-3 py-2">Reward</div>
+            </div>
           </div>
 
           {/* Leaderboard rows */}

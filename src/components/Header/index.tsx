@@ -120,7 +120,7 @@ const Header = () => {
         </div>
 
         {/* <!-- Desktop Header Navigation --> */}
-        <nav className="hidden lg:flex items-center max-w-screen-lg mx-auto gap-1 xl:gap-2"> {/* Removed justify-around */}
+        <nav className="hidden lg:flex items-center min-w-fit mx-auto gap-1 xl:gap-2 px-4"> {/* Removed justify-around */}
           {menuGroups[0]?.menuItems.map((item, index) => (
             <HeaderNavItem
               key={index}
