@@ -109,15 +109,15 @@ const HeaderNavItem: React.FC<React.PropsWithChildren<HeaderNavItemProps>> = ({ 
               const childProps = child.props as any; // Type assertion, be cautious
               const childIsActive = pathname === childProps.href;
               // Base classes for all submenu items
-              let childLinkClasses = "block px-4 py-2 text-sm w-full text-center transition-colors duration-150 ease-in-out";
+              let childLinkClasses = "block py-2 text-sm w-full text-center text-[rgb(222,228,238)] transition-colors duration-150 ease-in-out"; // px-4 removed
 
               if (childIsActive) {
-                // Active state: Uses bg-purple-600 (#7E22CE) with white text
-                childLinkClasses += " bg-purple-600 text-white";
+                // Active state: bg-purple-600. Text color is inherited from base.
+                childLinkClasses += " bg-purple-600";
               } else {
-                // Inactive state: now text-white for resting,
-                // On hover: bg-purple-700 (#6B21A8) with white text
-                childLinkClasses += " text-white hover:bg-purple-700 hover:text-white"; // Changed from text-gray-200
+                // Inactive state: Text color inherited from base.
+                // On hover: bg-purple-700. Text color inherited from base.
+                childLinkClasses += " hover:bg-purple-700";
               }
 
               // We need to clone the element to add/modify props like className and onClick
