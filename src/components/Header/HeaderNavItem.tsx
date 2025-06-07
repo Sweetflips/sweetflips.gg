@@ -39,7 +39,7 @@ const HeaderNavItem: React.FC<React.PropsWithChildren<HeaderNavItemProps>> = ({ 
   }, [dropdownRef]);
 
   const alignmentClass = isMobile ? 'justify-start' : 'justify-center';
-  let linkClasses = `relative group flex items-center ${alignmentClass} text-gray-300 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ease-in-out`;
+  let linkClasses = `relative group flex items-center ${alignmentClass} text-[rgb(222,228,238)] px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ease-in-out`;
 
   if (isMobile) {
     linkClasses += ' w-full'; // Ensure full width for mobile items' clickable area
@@ -48,10 +48,10 @@ const HeaderNavItem: React.FC<React.PropsWithChildren<HeaderNavItemProps>> = ({ 
   if (isActive) {
     linkClasses += " text-primary";
   } else {
-    linkClasses += " hover:text-primary";
+    // Text color does not change on hover for non-active items
   }
 
-  const iconClasses = `mr-2 h-5 w-5 flex-shrink-0 ${isActive ? 'text-primary' : 'text-gray-400 group-hover:text-primary'}`;
+  const iconClasses = `mr-2 h-5 w-5 flex-shrink-0 ${isActive ? 'text-primary' : 'text-[rgb(222,228,238)]'}`;
   const IconComponent = icon ? iconMap[icon] : null;
 
   const handleToggleDropdown = (e: React.MouseEvent) => {
@@ -70,7 +70,7 @@ const HeaderNavItem: React.FC<React.PropsWithChildren<HeaderNavItemProps>> = ({ 
         {/* On mobile, let natural width dictate for left-align; desktop needs w-full for absolute overlay */}
       </div>
       {hasChildren && !isMobile && ( // Chevron only for desktop dropdowns
-        <ChevronDown className={`ml-auto h-4 w-4 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''} ${isActive ? 'text-primary' : 'text-gray-400 group-hover:text-primary'}`} />
+        <ChevronDown className={`ml-auto h-4 w-4 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''} ${isActive ? 'text-primary' : 'text-[rgb(222,228,238)]'}`} />
       )}
     </>
   );
@@ -78,7 +78,7 @@ const HeaderNavItem: React.FC<React.PropsWithChildren<HeaderNavItemProps>> = ({ 
   const underlineDiv = (
     <div
       className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 h-0.5 w-[calc(100%-1.5rem)]
-                 ${isActive ? 'scale-x-100 bg-primary' : 'scale-x-0 group-hover:scale-x-100 bg-primary'}
+                 scale-x-0 group-hover:scale-x-100 bg-primary
                  transition-transform duration-200 ease-out`}
     ></div>
   );
