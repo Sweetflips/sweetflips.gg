@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { ChevronDown } from 'lucide-react';
-import { iconMap } from '@/components/icons/MenuIcons';
+import React, { useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { ChevronDown } from "lucide-react";
+import { iconMap } from "@/components/icons/MenuIcons";
 
 interface HeaderNavItemProps {
   label: string;
@@ -13,14 +13,28 @@ interface HeaderNavItemProps {
   isMobile?: boolean; // Added isMobile prop
 }
 
-const HeaderNavItem: React.FC<React.PropsWithChildren<HeaderNavItemProps>> = ({ label, route, external, icon, children: propChildren, isMobile }) => {
+const HeaderNavItem: React.FC<React.PropsWithChildren<HeaderNavItemProps>> = ({
+  label,
+  route,
+  external,
+  icon,
+  children: propChildren,
+  isMobile,
+}) => {
   const pathname = usePathname();
   // Use React.Children to count and iterate over children
   const childrenArray = React.Children.toArray(propChildren);
-  const isActive = pathname === route || (childrenArray && childrenArray.some(child => {
-    // Children are expected to be <Link> or <a> tags, so check href
-    return React.isValidElement(child) && child.props.href && pathname === child.props.href;
-  }));
+  const isActive =
+    pathname === route ||
+    (childrenArray &&
+      childrenArray.some((child) => {
+        // Children are expected to be <Link> or <a> tags, so check href
+        return (
+          React.isValidElement(child) &&
+          child.props.href &&
+          pathname === child.props.href
+        );
+      }));
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -28,7 +42,10 @@ const HeaderNavItem: React.FC<React.PropsWithChildren<HeaderNavItemProps>> = ({ 
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsDropdownOpen(false);
       }
     };
@@ -38,11 +55,11 @@ const HeaderNavItem: React.FC<React.PropsWithChildren<HeaderNavItemProps>> = ({ 
     };
   }, [dropdownRef]);
 
-  const alignmentClass = isMobile ? 'justify-start' : 'justify-center';
+  const alignmentClass = isMobile ? "justify-start" : "justify-center";
   let linkClasses = `relative group flex items-center ${alignmentClass} text-[rgb(222,228,238)] px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ease-in-out`;
 
   if (isMobile) {
-    linkClasses += ' w-full'; // Ensure full width for mobile items' clickable area
+    linkClasses += " w-full"; // Ensure full width for mobile items' clickable area
   }
 
   if (isActive) {
@@ -51,7 +68,7 @@ const HeaderNavItem: React.FC<React.PropsWithChildren<HeaderNavItemProps>> = ({ 
     // Text color does not change on hover for non-active items
   }
 
-  const iconClasses = `mr-2 h-5 w-5 flex-shrink-0 ${isActive ? 'text-primary' : 'text-[rgb(222,228,238)]'}`;
+  const iconClasses = `mr-2 h-5 w-5 flex-shrink-0 ${isActive ? "text-primary" : "text-[rgb(222,228,238)]"}`;
   const IconComponent = icon ? iconMap[icon] : null;
 
   const handleToggleDropdown = (e: React.MouseEvent) => {
@@ -63,29 +80,43 @@ const HeaderNavItem: React.FC<React.PropsWithChildren<HeaderNavItemProps>> = ({ 
 
   const itemContent = (
     <>
-      {IconComponent ? <IconComponent className={iconClasses} /> : <span className="w-5 mr-2 h-5"></span>}
+      {IconComponent ? (
+        <IconComponent className={iconClasses} />
+      ) : (
+        <span className="mr-2 h-5 w-5"></span>
+      )}
       <div className="relative">
-        <span className="block font-semibold invisible" aria-hidden="true">{label}</span>
-        <span className={`absolute left-0 top-0 ${isMobile ? '' : 'w-full'} ${isActive ? "font-semibold" : ""}`}>{label}</span>
+        <span className="invisible block font-semibold" aria-hidden="true">
+          {label}
+        </span>
+        <span
+          className={`absolute left-0 top-0 ${isMobile ? "" : "w-full"} ${isActive ? "font-semibold" : ""}`}
+        >
+          {label}
+        </span>
         {/* On mobile, let natural width dictate for left-align; desktop needs w-full for absolute overlay */}
       </div>
-      {hasChildren && !isMobile && ( // Chevron only for desktop dropdowns
-        <ChevronDown className={`ml-auto h-4 w-4 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''} ${isActive ? 'text-primary' : 'text-[rgb(222,228,238)]'}`} />
-      )}
+      {hasChildren &&
+        !isMobile && ( // Chevron only for desktop dropdowns
+          <ChevronDown
+            className={`ml-auto h-4 w-4 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""} ${isActive ? "text-primary" : "text-[rgb(222,228,238)]"}`}
+          />
+        )}
     </>
   );
 
   const underlineDiv = (
     <div
-      className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 h-0.5 w-[calc(100%-1.5rem)]
-                 scale-x-0 group-hover:scale-x-100 bg-primary
-                 transition-transform duration-200 ease-out`}
+      className={`absolute bottom-0 left-1/2 h-0.5 w-[calc(100%-1.5rem)] -translate-x-1/2 scale-x-0
+                 transform bg-primary transition-transform
+                 duration-200 ease-out group-hover:scale-x-100`}
     ></div>
   );
 
   // For mobile, children are not handled as a dropdown by this component
   // They are expected to be rendered as a flat list in the mobile menu itself if needed
-  if (hasChildren && !isMobile) { // Desktop dropdown logic
+  if (hasChildren && !isMobile) {
+    // Desktop dropdown logic
     return (
       <div className="relative flex-1" ref={dropdownRef}>
         <button
@@ -99,7 +130,9 @@ const HeaderNavItem: React.FC<React.PropsWithChildren<HeaderNavItemProps>> = ({ 
           {!isMobile && underlineDiv} {/* Underline for desktop parent items */}
         </button>
         {isDropdownOpen && (
-          <div className="absolute left-0 mt-2 w-full origin-top-left rounded-md shadow-lg bg-[#1A1123] ring-1 ring-black ring-opacity-5 focus:outline-none z-50 py-1 flex flex-col"> {/* Changed background color */}
+          <div className="absolute left-0 z-50 mt-2 flex w-full origin-top-left flex-col rounded-md bg-[#1A1123] py-1 text-center text-[rgb(222,228,238)] shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+            {" "}
+            {/* Changed background color */}
             {/* Iterate over React children */}
             {childrenArray.map((child, index) => {
               if (!React.isValidElement(child)) return null; // Skip invalid elements
@@ -109,7 +142,8 @@ const HeaderNavItem: React.FC<React.PropsWithChildren<HeaderNavItemProps>> = ({ 
               const childProps = child.props as any; // Type assertion, be cautious
               const childIsActive = pathname === childProps.href;
               // Base classes for all submenu items
-              let childLinkClasses = "block py-2 text-sm w-full text-center text-[rgb(222,228,238)] transition-colors duration-150 ease-in-out"; // px-4 removed
+              let childLinkClasses =
+                "block py-2 text-sm w-full text-center text-[rgb(222,228,238)] transition-colors duration-150 ease-in-out"; // px-4 removed
 
               if (childIsActive) {
                 // Active state: bg-purple-600. Text color is inherited from base.
@@ -139,7 +173,12 @@ const HeaderNavItem: React.FC<React.PropsWithChildren<HeaderNavItemProps>> = ({ 
 
   if (external) {
     return (
-      <a href={route} className={`${linkClasses} ${rootElementClasses}`} target="_blank" rel="noopener noreferrer">
+      <a
+        href={route}
+        className={`${linkClasses} ${rootElementClasses}`}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
         {itemContent}
         {underlineDiv}
       </a>
