@@ -399,7 +399,7 @@ const EmpireDropLeaderboard: React.FC = () => {
       </div>
 
       <div className="flex items-center justify-center overflow-x-auto">
-        <div className="w-full sm:w-6/12">
+        <div className="w-full md:w-10/12 lg:w-8/12 xl:w-7/12">
           {/* Table Header (Only visible on larger screens) */}
           <div className="bg-gray-800 hidden grid-cols-4 rounded-lg p-2 text-center font-bold sm:grid">
             <div className="px-4 py-2">Rank</div>

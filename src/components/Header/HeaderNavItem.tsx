@@ -99,7 +99,7 @@ const HeaderNavItem: React.FC<React.PropsWithChildren<HeaderNavItemProps>> = ({ 
           {!isMobile && underlineDiv} {/* Underline for desktop parent items */}
         </button>
         {isDropdownOpen && (
-          <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-md shadow-lg bg-[rgb(59,19,91)] ring-1 ring-black ring-opacity-5 focus:outline-none z-50 py-1"> {/* Changed background color */}
+          <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-md shadow-lg bg-[#241035] ring-1 ring-black ring-opacity-5 focus:outline-none z-50 py-1 flex flex-col"> {/* Changed background color */}
             {/* Iterate over React children */}
             {childrenArray.map((child, index) => {
               if (!React.isValidElement(child)) return null; // Skip invalid elements
