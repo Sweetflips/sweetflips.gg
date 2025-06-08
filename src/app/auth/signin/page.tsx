@@ -86,24 +86,17 @@ const SignInPage = () => {
   }
 };
 
-  return (<DefaultLayout>
+  return (
+    <div className="bg-animation">
+      <div id="stars"></div>
+      <div id="stars2"></div>
+      <div id="stars3"></div>
+      <div id="stars4"></div>
+      <DefaultLayout>
         {/* <Breadcrumb pageName="Login" /> */}
-        <div className="rounded-xl FooterBg shadow-lg"> {/* Changed shadow-default to shadow-lg */}
-          <div className="flex flex-wrap items-center">
-            <div className="hidden w-full xl:block xl:w-1/2">
-              <div className="px-12 py-10 text-center"> {/* Changed padding */}
-                <Link className="mb-5.5 inline-block" href="/">
-                  <Image
-                    className=""
-                    src={"/images/logo/site_logo.png"}
-                    alt="Logo"
-                    width={320}
-                    height={58} // Re-added proportional height
-                  />
-                </Link>
-              </div>
-            </div>
-            <div className="w-full xl:w-1/2 xl:border-l-2">
+        <div className="rounded-xl shadow-lg min-h-screen flex flex-col justify-center items-center"> {/* Changed shadow-default to shadow-lg */}
+          <div className="flex flex-wrap items-center justify-center flex-grow">
+            <div className="w-full max-w-md">
               <div className="w-full p-6 sm:p-10"> {/* Changed padding */}
                 <h2 className="mb-6 text-2xl font-bold text-white sm:text-title-xl2 dark:text-white"> {/* Changed mb-9 to mb-6 */}
                   Login
@@ -211,6 +204,7 @@ const SignInPage = () => {
           </div>
         </div>
       </DefaultLayout>
+    </div>
   );
 };
 
