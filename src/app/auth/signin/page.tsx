@@ -89,10 +89,10 @@ const SignInPage = () => {
   return (
     <DefaultLayout>
         {/* <Breadcrumb pageName="Login" /> */}
-        <div className="min-h-screen flex flex-col justify-center items-center"> {/* Changed shadow-default to shadow-lg */}
+        <div className="min-h-screen flex flex-col justify-start items-center pt-20"> {/* Changed shadow-default to shadow-lg */}
           <div className="flex flex-wrap items-center justify-center flex-grow">
-            <div className="w-full max-w-lg">
-              <div className="w-full p-8 rounded-lg shadow-xl RegisterBlocks-inner border border-graydark"> {/* Changed padding */}
+            <div className="w-full max-w-xl">
+              <div className="w-full p-6 rounded-lg shadow-xl RegisterBlocks-inner border border-graydark"> {/* Changed padding */}
                 <h2 className="mb-6 text-2xl font-bold text-white sm:text-title-xl2"> {/* Changed mb-9 to mb-6 */}
                   Login
                 </h2>
