@@ -87,23 +87,18 @@ const SignInPage = () => {
 };
 
   return (
-    <div className="bg-animation">
-      <div id="stars"></div>
-      <div id="stars2"></div>
-      <div id="stars3"></div>
-      <div id="stars4"></div>
-      <DefaultLayout>
+    <DefaultLayout>
         {/* <Breadcrumb pageName="Login" /> */}
-        <div className="rounded-xl shadow-lg min-h-screen flex flex-col justify-center items-center"> {/* Changed shadow-default to shadow-lg */}
+        <div className="min-h-screen flex flex-col justify-center items-center"> {/* Changed shadow-default to shadow-lg */}
           <div className="flex flex-wrap items-center justify-center flex-grow">
             <div className="w-full max-w-md">
-              <div className="w-full p-6 sm:p-10"> {/* Changed padding */}
-                <h2 className="mb-6 text-2xl font-bold text-white sm:text-title-xl2 dark:text-white"> {/* Changed mb-9 to mb-6 */}
+              <div className="w-full bg-gray-100 dark:bg-boxdark p-8 rounded-lg shadow-xl"> {/* Changed padding */}
+                <h2 className="mb-6 text-2xl font-bold text-black sm:text-title-xl2 dark:text-white"> {/* Changed mb-9 to mb-6 */}
                   Login
                 </h2>
                 <form onSubmit={handleSubmit}>
                   <div className="mb-4"> {/* Spacing between input groups remains mb-4 */}
-                    <label className="mb-1.5 block font-medium text-white dark:text-white"> {/* Changed mb-2.5 to mb-1.5 */}
+                    <label className="mb-1.5 block font-medium text-black dark:text-white"> {/* Changed mb-2.5 to mb-1.5 */}
                       Username/Email
                     </label>
                     <div className="relative">
@@ -113,7 +108,7 @@ const SignInPage = () => {
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         // Added focus:ring-2 focus:ring-primary/50, removed focus-visible:shadow-none, changed py-4 to py-3
-                        className="w-full rounded-lg border border-stroke bg-transparent py-3 pl-6 pr-10 text-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/50 dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                        className="w-full rounded-lg border border-stroke bg-transparent py-3 pl-6 pr-10 text-black outline-none focus:border-primary focus:ring-2 focus:ring-primary/50 dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                       />
                       <span className="absolute right-4 top-4">
                         <svg
@@ -135,7 +130,7 @@ const SignInPage = () => {
                     </div>
                   </div>
                   <div className="mb-4"> {/* Changed mb-6 to mb-4 */}
-                    <label className="mb-1.5 block font-medium text-white dark:text-white"> {/* Changed mb-2.5 to mb-1.5 */}
+                    <label className="mb-1.5 block font-medium text-black dark:text-white"> {/* Changed mb-2.5 to mb-1.5 */}
                       Password
                     </label>
                     <div className="relative">
@@ -145,7 +140,7 @@ const SignInPage = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         // Added focus:ring-2 focus:ring-primary/50, removed focus-visible:shadow-none, changed py-4 to py-3
-                        className="w-full rounded-lg border border-stroke bg-transparent py-3 pl-6 pr-10 outline-none focus:border-primary focus:ring-2 focus:ring-primary/50 dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                        className="w-full rounded-lg border border-stroke bg-transparent py-3 pl-6 pr-10 text-black outline-none focus:border-primary focus:ring-2 focus:ring-primary/50 dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                       />
                       <span className="absolute right-4 top-4">
                         <svg
@@ -204,7 +199,6 @@ const SignInPage = () => {
           </div>
         </div>
       </DefaultLayout>
-    </div>
   );
 };
 
