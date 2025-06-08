@@ -91,11 +91,17 @@ const SignInPage = () => {
         {/* <Breadcrumb pageName="Login" /> */}
         <div className="min-h-screen flex flex-col justify-start items-center pt-20"> {/* Changed shadow-default to shadow-lg */}
           <div className="flex flex-wrap items-center justify-center flex-grow">
-            <div className="w-full max-w-xl">
+            <div className="w-full max-w-2xl">
               <div className="w-full p-6 rounded-lg shadow-xl RegisterBlocks-inner border border-graydark"> {/* Changed padding */}
-                <h2 className="mb-6 text-2xl font-bold text-white sm:text-title-xl2"> {/* Changed mb-9 to mb-6 */}
-                  Login
-                </h2>
+                <div className="mb-6 flex justify-center"> {/* Using mb-6 for spacing, similar to the old h2 */}
+                  <Image
+                    src="/images/logo/site_logo.png"
+                    alt="Site Logo"
+                    width={240}
+                    height={43}
+                    priority={true} /* Optional: if logo is critical for LCP */
+                  />
+                </div>
                 <form onSubmit={handleSubmit}>
                   <div className="mb-4"> {/* Spacing between input groups remains mb-4 */}
                     <label className="mb-1.5 block font-medium text-white"> {/* Changed mb-2.5 to mb-1.5 */}
