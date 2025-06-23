@@ -16,31 +16,26 @@ type LeaderboardEntry = {
 };
 
 const rewardMapping: { [key: number]: number } = {
-  1: 15000,
-  2: 8000,
-  3: 5000,
-  4: 1100,
-  5: 1000,
-  6: 950,
-  7: 900,
-  8: 850,
-  9: 800,
-  10: 750,
-  11: 700,
-  12: 650,
-  13: 600,
-  14: 550,
-  15: 500,
-  16: 450,
-  17: 400,
-  18: 350,
-  19: 325,
-  20: 275,
-  21: 250,
-  22: 225,
-  23: 200,
-  24: 150,
-  25: 75,
+  1: 3200,
+  2: 1800,
+  3: 1200,
+  4: 700,
+  5: 600,
+  6: 500,
+  7: 400,
+  8: 300,
+  9: 250,
+  10: 200,
+  11: 160,
+  12: 130,
+  13: 120,
+  14: 110,
+  15: 100,
+  16: 90,
+  17: 80,
+  18: 70,
+  19: 60,
+  20: 20,
 };
 
 const RazedLeaderboard: React.FC = () => {
@@ -117,24 +112,19 @@ const RazedLeaderboard: React.FC = () => {
       });
     }
   }, [topUsers]);
-
   useEffect(() => {
     const updateTimer = () => {
       const now = new Date();
-      const currentMonth = now.getMonth() + 1;
-      const currentYear = now.getFullYear();
-
-      let targetDate: Date;
-      if (now.getDate() < 24) {
-        targetDate = new Date(currentYear, currentMonth - 1, 23);
-      } else {
-        const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
-        const nextMonthYear =
-          currentMonth === 12 ? currentYear + 1 : currentYear;
-        targetDate = new Date(nextMonthYear, nextMonth - 1, 23);
-      }
+      // Target date is June 30, 2025
+      const targetDate = new Date(2025, 5, 30, 23, 59, 59); // Month is 0-indexed, so 5 = June
 
       const diff = targetDate.getTime() - now.getTime();
+      
+      if (diff <= 0) {
+        setTimeLeft("Event Ended");
+        return;
+      }
+
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
       const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
       const minutes = Math.floor((diff / 1000 / 60) % 60);
@@ -170,28 +160,17 @@ const RazedLeaderboard: React.FC = () => {
       : formattedAmount;
   };
 
-  const restUsers = data.slice(3, 25);
-
+  const restUsers = data.slice(3, 20);
   const countDownDate = (() => {
-    const now = DateTime.now().setZone("Europe/Amsterdam");
-    const currentMonth = now.month;
-    const currentYear = now.year;
-    const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
-
-    let targetDate;
-    if (now.day < 23) {
-      targetDate = DateTime.fromObject({
-        year: currentYear,
-        month: currentMonth,
-        day: 23,
-      }).setZone("Europe/Amsterdam");
-    } else {
-      targetDate = DateTime.fromObject({
-        year: currentYear,
-        month: nextMonth,
-        day: 23,
-      }).setZone("Europe/Amsterdam");
-    }
+    // Set target date to June 30, 2025 in Amsterdam timezone
+    const targetDate = DateTime.fromObject({
+      year: 2025,
+      month: 6, // June
+      day: 30,
+      hour: 23,
+      minute: 59,
+      second: 59,
+    }).setZone("Europe/Amsterdam");
 
     return targetDate.toISO();
   })();
@@ -253,9 +232,8 @@ const RazedLeaderboard: React.FC = () => {
           />
         </div>
 
-        <div className="absolute left-0 right-0 mx-auto mt-6 max-w-screen-lg px-4 text-center md:mt-10">
-          <b className="text-4xl text-[#4D4EE0] sm:text-2xl md:text-3xl lg:text-4xl xl:text-4xl">
-            $40,000
+        <div className="absolute left-0 right-0 mx-auto mt-6 max-w-screen-lg px-4 text-center md:mt-10">          <b className="text-4xl text-[#4D4EE0] sm:text-2xl md:text-3xl lg:text-4xl xl:text-4xl">
+            $10,000
           </b>
 
           <div className="mt-4 flex flex-col items-center justify-center sm:flex-row sm:space-x-4">
@@ -270,12 +248,10 @@ const RazedLeaderboard: React.FC = () => {
             <b className="text-4xl text-white sm:text-2xl md:text-3xl lg:text-3xl">
               Leaderboard
             </b>
-          </div>
-
-          <p className="mx-auto mt-4 text-center text-white sm:text-xl md:mt-0 md:text-2xl lg:m-4 lg:text-3xl xl:text-xl">
-            Each month, a total of $40,000 is distributed across 25 users
+          </div>          <p className="mx-auto mt-4 text-center text-white sm:text-xl md:mt-0 md:text-2xl lg:m-4 lg:text-3xl xl:text-xl">
+            Weekly leaderboard with $10,000 distributed across 20 users
             <br></br>
-            based on their total wagered amount.
+            based on their total wagered amount until June 30th.
           </p>
         </div>
       </div>

@@ -7,23 +7,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!API_URL || !REFERRAL_KEY) {
       return res.status(500).json({ error: "Missing BASE_RAZED_API_URL or AUTH_RAZED in environment variables" });
-    }
+    }    const now = new Date();
 
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth();
-    const currentDay = now.getDate();
-
-    let fromDate: Date;
-    let toDate: Date;
-
-    if (currentDay < 23) {
-      fromDate = new Date(currentYear, currentMonth - 1, 23, 0, 0, 0);
-      toDate = new Date(currentYear, currentMonth, 23, 23, 59, 59);
-    } else {
-      fromDate = new Date(currentYear, currentMonth, 23, 0, 0, 0);
-      toDate = new Date(currentYear, currentMonth + 1, 23, 23, 59, 59);
-    }
+    // One-time weekly leaderboard from June 23 to June 30, 2025
+    const fromDate = new Date(2025, 5, 23, 0, 0, 0); // June 23, 2025
+    const toDate = new Date(2025, 5, 30, 23, 59, 59); // June 30, 2025
 
     const formatDate = (date: Date) => {
       const pad = (n: number) => String(n).padStart(2, "0");
