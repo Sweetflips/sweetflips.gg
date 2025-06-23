@@ -15,9 +15,9 @@ type LeaderboardEntry = {
 };
 
 const rewardMapping: { [key: number]: number } = {
-  1: 15000,
-  2: 8000,
-  3: 5000,
+  1: 3200,
+  2: 1800,
+  3: 1200,
 };
 
 const TopLeaderboard: React.FC = () => {
@@ -76,25 +76,19 @@ const TopLeaderboard: React.FC = () => {
   
 
   const topUsers = data.slice(0, 3);
-
   useEffect(() => {
     const updateTimer = () => {
       const now = new Date();
-      const currentMonth = now.getMonth() + 1;
-      const currentYear = now.getFullYear();
-
-      let targetDate: Date;
-
-      if (now.getDate() < 24) {
-        targetDate = new Date(currentYear, currentMonth - 1, 23);
-      } else {
-        const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
-        const nextMonthYear =
-          currentMonth === 12 ? currentYear + 1 : currentYear;
-        targetDate = new Date(nextMonthYear, nextMonth - 1, 23);
-      }
+      // Target date is June 30, 2025
+      const targetDate = new Date(2025, 5, 30, 23, 59, 59); // Month is 0-indexed, so 5 = June
 
       const diff = targetDate.getTime() - now.getTime();
+      
+      if (diff <= 0) {
+        setTimeLeft("Event Ended");
+        return;
+      }
+
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
       const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
       const minutes = Math.floor((diff / 1000 / 60) % 60);
@@ -126,20 +120,17 @@ const TopLeaderboard: React.FC = () => {
     return formattedAmount.endsWith(".00")
       ? formattedAmount.slice(0, -3)
       : formattedAmount;
-  };
-  const countDownDate = (() => {
-    const now = DateTime.now().setZone("Europe/Amsterdam");
-    const currentMonth = now.month;
-    const currentYear = now.year;
-    const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
-  
-    let targetDate;
-    if (now.day < 23) {
-      targetDate = DateTime.fromObject({ year: currentYear, month: currentMonth, day: 23 }).setZone("Europe/Amsterdam");
-    } else {
-      targetDate = DateTime.fromObject({ year: currentYear, month: nextMonth, day: 23 }).setZone("Europe/Amsterdam");
-    }
-  
+  };  const countDownDate = (() => {
+    // Set target date to June 30, 2025 in Amsterdam timezone
+    const targetDate = DateTime.fromObject({
+      year: 2025,
+      month: 6, // June
+      day: 30,
+      hour: 23,
+      minute: 59,
+      second: 59,
+    }).setZone("Europe/Amsterdam");
+
     return targetDate.toISO();
   })();
 
