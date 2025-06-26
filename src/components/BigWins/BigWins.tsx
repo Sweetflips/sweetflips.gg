@@ -19,7 +19,7 @@ const BigWins: React.FC = () => {
         {bigWins.map((win, index) => (
           <div
             key={index}
-            className="rounded-2xl p-5 bg-gradient-to-br from-purple-800/40 to-purple-900/30 backdrop-blur-xl border border-purple-500 transform transition-transform hover:scale-[1.03] hover:shadow-[0_0_40px_rgba(168,85,247,0.9)]"
+            className="rounded-xl p-5 bg-[radial-gradient(at_top_center,_#350c4a_0%,_#130C1A_60%)] border border-graydark shadow-card transform transition-transform hover:scale-[1.03] hover:shadow-xl"
           >
             <div className="mb-3 flex items-center justify-center gap-3">
               <Image

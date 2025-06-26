@@ -66,11 +66,11 @@ export default function TokenSettingsManager() {
               placeholder="New rate"
               value={newRate}
               onChange={(e) => setNewRate(e.target.value)}
-              className="text-white px-4 py-2 rounded w-full"
+              className="w-full px-4 py-2 mb-3 rounded-lg text-white bg-[#1d1628] border border-graydark focus:outline-none focus:ring-2 focus:ring-[#9925FE]"
             />
             <button
               onClick={updateRate}
-              className="bg-[#9925FE] hover:bg-opacity-90 text-white px-4 py-2 rounded"
+              className="bg-[#9925FE] hover:bg-purple-700 transition-all duration-200 w-full py-2 rounded-lg text-white font-semibold shadow-md shadow-[#9925fe]/40"
             >
               Update
             </button>

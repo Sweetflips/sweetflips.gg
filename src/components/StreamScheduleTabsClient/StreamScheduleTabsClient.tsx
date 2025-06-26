@@ -34,10 +34,10 @@ export default function StreamScheduleTabsClient({ schedule }: Props) {
   });
 
   return (
-    <div className="bg-transparent max-w-3xl rounded-3xl border border-purple-500 p-4 shadow-[0_0_30px_rgba(168,85,247,0.6)] ring-1 ring-purple-400">
-      <h2 className="mb-6 text-center text-2xl font-bold text-white sm:text-3xl">
+    <div className="bg-[radial-gradient(at_top_center,_#350c4a_0%,_#130C1A_60%)] rounded-xl border border-graydark p-4 shadow-card">
+      {/* <h2 className="mb-6 text-center text-2xl font-bold text-white sm:text-3xl">
         Weekly Stream Schedule
-      </h2>
+      </h2> */} {/* Header moved to page.tsx */}
 
       <div className="mb-6 flex flex-wrap justify-center gap-1 sm:gap-2">
         {(Object.keys(groupedSchedule) as Day[]).map((day) => (

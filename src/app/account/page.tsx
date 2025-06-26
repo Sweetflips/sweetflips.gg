@@ -1,35 +1,45 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, useCallback } from 'react'; // Added useCallback
+// import { useRouter } from 'next/navigation'; // No longer needed directly for auth
 import DefaultLayout from '../../components/Layouts/DefaultLayout';
 import Loader from "@/components/common/Loader";
 import TokenExchange from '@/components/TokenExchange/TokenExchange';
 import UserOrders from '@/components/UserOrders/UserOrders';
+import { withAuth } from '@/components/withAuth'; // Import the HOC
 
 const ProfilePage = () => {
-  const [user, setUser] = useState<any>(null);
-  const [userData, setUserData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null); // Still need user for display
+  const [userData, setUserData] = useState<any>(null); // Still need userData for display
+  const [loading, setLoading] = useState(true); // For fetching user data, not auth
   const [activeSection, setActiveSection] = useState<'details' | 'orders' | 'tokens'>('details');
-  const router = useRouter();
+  // const router = useRouter(); // Used by HOC
 
-  const fetchUser = async () => {
+  // useCallback for fetchUser to avoid re-creation on every render if passed as dependency
+  const fetchUser = useCallback(async () => {
+    setLoading(true); // Set loading true when fetching starts
     try {
       const res = await fetch('/api/user');
       if (!res.ok) {
-        router.push('/auth/signin');
+        // Auth redirection is handled by withAuth, but you might want to handle other errors or set user to null
+        // router.push('/auth/signin'); // Handled by withAuth
+        setUser(null);
+        setUserData(null);
         return;
       }
       const data = await res.json();
       setUser(data.user);
       setUserData(data.userData);
+    } catch (error) {
+      console.error("Failed to fetch user data:", error);
+      setUser(null);
+      setUserData(null);
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // No dependencies, this function itself doesn't change
 
   useEffect(() => {
-    fetchUser();
+    fetchUser(); // Fetch user data on component mount
 
     const hash = window.location.hash;
     if (hash === '#orders') {
@@ -39,7 +49,7 @@ const ProfilePage = () => {
     } else {
       setActiveSection('details');
     }
-  }, [fetchUser]);
+  }, [fetchUser]); // Depend on fetchUser (which is stable due to useCallback)
 
   const handleTabClick = (section: 'details' | 'orders' | 'tokens') => {
     setActiveSection(section);
@@ -79,19 +89,19 @@ const handleSyncBotrix = async () => {
   <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
     <button
       onClick={() => handleTabClick('details')}
-      className={`text-sm sm:text-base rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 hover:bg-[#9925FE] transition ${activeSection === 'details' ? 'bg-[#9925FE] text-white font-semibold' : ''}`}
+      className={`text-sm sm:text-base rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 hover:bg-[#9925FE] transition ${activeSection === 'details' ? 'bg-[#9925FE] text-white font-semibold shadow-md' : 'bg-purple-800/40 text-white border border-purple-500'}`}
     >
       Account Details
     </button>
     <button
       onClick={() => handleTabClick('orders')}
-      className={`text-sm sm:text-base rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 hover:bg-[#9925FE] transition ${activeSection === 'orders' ? 'bg-[#9925FE] text-white font-semibold' : ''}`}
+      className={`text-sm sm:text-base rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 hover:bg-[#9925FE] transition ${activeSection === 'orders' ? 'bg-[#9925FE] text-white font-semibold shadow-md' : 'bg-purple-800/40 text-white border border-purple-500'}`}
     >
       Orders
     </button>
     <button
       onClick={() => handleTabClick('tokens')}
-      className={`text-sm sm:text-base rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 hover:bg-[#9925FE] transition ${activeSection === 'tokens' ? 'bg-[#9925FE] text-white font-semibold' : ''}`}
+      className={`text-sm sm:text-base rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 hover:bg-[#9925FE] transition ${activeSection === 'tokens' ? 'bg-[#9925FE] text-white font-semibold shadow-md' : 'bg-purple-800/40 text-white border border-purple-500'}`}
     >
       Tokens
     </button>
@@ -149,4 +159,4 @@ const handleSyncBotrix = async () => {
   );
 };
 
-export default ProfilePage;
+export default withAuth(ProfilePage);

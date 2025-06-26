@@ -23,7 +23,7 @@ export default function ShopTokenBar() {
 
   return (
     <div className="w-full flex justify-center sm:justify-center">
-      <div className="flex items-center overflow-hidden rounded-xl border border-[#9925FE] bg-[#1a1120] shadow-lg text-white">
+      <div className="flex items-center overflow-hidden rounded-xl bg-[#1a1120] shadow-lg text-white mr-2">
         <div className="flex items-center gap-2 px-4 py-2 bg-[#130c1a]">
           <Image
             src="/images/logo/sweetflips_coin.png"
