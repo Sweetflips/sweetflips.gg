@@ -139,7 +139,7 @@ export default function ProductManager() {
           <div className="flex flex-col col-span-2 sm:col-span-1">
             <label className="text-sm text-purple-300 mb-1">Name</label>
             <input
-              className="bg-[#130c1a] border border-gray-600 text-white p-2 rounded w-50 sm:w-full"
+              className="w-full px-4 py-2 mb-3 rounded-lg text-white bg-[#1d1628] border border-graydark focus:outline-none focus:ring-2 focus:ring-[#9925FE]"
               value={name}
               onChange={e => setName(e.target.value)}
             />
@@ -150,7 +150,7 @@ export default function ProductManager() {
               type="text"
               pattern="\d*"
               inputMode="numeric"
-              className="bg-[#130c1a] border border-gray-600 text-white p-2 rounded w-50 sm:w-full"
+              className="w-full px-4 py-2 mb-3 rounded-lg text-white bg-[#1d1628] border border-graydark focus:outline-none focus:ring-2 focus:ring-[#9925FE]"
               value={price}
               onChange={e => setPrice(Number(e.target.value))}
             />
@@ -158,7 +158,7 @@ export default function ProductManager() {
           <div className="flex flex-col col-span-2">
             <label className="text-sm text-purple-300 mb-1">Description</label>
             <textarea
-              className="bg-[#130c1a] border border-gray-600 text-white p-2 rounded w-50 sm:w-full"
+              className="w-full px-4 py-2 mb-3 rounded-lg text-white bg-[#1d1628] border border-graydark focus:outline-none focus:ring-2 focus:ring-[#9925FE]"
               value={description}
               onChange={e => setDescription(e.target.value)}
             />
@@ -170,12 +170,12 @@ export default function ProductManager() {
               accept="image/*"
               ref={fileRef}
               onChange={e => setFile(e.target.files?.[0] || null)}
-              className="text-white"
+              className="text-white w-full px-4 py-2 mb-3 rounded-lg bg-[#1d1628] border border-graydark focus:outline-none focus:ring-2 focus:ring-[#9925FE]"
             />
           </div>
         </div>
         <button
-          className="mt-4 bg-[#9925FE] px-4 py-2 rounded text-white hover:bg-opacity-90 disabled:opacity-50"
+          className="bg-[#9925FE] hover:bg-purple-700 transition-all duration-200 w-full py-2 rounded-lg text-white font-semibold shadow-md shadow-[#9925fe]/40 disabled:opacity-50"
           onClick={handleAdd}
           disabled={uploading}
         >
@@ -200,17 +200,17 @@ export default function ProductManager() {
               {editingId === p.id ? (
                 <>
                   <input
-                    className="mb-2 w-50 sm:w-full bg-[#130c1a] border border-gray-600 text-white p-1 rounded"
+                    className="w-full px-4 py-2 mb-3 rounded-lg text-white bg-[#1d1628] border border-graydark focus:outline-none focus:ring-2 focus:ring-[#9925FE]"
                     value={editFields[p.id]?.name || p.name}
                     onChange={(e) => handleEditChange(p.id, 'name', e.target.value)}
                   />
                   <textarea
-                    className="mb-2 w-50 sm:w-full bg-[#130c1a] border border-gray-600 text-white p-1 rounded"
+                    className="w-full px-4 py-2 mb-3 rounded-lg text-white bg-[#1d1628] border border-graydark focus:outline-none focus:ring-2 focus:ring-[#9925FE]"
                     value={editFields[p.id]?.description || p.description}
                     onChange={(e) => handleEditChange(p.id, 'description', e.target.value)}
                   />
                   <input
-                    className="mb-2 w-50 sm:w-full bg-[#130c1a] border border-gray-600 text-white p-1 rounded"
+                    className="w-full px-4 py-2 mb-3 rounded-lg text-white bg-[#1d1628] border border-graydark focus:outline-none focus:ring-2 focus:ring-[#9925FE]"
                     type="text"
                     inputMode="numeric"
                     pattern="\d*"
@@ -223,7 +223,7 @@ export default function ProductManager() {
                       type="file"
                       accept="image/*"
                       onChange={(e) => e.target.files?.[0] && handleImageEditChange(p.id, e.target.files[0])}
-                      className="text-white"
+                      className="text-white w-full px-4 py-2 mb-3 rounded-lg bg-[#1d1628] border border-graydark focus:outline-none focus:ring-2 focus:ring-[#9925FE]"
                     />
                   </div>
                 </>

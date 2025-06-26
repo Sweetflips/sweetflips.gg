@@ -175,7 +175,7 @@ const Header = () => {
           </button>
 
           {/* User-specific items - hidden on small screens, shown on large */}
-          <div className="hidden lg:flex items-center gap-3 2xsm:gap-7">
+          <div className="hidden lg:flex items-center gap-3 2xsm:gap-7 flex-wrap">
             {isLoggedIn && (
               <div className="hidden sm:block"> {/* Desktop ShopTokenBar */}
                 <ShopTokenBar />
@@ -187,19 +187,19 @@ const Header = () => {
                   <div className="flex gap-2 items-center">
                     <Link
                       href="/account"
-                      className="flex items-center justify-center gap-2 rounded-lg bg-[#9925FE] px-3.5 py-3.5 text-white transition hover:bg-opacity-90 text-sm sm:px-4 sm:py-3 sm:text-base"
+                      aria-label="Account"
+                      className="flex items-center justify-center h-11 w-11 rounded-lg text-white transition bg-gradient-to-br from-primary to-sweetflipsPanel hover:shadow-lg hover:shadow-primary/40"
                     >
-                      <User className="w-5 h-5" />
-                      <span className="hidden sm:inline">Account</span>
+                      <User className="w-5 h-5" fill="currentColor" />
                     </Link>
 
                     {userRole === "admin" && (
                       <Link
                         href="/admin-panel"
-                        className="flex items-center justify-center gap-2 rounded-lg bg-[#9925FE] px-3.5 py-3.5 text-white transition hover:bg-opacity-90 text-sm sm:px-4 sm:py-3 sm:text-base"
+                        aria-label="Admin Panel"
+                        className="flex items-center justify-center h-11 w-11 rounded-lg text-white transition bg-gradient-to-br from-primary to-sweetflipsPanel hover:shadow-lg hover:shadow-primary/40"
                       >
                         <Shield className="w-5 h-5" />
-                        <span className="hidden sm:inline">Admin</span>
                       </Link>
                     )}
                   </div>
@@ -208,10 +208,10 @@ const Header = () => {
                 <div>
                   <Link
                     href="/auth/signin"
-                    className="flex items-center justify-center gap-2 rounded-lg bg-[#9925FE] px-3.5 py-3.5 text-white transition hover:bg-opacity-90 text-sm sm:px-4 sm:py-3 sm:text-base"
+                    aria-label="Login"
+                    className="flex items-center justify-center h-11 w-11 rounded-lg text-white transition bg-gradient-to-br from-primary to-sweetflipsPanel hover:shadow-lg hover:shadow-primary/40"
                   >
-                    <User className="w-5 h-5" />
-                    <span className="hidden sm:inline">Login</span>
+                    <User className="w-5 h-5" fill="currentColor" />
                   </Link>
                 </div>
               )}
@@ -281,7 +281,7 @@ const Header = () => {
             {isLoggedIn ? (
               <>
                 <Link href="/account" className="flex items-center text-white hover:bg-gray-700 hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ease-in-out">
-                   <User className="w-5 h-5 mr-2 text-gray-400" /> Account
+                   <User className="w-5 h-5 mr-2 text-gray-400" fill="currentColor" /> Account
                 </Link>
                 {userRole === "admin" && (
                    <Link href="/admin-panel" className="flex items-center text-white hover:bg-gray-700 hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ease-in-out">
@@ -291,7 +291,7 @@ const Header = () => {
               </>
             ) : (
               <Link href="/auth/signin" className="flex items-center text-white hover:bg-gray-700 hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ease-in-out">
-                <User className="w-5 h-5 mr-2 text-gray-400" /> Login
+                <User className="w-5 h-5 mr-2 text-gray-400" fill="currentColor" /> Login
               </Link>
             )}
           </nav>

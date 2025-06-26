@@ -23,8 +23,8 @@ const BotrixLeaderboard: React.FC = () => {
   }, []);
 
   return (
-    <div className="max-w-3xl rounded-3xl border-1 border-purple-500 ring-1 ring-purple-400 bg-transparent p-6 shadow-[0_0_30px_rgba(168,85,247,0.6)]">
-      <h2 className="mb-4 md:mb-12 text-center text-3xl font-bold text-white">Stream Leaderboard</h2>
+    <div className="rounded-xl border border-graydark bg-[radial-gradient(at_top_center,_#350c4a_0%,_#130C1A_60%)] p-6 shadow-card">
+      {/* <h2 className="mb-4 md:mb-12 text-center text-3xl font-bold text-white">Stream Leaderboard</h2> */} {/* Header moved to page.tsx */}
   
       <div className="mb-2 flex items-center justify-between px-6 text-white text-xs md:text-sm font-semibold tracking-wide">
         <div className="w-1/4">Rank</div>

@@ -196,7 +196,7 @@ const EmpireDropLeaderboard: React.FC = () => {
       {/* <div className="floating-image3 animate-line3">
     <img src="/images/logo/sweet_flips_emblem.png" alt="Floating" className="h-300 w-25 rotate-[-18.63deg]" />
   </div> */}
-      <div className="FooterBg relative mx-auto flex h-80 w-full transform flex-col items-center justify-between overflow-hidden rounded-xl p-4 transition-all sm:w-3/4 sm:flex-row sm:items-start md:w-5/6">
+      <div className="FooterBg relative mx-auto flex h-80 w-full transform flex-col items-center justify-between overflow-hidden rounded-xl p-4 transition-all sm:w-3/4 sm:flex-row sm:items-start md:w-5/6 shadow-[inset_0_0_20px_rgba(0,0,0,0.4)]">
         {/* Left Image */}
         <div className="hide-on-ipad absolute left-0 hidden sm:block">
           <Image
@@ -243,7 +243,7 @@ const EmpireDropLeaderboard: React.FC = () => {
         {/* Centered Text Section */}
         <div className="absolute left-0 right-0 mx-auto mt-6 max-w-screen-lg px-4 text-center md:mt-10">
           {/* $20,000 Text */}
-          <b className="text-4xl text-[#FE25F7] sm:text-2xl md:text-3xl lg:text-4xl xl:text-4xl">
+          <b className="text-5xl text-[#FE25F7] sm:text-2xl md:text-3xl lg:text-4xl xl:text-4xl animate-pulse-glow">
             $20,000
           </b>
 
@@ -265,7 +265,7 @@ const EmpireDropLeaderboard: React.FC = () => {
           </div>
 
           {/* Description Text */}
-          <p className="m-4 mx-auto text-center text-white sm:m-6 sm:text-xl md:text-2xl lg:m-8 lg:text-3xl xl:text-xl">
+          <p className="m-4 mx-auto text-center text-white sm:m-6 sm:text-xl md:text-2xl lg:m-8 lg:text-3xl xl:text-xl leading-relaxed">
             Each month, a total of $20,000 is distributed across 10 users based
             on<br></br>
             their total wagered amount.
@@ -291,7 +291,7 @@ const EmpireDropLeaderboard: React.FC = () => {
         {topUsers && topUsers.length >= 3 && (
           <>
             {/* Left Card */}
-            <div className="TopLeaderboard__card TopLeaderboard__card--left duration-200 ease-in hover:scale-110 md:mt-10">
+            <div className="TopLeaderboard__card TopLeaderboard__card--left duration-200 ease-in hover:scale-110 md:mt-10 border border-purple-700 shadow-lg shadow-purple-900/50">
               <div className="TopLeaderboard__card-inner">
                 <div className="TopLeaderboard__number-wrapper">
                   <Image
@@ -326,7 +326,7 @@ const EmpireDropLeaderboard: React.FC = () => {
             </div>
 
             {/* Middle Card */}
-            <div className="TopLeaderboard__card TopLeaderboard__card--middle duration-200 ease-in hover:scale-110">
+            <div className="TopLeaderboard__card TopLeaderboard__card--middle duration-200 ease-in hover:scale-110 border border-purple-700 shadow-lg shadow-purple-900/50">
               <div className="TopLeaderboard__card-inner">
                 <div className="TopLeaderboard__number-wrapper">
                   <Image
@@ -361,7 +361,7 @@ const EmpireDropLeaderboard: React.FC = () => {
             </div>
 
             {/* Right Card */}
-            <div className="TopLeaderboard__card TopLeaderboard__card--right duration-200 ease-in hover:scale-110 md:mt-10">
+            <div className="TopLeaderboard__card TopLeaderboard__card--right duration-200 ease-in hover:scale-110 md:mt-10 border border-purple-700 shadow-lg shadow-purple-900/50">
               <div className="TopLeaderboard__card-inner">
                 <div className="TopLeaderboard__number-wrapper">
                   <Image
@@ -435,7 +435,6 @@ const EmpireDropLeaderboard: React.FC = () => {
         </div>
       </div>
 
-      <Footer />
     </div>
   );
 };

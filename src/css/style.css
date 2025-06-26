@@ -420,7 +420,7 @@ input[type="search"]::-webkit-search-cancel-button {
     border-radius: 15px;
     padding: 1px; /* Padding for gradient border */
     background: transparent;
-    background-image: linear-gradient(to right, #FEA613, #9747FF); /* Gradient border */
+    /* background-image: linear-gradient(to right, #FEA613, #9747FF); */ /* Gradient border */
     border-radius: 10px;
     max-width: 390px; /* Ensures cards do not exceed this width */
     width: 100%; /* Ensure the cards take up the full width of the container */
@@ -645,7 +645,7 @@ input[type="search"]::-webkit-search-cancel-button {
     border-radius: 15px;
     padding: 1px; /* Padding for gradient border */
     background: transparent;
-    background-image: linear-gradient(to right, rgba(0, 224, 255, 0.5), rgba(255, 184, 0, 0.5)); /* Gradient border with opacity */
+    /* background-image: linear-gradient(to right, rgba(0, 224, 255, 0.5), rgba(255, 184, 0, 0.5)); */ /* Gradient border with opacity */
     border-radius: 10px;
     max-width: 1000px; /* Ensures the rows do not exceed this width */
     width: 100%; /* Ensure the rows take up the full width of the container */

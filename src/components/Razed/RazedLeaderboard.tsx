@@ -215,7 +215,7 @@ return targetDate.toISO(); // ISO in UTC
           height={100}
         />
       </div>
-      <div className="FooterBg relative mx-auto flex h-80 w-full transform flex-col items-center justify-between overflow-hidden rounded-xl p-4 transition-all sm:w-3/4 sm:flex-row sm:items-start md:w-5/6">
+      <div className="FooterBg relative mx-auto flex h-80 w-full transform flex-col items-center justify-between overflow-hidden rounded-xl p-4 transition-all sm:w-3/4 sm:flex-row sm:items-start md:w-5/6 shadow-[inset_0_0_20px_rgba(0,0,0,0.4)]">
         {/* Left Image */}
         <div className="hide-on-ipad absolute left-0 hidden sm:block">
           <Image
@@ -262,7 +262,7 @@ return targetDate.toISO(); // ISO in UTC
         {/* Centered Text Section */}
         <div className="absolute left-0 right-0 mx-auto mt-6 max-w-screen-lg px-4 text-center md:mt-10">
           {/* $40,000 Text */}
-          <b className="text-4xl text-[#4D4EE0] sm:text-2xl md:text-3xl lg:text-4xl xl:text-4xl">
+          <b className="text-5xl text-[#4D4EE0] sm:text-2xl md:text-3xl lg:text-4xl xl:text-4xl animate-pulse-glow">
             $40,000
           </b>
 
@@ -284,7 +284,7 @@ return targetDate.toISO(); // ISO in UTC
           </div>
 
           {/* Description Text */}
-          <p className="mx-auto mt-4 text-center text-white sm:text-xl md:mt-0 md:text-2xl lg:m-4 lg:text-3xl xl:text-xl">
+          <p className="mx-auto mt-4 text-center text-white sm:text-xl md:mt-0 md:text-2xl lg:m-4 lg:text-3xl xl:text-xl leading-relaxed">
             Each month, a total of $40,000 is distributed across 25 users
             <br></br>
             based on their total wagered amount.
@@ -310,7 +310,7 @@ return targetDate.toISO(); // ISO in UTC
         {topUsers && topUsers.length >= 3 && (
           <>
             {/* Left Card */}
-            <div className="TopLeaderboard__card TopLeaderboard__card--left duration-200 ease-in hover:scale-110 md:mt-10">
+            <div className="TopLeaderboard__card TopLeaderboard__card--left duration-200 ease-in hover:scale-110 md:mt-10 border border-purple-700 shadow-lg shadow-purple-900/50">
               <div className="TopLeaderboard__card-inner">
                 <div className="TopLeaderboard__number-wrapper">
                   <Image
@@ -345,7 +345,7 @@ return targetDate.toISO(); // ISO in UTC
             </div>
 
             {/* Middle Card */}
-            <div className="TopLeaderboard__card TopLeaderboard__card--middle duration-200 ease-in hover:scale-110">
+            <div className="TopLeaderboard__card TopLeaderboard__card--middle duration-200 ease-in hover:scale-110 border border-purple-700 shadow-lg shadow-purple-900/50">
               <div className="TopLeaderboard__card-inner">
                 <div className="TopLeaderboard__number-wrapper">
                   <Image
@@ -380,7 +380,7 @@ return targetDate.toISO(); // ISO in UTC
             </div>
 
             {/* Right Card */}
-            <div className="TopLeaderboard__card TopLeaderboard__card--right duration-200 ease-in hover:scale-110 md:mt-10">
+            <div className="TopLeaderboard__card TopLeaderboard__card--right duration-200 ease-in hover:scale-110 md:mt-10 border border-purple-700 shadow-lg shadow-purple-900/50">
               <div className="TopLeaderboard__card-inner">
                 <div className="TopLeaderboard__number-wrapper">
                   <Image
@@ -455,7 +455,6 @@ return targetDate.toISO(); // ISO in UTC
         </div>
       </div>
 
-      <Footer />
     </div>
   );
 };

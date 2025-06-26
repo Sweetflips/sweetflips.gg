@@ -1,61 +1,58 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+// import { useRouter } from 'next/navigation'; // No longer needed directly here
 import DefaultLayout from '@/components/Layouts/DefaultLayout';
-import Loader from '@/components/common/Loader';
+// import Loader from '@/components/common/Loader'; // Loader will be handled by withAuth or page can show its own if needed
 import ScheduleManager from '@/components/ScheduleManager/ScheduleManager';
 import TokenSettingsManager from '@/components/TokenSettingsManager/TokenSettingsManager';
 import ProductManager from '@/components/ProductManager/ProductManager';
 import AdminOrders from '@/components/AdminOrders/AdminOrders';
 import AdminUsers from '@/components/AdminUsers/AdminUsers';
+import { withAuth } from '@/components/withAuth'; // Import the HOC
 
 type AdminTab = 'schedule' | 'orders' | 'users' | 'token settings' | 'products';
 
 const AdminPanel = () => {
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [redirecting, setRedirecting] = useState(false);
+  // const [user, setUser] = useState<any>(null); // User context might be needed from elsewhere or passed by HOC if extended
+  // const [loading, setLoading] = useState(true); // Loading is handled by HOC
+  // const [redirecting, setRedirecting] = useState(false); // Redirecting is handled by HOC
   const [activeTab, setActiveTab] = useState<AdminTab>('schedule');
-  const router = useRouter();
+  // const router = useRouter(); // Router is used by HOC
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await fetch('/api/user');
-        if (!res.ok) {
-          setRedirecting(true);
-          router.push('/');
-          return;
-        }
+  // useEffect(() => {
+  //   const fetchUser = async () => {
+  //     try {
+  //       const res = await fetch('/api/user');
+  //       if (!res.ok) {
+  //         // setRedirecting(true); // Handled by withAuth
+  //         // router.push('/');
+  //         return;
+  //       }
+  //       const data = await res.json();
+  //       if (data.user?.role !== 'admin') {
+  //         // setRedirecting(true); // Handled by withAuth
+  //         // router.push('/');
+  //         return;
+  //       }
+  //       // setUser(data); // User data might be fetched differently or passed if still needed
+  //     } catch (error) {
+  //       // setRedirecting(true); // Handled by withAuth
+  //       // router.push('/');
+  //     } finally {
+  //       // setLoading(false); // Handled by withAuth
+  //     }
+  //   };
+  //   // fetchUser(); // This logic is now in withAuth
+  // }, [router]);
 
-        const data = await res.json();
-
-        if (data.user?.role !== 'admin') {
-          setRedirecting(true);
-          router.push('/');
-          return;
-        }
-
-        setUser(data);
-      } catch (error) {
-        setRedirecting(true);
-        router.push('/');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
-  }, [router]);
-
-  if (loading || redirecting) {
-    return (
-      <div className="p-6">
-        <Loader />
-      </div>
-    );
-  }
+  // if (loading || redirecting) { // This is handled by withAuth
+  //   return (
+  //     <div className="p-6">
+  //       <Loader />
+  //     </div>
+  //   );
+  // }
 
   return (
     <DefaultLayout>
@@ -66,7 +63,7 @@ const AdminPanel = () => {
             <button
               onClick={() => setActiveTab('schedule')}
               className={`text-sm sm:text-base rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 hover:bg-[#9925FE] transition ${
-                activeTab === 'schedule' ? 'bg-[#9925FE] text-white font-semibold' : ''
+                activeTab === 'schedule' ? 'bg-[#9925FE] text-white font-semibold shadow-md' : 'bg-purple-800/40 text-white border border-purple-500'
               }`}
             >
               Stream Schedule
@@ -74,7 +71,7 @@ const AdminPanel = () => {
             <button
               onClick={() => setActiveTab('orders')}
               className={`text-sm sm:text-base rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 hover:bg-[#9925FE] transition ${
-                activeTab === 'orders' ? 'bg-[#9925FE] text-white font-semibold' : ''
+                activeTab === 'orders' ? 'bg-[#9925FE] text-white font-semibold shadow-md' : 'bg-purple-800/40 text-white border border-purple-500'
               }`}
             >
               Orders
@@ -82,7 +79,7 @@ const AdminPanel = () => {
             <button
               onClick={() => setActiveTab('users')}
               className={`text-sm sm:text-base rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 hover:bg-[#9925FE] transition ${
-                activeTab === 'users' ? 'bg-[#9925FE] text-white font-semibold' : ''
+                activeTab === 'users' ? 'bg-[#9925FE] text-white font-semibold shadow-md' : 'bg-purple-800/40 text-white border border-purple-500'
               }`}
             >
               Users
@@ -90,7 +87,7 @@ const AdminPanel = () => {
             <button
               onClick={() => setActiveTab('token settings')}
               className={`text-sm sm:text-base rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 hover:bg-[#9925FE] transition ${
-                activeTab === 'token settings' ? 'bg-[#9925FE] text-white font-semibold' : ''
+                activeTab === 'token settings' ? 'bg-[#9925FE] text-white font-semibold shadow-md' : 'bg-purple-800/40 text-white border border-purple-500'
               }`}
             >
               Token Settings
@@ -98,7 +95,7 @@ const AdminPanel = () => {
             <button
   onClick={() => setActiveTab('products')}
   className={`text-sm sm:text-base rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 hover:bg-[#9925FE] transition ${
-    activeTab === 'products' ? 'bg-[#9925FE] text-white font-semibold' : ''
+    activeTab === 'products' ? 'bg-[#9925FE] text-white font-semibold shadow-md' : 'bg-purple-800/40 text-white border border-purple-500'
   }`}
 >
   Products
@@ -159,4 +156,4 @@ const AdminPanel = () => {
   );
 };
 
-export default AdminPanel;
+export default withAuth(AdminPanel, { role: 'admin' });
