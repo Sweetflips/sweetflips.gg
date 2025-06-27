@@ -47,7 +47,7 @@ export const menuGroups: MenuGroup[] = [
         label: "Games",
         route: "#",
         children: [
-          // { label: "Plinko", route: "/plinko" }
+          { label: "Plinko", route: "/plinko" },
           { label: "Coinflip", route: "/coinflip" },
         ],
       },
