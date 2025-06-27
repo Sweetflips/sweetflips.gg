@@ -17,6 +17,7 @@ const SignInPage = () => {
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true); // Added loading state
 
   // ✅ Redirect if already logged in
   useEffect(() => {
@@ -25,9 +26,12 @@ const SignInPage = () => {
         const res = await fetch("/api/user");
         if (res.ok) {
           router.push("/account");
+        } else {
+          setIsLoading(false); // Only set loading to false if not redirecting
         }
       } catch (error) {
         // Not logged in — no redirect
+        setIsLoading(false);
       }
     };
     checkIfLoggedIn();
@@ -85,6 +89,18 @@ const SignInPage = () => {
       console.error("Kick login failed:", err);
     }
   };
+
+  if (isLoading) {
+    // Render a loading spinner or a blank page while checking auth state
+    // For simplicity, returning null here, but a proper loading UI would be better.
+    return (
+      <DefaultLayout>
+        <div className="flex min-h-screen flex-col items-center justify-center">
+          <p>Loading...</p> {/* Or a spinner component */}
+        </div>
+      </DefaultLayout>
+    );
+  }
 
   return (
     <DefaultLayout>

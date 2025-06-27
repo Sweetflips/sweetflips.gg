@@ -1,7 +1,7 @@
 import Link from "next/link";
 // Removed DarkModeSwitcher, DropdownMessage, DropdownNotification, DropdownUser as they are not used in the provided snippet
 import Image from "next/image";
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react'; // useEffect might still be needed for other things if any
 import Cookies from 'js-cookie';
 import { usePathname } from 'next/navigation';
 import { User, Shield, Menu as MenuIcon } from "lucide-react"; // Renamed Menu to MenuIcon to avoid conflict
@@ -10,34 +10,35 @@ import React from "react";
 import { HeaderLiveStatus } from "../HeaderLiveStatus/HeaderLiveStatus";
 import { menuGroups } from "@/data/menuData"; // Import menuGroups
 import HeaderNavItem from "./HeaderNavItem"; // Import HeaderNavItem
+import { useAuth } from "@/contexts/AuthContext"; // Import useAuth
 
 // Removed sidebarOpen and setSidebarOpen from props
 const Header = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const { isLoggedIn, userRole } = useAuth(); // Use AuthContext
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // State for mobile menu
   const pathname = usePathname(); // Add this line
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const res = await fetch('/api/user');
-        if (res.ok) {
-          const data = await res.json();
-          setIsLoggedIn(true);
-          setUserRole(data.user?.role || null);
-        } else {
-          setIsLoggedIn(false);
-          setUserRole(null);
-        }
-      } catch (err) {
-        setIsLoggedIn(false);
-        setUserRole(null);
-      }
-    };
-  
-    checkAuth();
-  }, []);   
+  // Removed local useEffect for checkAuth as it's now handled by AuthContext
+  // useEffect(() => {
+  //   const checkAuth = async () => {
+  //     try {
+  //       const res = await fetch('/api/user');
+  //       if (res.ok) {
+  //         const data = await res.json();
+  //         setIsLoggedIn(true);
+  //         setUserRole(data.user?.role || null);
+  //       } else {
+  //         setIsLoggedIn(false);
+  //         setUserRole(null);
+  //       }
+  //     } catch (err) {
+  //       setIsLoggedIn(false);
+  //       setUserRole(null);
+  //     }
+  //   };
+  //
+  //   checkAuth();
+  // }, []);
 
   // Unused useEffect and handleLogout removed for clarity
   // useEffect(() => {

@@ -22,9 +22,9 @@ export default function ShopTokenBar() {
   if (tokenBalance === null) return null;
 
   return (
-    <div className="w-full flex justify-center sm:justify-center">
-      <div className="flex items-center overflow-hidden rounded-xl bg-[#1a1120] shadow-lg text-white mr-2">
-        <div className="flex items-center gap-2 px-4 py-2 bg-[#130c1a]">
+    <div className="w-full flex justify-center sm:justify-start items-center"> {/* Changed justify-center to sm:justify-start and added items-center */}
+      <div className="flex items-center bg-[#130c1a] shadow-lg text-white rounded-lg overflow-hidden"> {/* Main container for token balance */}
+        <div className="flex items-center gap-2 px-4 py-2"> {/* Adjusted padding, bg is now on parent */}
           <Image
             src="/images/logo/sweetflips_coin.png"
             alt="Token Icon"
@@ -36,14 +36,16 @@ export default function ShopTokenBar() {
             {tokenBalance.toFixed(2)}
           </span>
         </div>
-        <div className="h-6 w-px bg-[#9925FE] mx-2" />
-        <Link
-          href="/account#tokens"
-          className="bg-[#9925FE] hover:opacity-90 text-white text-xs sm:text-sm px-4 py-2 rounded-r-xl transition"
-        >
-          +
-        </Link>
       </div>
+      {/* Removed the old divider and structure for the + button */}
+      {/* New "Add Coin" button, styled like header buttons */}
+      <Link
+        href="/account#tokens"
+        aria-label="Add Tokens"
+        className="ml-2 flex items-center justify-center h-11 w-11 rounded-lg text-white transition bg-gradient-to-br from-primary to-sweetflipsPanel hover:shadow-lg hover:shadow-primary/40"
+      >
+        <span className="text-2xl font-bold">+</span> {/* Making the plus icon larger and bold */}
+      </Link>
     </div>
   );
 }
