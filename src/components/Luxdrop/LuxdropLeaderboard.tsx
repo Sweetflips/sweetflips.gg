@@ -126,6 +126,48 @@ const LuxdropLeaderboard: React.FC = () => {
   return (
     <div className="mt-4 p-4 text-white">
       <div className="FooterBg relative mx-auto flex h-80 w-full transform flex-col items-center justify-between overflow-hidden rounded-xl p-4 shadow-[inset_0_0_20px_rgba(0,0,0,0.4)] transition-all sm:w-3/4 sm:flex-row sm:items-start md:w-5/6">
+        {/* Left Image */}
+        <div className="hide-on-ipad absolute left-0 hidden sm:block">
+          <Image
+            src="/images/icon/luxdrop_chest.png"
+            alt="Luxdrop Sneaker Chest"
+            className="transform"
+            width={272}
+            height={408}
+          />
+        </div>
+
+        {/* Right Image */}
+        <div className="hide-on-ipad absolute right-0 top-[30px] hidden sm:block">
+          <Image
+            src="/images/icon/luxdrop_car.png"
+            alt="Luxdrop Car"
+            className="transform"
+            width={272}
+            height={408}
+          />
+        </div>
+        {/* Left Image mobile */}
+        <div className="absolute -left-1 top-[-20px] sm:block md:hidden">
+          <Image
+            src="/images/icon/luxdrop_chest.png"
+            alt="Luxdrop Sneaker Chest"
+            className="h-[103px] w-[68.05px] transform"
+            width={68.05}
+            height={103}
+          />
+        </div>
+
+        {/* Right Image mobile*/}
+        <div className="absolute -right-5 top-[250px] sm:block md:hidden">
+          <Image
+            src="/images/icon/luxdrop_car.png"
+            alt="Luxdrop Car"
+            className="h-[103px] w-[68.05px] transform"
+            width={68.05}
+            height={103}
+          />
+        </div>
         <div className="absolute left-0 right-0 mx-auto mt-6 max-w-screen-lg px-4 text-center md:mt-10">
           <b className="animate-pulse-glow text-5xl text-[#FE25F7] sm:text-2xl md:text-3xl lg:text-4xl xl:text-4xl">
             $20,000
