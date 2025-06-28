@@ -14,6 +14,28 @@ type LeaderboardEntry = {
   reward: number;
 };
 
+const mockLeaderboardData: LeaderboardEntry[] = [
+  { username: "TopGamer", wagered: 150000, reward: 0 },
+  { username: "ProPlayer", wagered: 125000, reward: 0 },
+  { username: "LuckyCat", wagered: 98000, reward: 0 },
+  { username: "DevUser4", wagered: 75000, reward: 0 },
+  { username: "DevUser5", wagered: 72000, reward: 0 },
+  { username: "DevUser6", wagered: 68000, reward: 0 },
+  { username: "DevUser7", wagered: 65000, reward: 0 },
+  { username: "DevUser8", wagered: 61000, reward: 0 },
+  { username: "DevUser9", wagered: 58000, reward: 0 },
+  { username: "DevUser10", wagered: 55000, reward: 0 },
+  { username: "DevUser11", wagered: 51000, reward: 0 },
+  { username: "DevUser12", wagered: 48000, reward: 0 },
+  { username: "DevUser13", wagered: 45000, reward: 0 },
+  { username: "DevUser14", wagered: 42000, reward: 0 },
+  { username: "DevUser15", wagered: 40000, reward: 0 },
+  { username: "DevUser16", wagered: 38000, reward: 0 },
+  { username: "DevUser17", wagered: 36000, reward: 0 },
+  { username: "DevUser18", wagered: 34000, reward: 0 },
+  { username: "DevUser19", wagered: 32000, reward: 0 },
+  { username: "DevUser20", wagered: 30000, reward: 0 },
+];
 // Define the reward mapping based on rank
 const rewardMapping: { [key: number]: number } = {
   1: 8000,
@@ -45,6 +67,25 @@ const LuxdropLeaderboard: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (process.env.NODE_ENV === "development") {
+        try {
+          const response = await fetch(API_PROXY_URL);
+          if (!response.ok)
+            throw new Error("API failed, using mock data for layout.");
+          const result = await response.json();
+          if (!result.data || !Array.isArray(result.data))
+            throw new Error("Invalid API format, using mock data.");
+          setData(result.data); // Use real data if successful
+        } catch (devError: any) {
+          console.warn(`DEV MODE: ${devError.message}`);
+          setData(mockLeaderboardData); // Fallback to mock data on any error
+          setError(null); // Clear the error so the layout renders
+        } finally {
+          setLoading(false);
+        }
+        return; // End execution for dev mode
+      }
+
       try {
         const response = await fetch(API_PROXY_URL);
         if (!response.ok) {
@@ -132,8 +173,8 @@ const LuxdropLeaderboard: React.FC = () => {
             src="/images/icon/luxdrop_chest.png"
             alt="Luxdrop Sneaker Chest"
             className="transform"
-            width={272}
-            height={408}
+            width={540}
+            height={378}
           />
         </div>
 
@@ -143,8 +184,8 @@ const LuxdropLeaderboard: React.FC = () => {
             src="/images/icon/luxdrop_car.png"
             alt="Luxdrop Car"
             className="transform"
-            width={272}
-            height={408}
+            width={540}
+            height={378}
           />
         </div>
         {/* Left Image mobile */}
