@@ -66,10 +66,10 @@ const GiveAwayCounter: React.FC = () => {
                   className="object-contain hover:scale-105 transition-transform"
                 />
               </a>
-              <a href="/empiredrop" rel="noopener noreferrer">
+              <a href="/luxdrop" rel="noopener noreferrer">
                 <Image
-                  src="/images/icon/EmpireDrop_Fav_Text.png"
-                  alt="EmpireDrop"
+                  src="/images/icon/luxdrop_fav_text.png"
+                  alt="Luxdrop"
                   width={50}
                   height={50}
                   className="object-contain hover:scale-105 transition-transform"

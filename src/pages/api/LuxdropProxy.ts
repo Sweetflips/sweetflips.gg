@@ -4,12 +4,15 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const API_URL = process.env.BASE_EMPIREDROP_API_URL as string;
-    const PRIVATE_KEY = process.env.PRIVATE_KEY_EMPIREDROP as string;
+    // TODO: Ensure BASE_LUXDROP_API_URL (e.g., https://api.luxdrop.com) and LUXDROP_API_KEY are set in environment variables.
+    const BASE_API_URL = process.env.BASE_LUXDROP_API_URL || "https://api.luxdrop.com";
+    const API_KEY = process.env.LUXDROP_API_KEY;
 
-    if (!API_URL || !PRIVATE_KEY) {
-      return res.status(500).json({ error: "Missing API_URL or PRIVATE_KEY in environment variables" });
+    if (!API_KEY) {
+      return res.status(500).json({ error: "Missing LUXDROP_API_KEY in environment variables" });
     }
+
+    const codes = "sweetflips"; // Placeholder - get this from user or config
 
     // Use UTC for consistent global logic
     const now = DateTime.utc();
@@ -20,6 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let afterDateTime: DateTime;
     let beforeDateTime: DateTime;
 
+    // Retain existing date logic: 27th of previous/current month to 28th of current/next month
     if (currentDay >= 27) {
       afterDateTime = DateTime.utc(currentYear, currentMonth, 27).startOf("day");
       const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
@@ -32,43 +36,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       beforeDateTime = DateTime.utc(currentYear, currentMonth, 28).startOf("day");
     }
 
-    const afterTimestamp = Math.floor(afterDateTime.toSeconds());
-    const beforeTimestamp = Math.floor(beforeDateTime.toSeconds());
+    const startDate = afterDateTime.toISODate(); // YYYY-MM-DD
+    const endDate = beforeDateTime.toISODate();   // YYYY-MM-DD
 
-    // Prepare body
-    const data = {
-      start_timestamp: afterTimestamp,
-      end_timestamp: beforeTimestamp,
-    };
+    const apiUrl = `${BASE_API_URL}/external/affiliates`;
+
+    const params = new URLSearchParams({
+      codes: codes,
+      startDate: startDate as string,
+      endDate: endDate as string,
+    });
 
     const config = {
       method: 'get',
-      url: API_URL,
+      url: `${apiUrl}?${params.toString()}`,
       headers: {
-        'Content-Type': 'application/json',
-        'X-Private-Key': PRIVATE_KEY,
+        'x-api-key': API_KEY,
+        'Accept': 'application/json', // Good practice to specify accept header
       },
-      data: data, // Yes, Axios allows body in GET request
       maxBodyLength: Infinity,
     };
 
     const response = await axios(config);
 
     const result = response.data;
+    // Add the date range back to the response for the frontend, similar to old API
     result.dates = {
-      afterDate: afterDateTime.toISODate(),  // e.g., "2025-05-27"
-      beforeDate: beforeDateTime.toISODate(), // e.g., "2025-06-28"
+      afterDate: startDate,  // e.g., "2025-05-27"
+      beforeDate: endDate, // e.g., "2025-06-28"
     };
 
     // Cache headers
-    res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=600');
+    res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=600'); // Cache for 10 minutes
     res.setHeader('Last-Modified', new Date().toUTCString());
 
     return res.status(200).json(result);
   } catch (error: any) {
-    console.error("EmpireDrop Proxy Error:", error?.response?.data || error.message);
+    console.error("Luxdrop Proxy Error:", error?.response?.data || error.message);
     return res.status(500).json({
-      error: "Failed to fetch API data",
+      error: "Failed to fetch API data from Luxdrop",
       details: error?.response?.data || error.message,
     });
   }

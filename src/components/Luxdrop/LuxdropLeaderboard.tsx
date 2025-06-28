@@ -7,7 +7,7 @@ import Footer from "@/components/Footer/Footer";
 import { DateTime } from "luxon";
 import Image from "next/image";
 
-const API_PROXY_URL = "/api/EmpireDropProxy";
+const API_PROXY_URL = "/api/LuxdropProxy";
 
 // Define the type for the user object
 interface User {
@@ -40,7 +40,7 @@ const rewardMapping: { [key: number]: number } = {
   20: 50,
 };
 
-const EmpireDropLeaderboard: React.FC = () => {
+const LuxdropLeaderboard: React.FC = () => {
   const [data, setData] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -97,6 +97,7 @@ const EmpireDropLeaderboard: React.FC = () => {
         setCountdownDate(result.dates.beforeDate);
 
         // Correctly MAP the new API structure to the expected old one
+        // Assuming Luxdrop API response structure for ranking, user.name, and total is similar.
         const mappedData: User[] = result.ranking.map((entry: any) => ({
           username: entry.user.name,
           wagerAmount: entry.total / 100, // Fix: Divide by 100
@@ -201,7 +202,7 @@ const EmpireDropLeaderboard: React.FC = () => {
         <div className="hide-on-ipad absolute left-0 hidden sm:block">
           <Image
             src="/images/cover/Character Box Dior.png"
-            alt="EmpireDrop Box"
+            alt="Luxdrop Box"
             className="transform"
             width={491}
             height={270}
@@ -249,13 +250,13 @@ const EmpireDropLeaderboard: React.FC = () => {
 
           {/* Image and Leaderboard Layout */}
           <div className="mt-4 flex flex-col items-center justify-center sm:flex-row sm:space-x-4">
-            {/* EmpireDrop Logo */}
+            {/* Luxdrop Logo */}
             <Image
-              src="/images/logo/EmpireDrop_Logo.png"
-              alt="EmpireDrop Logo"
+              src="/images/logo/luxdrop_logo.svg"
+              alt="Luxdrop Logo"
               className="mb-3 transition-all duration-300 sm:mb-0 sm:w-[150px] md:w-[200px] lg:w-[300px] xl:w-[250px]"
-              width={300}
-              height={100}
+              width={178}
+              height={34}
               sizes="(max-width: 640px) 150px, (max-width: 768px) 200px, 250px"
             />
             {/* Leaderboard Text */}
@@ -439,4 +440,4 @@ const EmpireDropLeaderboard: React.FC = () => {
   );
 };
 
-export default EmpireDropLeaderboard;
+export default LuxdropLeaderboard;

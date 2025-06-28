@@ -29,7 +29,7 @@ export const menuGroups: MenuGroup[] = [
         route: "#",
         children: [
           { label: "Razed", route: "/razed" },
-          { label: "EmpireDrop", route: "/empiredrop" },
+          { label: "Luxdrop", route: "/luxdrop" },
         ],
       },
       {
