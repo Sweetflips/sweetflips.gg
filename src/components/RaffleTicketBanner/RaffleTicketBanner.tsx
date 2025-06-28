@@ -7,54 +7,49 @@ const RaffleTicketBanner: React.FC = () => {
 
   useEffect(() => {
     const calculateTargetDate = () => {
-      const now = new Date();
-      const currentYear = now.getFullYear();
-      const currentMonth = now.getMonth(); // 0-indexed (0 for January, 4 for May)
+      const now = new Date(); // Current local time used to determine current UTC month and year
+      const currentUTCFullYear = now.getUTCFullYear();
+      const currentUTCMonth = now.getUTCMonth(); // 0-indexed: 5 represents June
 
-      // Special condition: If current date is in May 2024, target end of June 2024
-      if (currentYear === 2024 && currentMonth === 4) { // 4 represents May
-        // Target end of June 2024 (month 5, day 0 of month 6)
-        return new Date(Date.UTC(2024, 5 + 1, 0, 23, 59, 59)).getTime();
+      // Special condition: If current UTC month is June 2025, target end of July 2025
+      if (currentUTCFullYear === 2025 && currentUTCMonth === 5) { // 5 represents June
+        // Target end of July 2025 UTC. July is month 6.
+        return new Date(Date.UTC(2025, 6 + 1, 0, 23, 59, 59)).getTime();
       } else {
-        // Standard logic: Target the last day of the current month
-        return new Date(Date.UTC(currentYear, currentMonth + 1, 0, 23, 59, 59)).getTime();
+        // Standard logic: Target the last day of the current UTC month
+        return new Date(Date.UTC(currentUTCFullYear, currentUTCMonth + 1, 0, 23, 59, 59)).getTime();
       }
     };
 
     let target = calculateTargetDate();
 
     const updateCountdown = () => {
-      const nowGmt = new Date(); // Get current date/time
-      const now = nowGmt.getTime();
+      const now = new Date().getTime(); // Current local timestamp for calculating distance
 
-      // Check if the target date has passed
-      if (target - now < 0) {
-        // If the target is in the past, recalculate.
-        const newNow = new Date();
-        const currentYear = newNow.getFullYear();
-        const currentMonth = newNow.getMonth();
+      if (target < now) {
+        const today = new Date();
+        const currentUTCFullYear = today.getUTCFullYear();
+        const currentUTCMonth = today.getUTCMonth();
 
-        let newTargetDate;
-        const endOfCurrentMonth = new Date(Date.UTC(currentYear, currentMonth + 1, 0, 23, 59, 59)).getTime();
-
-        if (now > endOfCurrentMonth) {
-            // Target end of NEXT month
-            newTargetDate = new Date(Date.UTC(currentYear, currentMonth + 2, 0, 23, 59, 59));
+        if (currentUTCFullYear === 2025 && currentUTCMonth === 5) {
+            const endOfJuly2025 = new Date(Date.UTC(2025, 6 + 1, 0, 23, 59, 59)).getTime();
+            if (endOfJuly2025 > now) {
+                target = endOfJuly2025;
+            } else {
+                target = new Date(Date.UTC(2025, 7 + 1, 0, 23, 59, 59)).getTime(); // End of August 2025
+            }
         } else {
-            // Target end of CURRENT month
-            newTargetDate = new Date(Date.UTC(currentYear, currentMonth + 1, 0, 23, 59, 59));
-        }
-        target = newTargetDate.getTime();
-
-        if (target - now < 0) { // Still negative after recalc? Display zero.
-            setTimeLeft("00d 00h 00m 00s");
-            return;
+            let newTargetTime = new Date(Date.UTC(currentUTCFullYear, currentUTCMonth + 1, 0, 23, 59, 59)).getTime();
+            if (newTargetTime < now) {
+                newTargetTime = new Date(Date.UTC(currentUTCFullYear, currentUTCMonth + 2, 0, 23, 59, 59)).getTime();
+            }
+            target = newTargetTime;
         }
       }
 
       const distance = target - now;
 
-      if (distance < 0) { // Fallback check
+      if (distance < 0) {
         setTimeLeft("00d 00h 00m 00s");
         return;
       }

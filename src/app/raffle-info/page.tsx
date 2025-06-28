@@ -9,62 +9,62 @@ function CountdownTimer() {
 
   useEffect(() => {
     const calculateTargetDate = () => {
-      const now = new Date();
-      const currentYear = now.getFullYear();
-      const currentMonth = now.getMonth(); // 0-indexed (0 for January, 4 for May)
+      const now = new Date(); // Current local time used to determine current UTC month and year
+      const currentUTCFullYear = now.getUTCFullYear();
+      const currentUTCMonth = now.getUTCMonth(); // 0-indexed: 5 represents June
 
-      // Special condition: If current date is in May 2024, target end of June 2024
-      if (currentYear === 2024 && currentMonth === 4) { // 4 represents May
-        // Target end of June 2024 (month 5, day 0 of month 6)
-        return new Date(Date.UTC(2024, 5 + 1, 0, 23, 59, 59)).getTime();
+      // Special condition: If current UTC month is June 2025, target end of July 2025
+      if (currentUTCFullYear === 2025 && currentUTCMonth === 5) { // 5 represents June
+        // Target end of July 2025 UTC. July is month 6.
+        // Date.UTC(year, monthIndexForNextMonth, 0) gives last day of monthIndexForNextMonth - 1.
+        // So for end of July (month 6), we use month 7 (August) and day 0.
+        return new Date(Date.UTC(2025, 6 + 1, 0, 23, 59, 59)).getTime();
       } else {
-        // Standard logic: Target the last day of the current month
-        return new Date(Date.UTC(currentYear, currentMonth + 1, 0, 23, 59, 59)).getTime();
+        // Standard logic: Target the last day of the current UTC month
+        return new Date(Date.UTC(currentUTCFullYear, currentUTCMonth + 1, 0, 23, 59, 59)).getTime();
       }
     };
 
     let target = calculateTargetDate();
 
     const updateCountdown = () => {
-      const nowGmt = new Date(); // Get current date/time
-      const now = nowGmt.getTime();
+      const now = new Date().getTime(); // Current local timestamp for calculating distance
 
-      // Check if the target date has passed
-      if (target - now < 0) {
-        // If the target is in the past, recalculate for the *current* month's end
-        // This ensures that after the initial period (e.g., after May/June 2024),
-        // it correctly defaults to the current month's end.
-        const newNow = new Date();
-        const currentYear = newNow.getFullYear();
-        const currentMonth = newNow.getMonth();
-        // This will now correctly target the end of the current month or next if it's already passed.
-        // However, the initial calculateTargetDate should handle the one-off correctly.
-        // If it's past the *current* month's end, it should aim for next month.
+      // This block handles cases where the target has passed (e.g., raffle ended, page reloaded)
+      if (target < now) {
+        const today = new Date(); // Fresh date for recalculation base
+        const currentUTCFullYear = today.getUTCFullYear();
+        const currentUTCMonth = today.getUTCMonth();
 
-        let newTargetDate;
-        // If 'now' is already past the calculated 'target' (e.g. June 30th has passed)
-        // we need to target the end of the *next* month.
-        const endOfCurrentMonth = new Date(Date.UTC(currentYear, currentMonth + 1, 0, 23, 59, 59)).getTime();
-        if (now > endOfCurrentMonth) {
-            // Target end of NEXT month
-            newTargetDate = new Date(Date.UTC(currentYear, currentMonth + 2, 0, 23, 59, 59));
+        // Check if the special condition (June 2025 -> July 2025) is still active
+        // and if the original target (end of July 2025) is still in the future.
+        // This is a safeguard, normally calculateTargetDate() should be the source of truth for the target.
+        if (currentUTCFullYear === 2025 && currentUTCMonth === 5) {
+            const endOfJuly2025 = new Date(Date.UTC(2025, 6 + 1, 0, 23, 59, 59)).getTime();
+            if (endOfJuly2025 > now) {
+                target = endOfJuly2025; // Re-affirm target if special period active and target is future
+            } else {
+                // Special period (June 2025) is active, but end of July 2025 has also passed.
+                // This means we should target end of August 2025.
+                target = new Date(Date.UTC(2025, 7 + 1, 0, 23, 59, 59)).getTime();
+            }
         } else {
-            // Target end of CURRENT month (this case handles when the page loads after the initial target has passed but before month end)
-            newTargetDate = new Date(Date.UTC(currentYear, currentMonth + 1, 0, 23, 59, 59));
-        }
-        target = newTargetDate.getTime();
+            // Standard rollover: target has passed, and not in the special June 2025 period.
+            // Set target to the end of the current UTC month.
+            let newTargetTime = new Date(Date.UTC(currentUTCFullYear, currentUTCMonth + 1, 0, 23, 59, 59)).getTime();
 
-        // If after recalculating, it's still negative (shouldn't happen with future dates), then display zero.
-        if (target - now < 0) {
-            setTimeLeft("00d 00h 00m 00s");
-            return;
+            // If end of current UTC month is *also* in the past, then target end of *next* UTC month.
+            if (newTargetTime < now) {
+                newTargetTime = new Date(Date.UTC(currentUTCFullYear, currentUTCMonth + 2, 0, 23, 59, 59)).getTime();
+            }
+            target = newTargetTime;
         }
       }
 
       const distance = target - now;
 
-      // This secondary check for distance < 0 is a fallback.
       if (distance < 0) {
+        // If after all calculations, distance is still negative, display zero.
         setTimeLeft("00d 00h 00m 00s");
         return;
       }
