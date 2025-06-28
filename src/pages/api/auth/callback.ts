@@ -114,14 +114,14 @@ export default async function handler(
       serialize("access_token", accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
+        sameSite: "none",
         maxAge: 60 * 60 * 24,
         path: "/",
       }),
       serialize("kick_id", kickUser.user_id.toString(), {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
+        sameSite: "none",
         maxAge: 60 * 60 * 24,
         path: "/",
       }),
