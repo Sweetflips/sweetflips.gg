@@ -8,29 +8,53 @@ const RaffleTicketBanner: React.FC = () => {
   useEffect(() => {
     const calculateTargetDate = () => {
       const now = new Date();
-      const year = now.getFullYear();
-      const month = now.getMonth();
-      // Target the last day of the current month at 23:59:59 UTC
-      // Note: Month is 0-indexed, so for Date constructor, month + 1 gives next month, day 0 gives last day of current month.
-      const targetDate = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59));
-      return targetDate.getTime();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth(); // 0-indexed (0 for January, 4 for May)
+
+      // Special condition: If current date is in May 2024, target end of June 2024
+      if (currentYear === 2024 && currentMonth === 4) { // 4 represents May
+        // Target end of June 2024 (month 5, day 0 of month 6)
+        return new Date(Date.UTC(2024, 5 + 1, 0, 23, 59, 59)).getTime();
+      } else {
+        // Standard logic: Target the last day of the current month
+        return new Date(Date.UTC(currentYear, currentMonth + 1, 0, 23, 59, 59)).getTime();
+      }
     };
 
     let target = calculateTargetDate();
 
     const updateCountdown = () => {
-      const now = new Date().getTime();
-       // Recalculate target if current target has passed to aim for next month's end
+      const nowGmt = new Date(); // Get current date/time
+      const now = nowGmt.getTime();
+
+      // Check if the target date has passed
       if (target - now < 0) {
-        const currentDate = new Date();
-        // If it's past this month's end, target next month's end.
-        const nextMonthTarget = new Date(Date.UTC(currentDate.getFullYear(), currentDate.getMonth() + 2, 0, 23, 59, 59));
-        target = nextMonthTarget.getTime();
+        // If the target is in the past, recalculate.
+        const newNow = new Date();
+        const currentYear = newNow.getFullYear();
+        const currentMonth = newNow.getMonth();
+
+        let newTargetDate;
+        const endOfCurrentMonth = new Date(Date.UTC(currentYear, currentMonth + 1, 0, 23, 59, 59)).getTime();
+
+        if (now > endOfCurrentMonth) {
+            // Target end of NEXT month
+            newTargetDate = new Date(Date.UTC(currentYear, currentMonth + 2, 0, 23, 59, 59));
+        } else {
+            // Target end of CURRENT month
+            newTargetDate = new Date(Date.UTC(currentYear, currentMonth + 1, 0, 23, 59, 59));
+        }
+        target = newTargetDate.getTime();
+
+        if (target - now < 0) { // Still negative after recalc? Display zero.
+            setTimeLeft("00d 00h 00m 00s");
+            return;
+        }
       }
 
       const distance = target - now;
 
-      if (distance < 0) {
+      if (distance < 0) { // Fallback check
         setTimeLeft("00d 00h 00m 00s");
         return;
       }
