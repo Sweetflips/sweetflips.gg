@@ -107,11 +107,20 @@ const LuxdropLeaderboard: React.FC = () => {
 
   const countDownDate = (() => {
     const now = DateTime.utc();
-    // Countdown to the end of the current month in UTC
-    let targetDate = now
-      .endOf("month")
-      .set({ hour: 23, minute: 59, second: 59, millisecond: 999 });
-    return targetDate.toISO();
+
+    const currentMonth = now.month;
+    const currentYear = now.year;
+    const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
+    const nextMonthYear = currentMonth === 12 ? currentYear + 1 : currentYear;
+
+    let targetDate;
+    if (now.day < 28) {
+      targetDate = DateTime.utc(currentYear, currentMonth, 28, 0, 0);
+    } else {
+      targetDate = DateTime.utc(nextMonthYear, nextMonth, 28, 0, 0);
+    }
+
+    return targetDate.toISO(); // ➜ will be interpreted correctly as UTC
   })();
 
   return (
