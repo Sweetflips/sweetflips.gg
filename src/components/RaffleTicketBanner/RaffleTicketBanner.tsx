@@ -6,10 +6,28 @@ const RaffleTicketBanner: React.FC = () => {
   const [timeLeft, setTimeLeft] = useState("");
 
   useEffect(() => {
-    const target = new Date("2025-05-26T00:00:00Z").getTime();
+    const calculateTargetDate = () => {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      // Target the last day of the current month at 23:59:59 UTC
+      // Note: Month is 0-indexed, so for Date constructor, month + 1 gives next month, day 0 gives last day of current month.
+      const targetDate = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59));
+      return targetDate.getTime();
+    };
+
+    let target = calculateTargetDate();
 
     const updateCountdown = () => {
       const now = new Date().getTime();
+       // Recalculate target if current target has passed to aim for next month's end
+      if (target - now < 0) {
+        const currentDate = new Date();
+        // If it's past this month's end, target next month's end.
+        const nextMonthTarget = new Date(Date.UTC(currentDate.getFullYear(), currentDate.getMonth() + 2, 0, 23, 59, 59));
+        target = nextMonthTarget.getTime();
+      }
+
       const distance = target - now;
 
       if (distance < 0) {
@@ -27,7 +45,7 @@ const RaffleTicketBanner: React.FC = () => {
       );
     };
 
-    updateCountdown();
+    updateCountdown(); // Initial call
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
   }, []);
@@ -40,7 +58,7 @@ const RaffleTicketBanner: React.FC = () => {
           {/* Left: Title + Button */}
           <div className="flex flex-col items-center text-center lg:items-start lg:text-left lg:ml-[20%]">
             <h2 className="text-3xl sm:text-4xl font-bold">
-              <b className="text-[#9925FE]">$2000</b> Weekly Raffle
+              <b className="text-[#9925FE]">$2000</b> Monthly Raffle
             </h2>
 
             <a href="/raffle-info" className="mt-3 lg:ml-[20%]">

@@ -65,6 +65,21 @@ const LuxdropLeaderboard: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Function to mask usernames (copied from RazedLeaderboard)
+  const maskUsername = (username: string) => {
+    const len = username.length;
+
+    if (len <= 2) {
+      return username; // Too short to mask
+    }
+
+    if (len <= 4) {
+      return username[0] + '*'.repeat(len - 2) + username[len - 1];
+    }
+
+    return username.slice(0, 2) + '*'.repeat(len - 4) + username.slice(-2);
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       if (process.env.NODE_ENV === "development") {
@@ -75,10 +90,23 @@ const LuxdropLeaderboard: React.FC = () => {
           const result = await response.json();
           if (!result.data || !Array.isArray(result.data))
             throw new Error("Invalid API format, using mock data.");
-          setData(result.data); // Use real data if successful
+
+          const processedData = result.data.map((user: any, index: number) => ({
+            ...user,
+            username: maskUsername(user.username),
+            wagered: Number(user.wagered) || 0,
+            reward: rewardMapping[index + 1] || 0,
+          }));
+          setData(processedData); // Use real data if successful
         } catch (devError: any) {
           console.warn(`DEV MODE: ${devError.message}`);
-          setData(mockLeaderboardData); // Fallback to mock data on any error
+          const processedMockData = mockLeaderboardData.map((user, index) => ({
+            ...user,
+            username: maskUsername(user.username),
+            // Ensure reward is assigned from rewardMapping for mock data as well
+            reward: rewardMapping[index + 1] || 0,
+          }));
+          setData(processedMockData); // Fallback to mock data on any error
           setError(null); // Clear the error so the layout renders
         } finally {
           setLoading(false);
@@ -105,7 +133,7 @@ const LuxdropLeaderboard: React.FC = () => {
         const leaderboardWithRewards = result.data.map(
           (user: any, index: number) => ({
             ...user,
-            username: user.username, // username is already the code from proxy
+            username: maskUsername(user.username), // Apply username masking
             wagered: Number(user.wagered) || 0, // Ensure wagered is a number
             reward: rewardMapping[index + 1] || 0,
           }),

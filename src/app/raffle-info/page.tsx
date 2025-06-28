@@ -8,13 +8,34 @@ function CountdownTimer() {
   const [timeLeft, setTimeLeft] = useState("");
 
   useEffect(() => {
-    const target = new Date("2025-05-26T00:00:00Z").getTime();
+    const calculateTargetDate = () => {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      // Target the last day of the current month at 23:59:59 UTC
+      // Note: Month is 0-indexed, so for Date constructor, month + 1 gives next month, day 0 gives last day of current month.
+      const targetDate = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59));
+      return targetDate.getTime();
+    };
+
+    let target = calculateTargetDate();
 
     const updateCountdown = () => {
       const now = new Date().getTime();
+      // Recalculate target if current target has passed to aim for next month's end
+      if (target - now < 0) {
+        const currentDate = new Date();
+        // If it's past this month's end, target next month's end.
+        // This logic might need adjustment if the raffle should only ever show current month's countdown.
+        // For now, it will roll over to the next month's end.
+        const nextMonthTarget = new Date(Date.UTC(currentDate.getFullYear(), currentDate.getMonth() + 2, 0, 23, 59, 59));
+        target = nextMonthTarget.getTime();
+      }
+
       const distance = target - now;
 
       if (distance < 0) {
+        // This case should ideally not be hit if rollover logic is correct
         setTimeLeft("00d 00h 00m 00s");
         return;
       }
@@ -29,7 +50,7 @@ function CountdownTimer() {
       );
     };
 
-    updateCountdown();
+    updateCountdown(); // Initial call
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
   }, []);
@@ -41,7 +62,7 @@ export default function RaffleInfo() {
   return (
     <DefaultLayout>
       <div className="mx-auto max-w-4xl px-4 py-12 text-white text-center flex flex-col items-center">
-        <h2 className="text-3xl sm:text-4xl font-bold text-[#9925FE] mb-2">$2,000 Weekly Raffle</h2>
+        <h2 className="text-3xl sm:text-4xl font-bold text-[#9925FE] mb-2">$2,000 Monthly Raffle</h2>
         <p className="text-lg sm:text-xl text-purple-200 mb-3">Raffle Ends In:</p>
         <CountdownTimer />
 
@@ -54,7 +75,7 @@ export default function RaffleInfo() {
         <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 border border-purple-500 rounded-xl p-6 backdrop-blur-md shadow-[0_0_20px_rgba(168,85,247,0.3)] mb-10 w-full flex flex-col items-center text-center">
           <h3 className="text-2xl font-bold text-purple-300 mb-4">About the Raffle</h3>
           <p className="mb-4 max-w-prose">
-            Every week, Sweetflips gives away <span className="text-[#9925FE] font-semibold">$2,000</span> to our community! Grab your entry tickets using <b>Sweetflips Points</b> and boost your chances the more tickets, the bigger your shot. Winners are picked live every Monday at 19:00 UTC.
+            Every month, Sweetflips gives away <span className="text-[#9925FE] font-semibold">$2,000</span> to our community! Grab your entry tickets using <b>Sweetflips Points</b> and boost your chances the more tickets, the bigger your shot. Winners are picked live on the last day of each month at 19:00 UTC.
           </p>
           <p className="mb-4 max-w-prose">
             If you win, your prize is paid out instantly to your Sweetflips wallet.
@@ -84,7 +105,7 @@ export default function RaffleInfo() {
             <li>💰 11th – 20th Place: <b>$20</b> each</li>
           </ul>
           <p className="mt-4 text-yellow-300 font-medium">
-            That’s 20 winners every week — all picked live!
+            That’s 20 winners every month — all picked live!
           </p>
         </div>
 
@@ -92,7 +113,7 @@ export default function RaffleInfo() {
         <div className="text-center text-sm text-purple-200 w-full">
           <h4 className="text-lg font-semibold mb-2">Key Info</h4>
           <ul className="mb-4 space-y-1 inline-block text-left">
-            <li>📅 Raffle Draw: Every Monday at 19:00 UTC</li>
+            <li>📅 Raffle Draw: Last day of each month at 19:00 UTC</li>
             <li>🎟️ Tickets: 10 Sweetflips Points each</li>
             <li>🔁 No Max Entries: Stack as many as you want!</li>
             <li>📧 Winners: Announced by email</li>
