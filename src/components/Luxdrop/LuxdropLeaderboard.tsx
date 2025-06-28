@@ -67,6 +67,10 @@ const LuxdropLeaderboard: React.FC = () => {
 
   // Function to mask usernames (copied from RazedLeaderboard)
   const maskUsername = (username: string) => {
+    if (!username) {
+      return "";
+    }
+
     const len = username.length;
 
     if (len <= 2) {
@@ -74,10 +78,10 @@ const LuxdropLeaderboard: React.FC = () => {
     }
 
     if (len <= 4) {
-      return username[0] + '*'.repeat(len - 2) + username[len - 1];
+      return username[0] + "*".repeat(len - 2) + username[len - 1];
     }
 
-    return username.slice(0, 2) + '*'.repeat(len - 4) + username.slice(-2);
+    return username.slice(0, 2) + "*".repeat(len - 4) + username.slice(-2);
   };
 
   useEffect(() => {
