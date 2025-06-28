@@ -189,7 +189,7 @@ const LuxdropLeaderboard: React.FC = () => {
           />
         </div>
         {/* Left Image mobile */}
-        <div className="absolute -left-1 top-[-20px] sm:block md:hidden">
+        {/* <div className="absolute -left-1 top-[-20px] sm:block md:hidden">
           <Image
             src="/images/icon/luxdrop_chest.png"
             alt="Luxdrop Sneaker Chest"
@@ -197,10 +197,10 @@ const LuxdropLeaderboard: React.FC = () => {
             width={68.05}
             height={103}
           />
-        </div>
+        </div> */}
 
         {/* Right Image mobile*/}
-        <div className="absolute -right-5 top-[250px] sm:block md:hidden">
+        {/* <div className="absolute -right-5 top-[250px] sm:block md:hidden">
           <Image
             src="/images/icon/luxdrop_car.png"
             alt="Luxdrop Car"
@@ -208,7 +208,7 @@ const LuxdropLeaderboard: React.FC = () => {
             width={68.05}
             height={103}
           />
-        </div>
+        </div> */}
         <div className="absolute left-0 right-0 mx-auto mt-6 max-w-screen-lg px-4 text-center md:mt-10">
           <b className="animate-pulse-glow text-5xl text-[#FE25F7] sm:text-2xl md:text-3xl lg:text-4xl xl:text-4xl">
             $20,000
