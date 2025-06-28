@@ -244,66 +244,110 @@ const LuxdropLeaderboard: React.FC = () => {
           </div>
         </div>
       )}
+      {/* src/components/Luxdrop/LuxdropLeaderboard.tsx */}
 
       <div className="TopLeaderboard mt-12">
         {topUsers.length >= 3 ? (
-          topUsers.map((user, index) => {
-            const rank = index + 1;
-            let emblemImage = "";
-            if (rank === 1)
-              emblemImage = "/images/logo/sweet_flips_emblem_gold.png";
-            else if (rank === 2)
-              emblemImage = "/images/logo/sweet_flips_emblem_silver.png";
-            else if (rank === 3)
-              emblemImage = "/images/logo/sweet_flips_emblem_bronze.png";
-
-            let rankIcon = "";
-            if (rank === 1) rankIcon = "/images/icon/First_Place.png";
-            else if (rank === 2) rankIcon = "/images/icon/Second_Place.png";
-            else if (rank === 3) rankIcon = "/images/icon/Third_Place.png";
-
-            let cardPositionClass = "";
-            if (rank === 1) cardPositionClass = "TopLeaderboard__card--middle";
-            else if (rank === 2)
-              cardPositionClass = "TopLeaderboard__card--left md:mt-10"; // Added md:mt-10 for non-mobile
-            else if (rank === 3)
-              cardPositionClass = "TopLeaderboard__card--right md:mt-10"; // Added md:mt-10 for non-mobile
-
-            return (
-              <div
-                key={index}
-                className={`TopLeaderboard__card ${cardPositionClass} border border-purple-700 shadow-lg shadow-purple-900/50 duration-200 ease-in hover:scale-110`}
-              >
-                <div className="TopLeaderboard__card-inner">
-                  <div className="TopLeaderboard__number-wrapper">
-                    <Image
-                      src={rankIcon}
-                      alt={`Rank ${rank}`}
-                      width={32}
-                      height={32}
-                    />
-                  </div>
-                  <div className="TopLeaderboard__card-image">
-                    <Image
-                      src={emblemImage}
-                      alt="Emblem"
-                      width={96}
-                      height={96}
-                    />
-                  </div>
-                  <div className="TopLeaderboard__card-content">
-                    <p className="TopLeaderboard__username">{user.username}</p>
-                    <p className="TopLeaderboard__amount">
-                      {formatCurrency(user.wagered)}
-                    </p>
-                    <p className="TopLeaderboard__prize">
-                      Prize: {formatRewardCurrency(user.reward)}
-                    </p>
-                  </div>
+          <>
+            {/* Left Card (Rank 2) */}
+            <div className="TopLeaderboard__card TopLeaderboard__card--left border border-purple-700 shadow-lg shadow-purple-900/50 duration-200 ease-in hover:scale-110 md:mt-10">
+              <div className="TopLeaderboard__card-inner">
+                <div className="TopLeaderboard__number-wrapper">
+                  <Image
+                    src="/images/icon/Second_Place.png"
+                    alt="Rank 2"
+                    width={32}
+                    height={32}
+                  />
+                </div>
+                <div className="TopLeaderboard__card-image">
+                  <Image
+                    src="/images/logo/sweet_flips_emblem_silver.png"
+                    alt="Silver Emblem"
+                    width={96}
+                    height={96}
+                  />
+                </div>
+                <div className="TopLeaderboard__card-content">
+                  <p className="TopLeaderboard__username">
+                    {topUsers[1].username}
+                  </p>
+                  <p className="TopLeaderboard__amount">
+                    {formatCurrency(topUsers[1].wagered)}
+                  </p>
+                  <p className="TopLeaderboard__prize">
+                    Prize: {formatRewardCurrency(topUsers[1].reward)}
+                  </p>
                 </div>
               </div>
-            );
-          })
+            </div>
+
+            {/* Middle Card (Rank 1) */}
+            <div className="TopLeaderboard__card TopLeaderboard__card--middle border border-purple-700 shadow-lg shadow-purple-900/50 duration-200 ease-in hover:scale-110">
+              <div className="TopLeaderboard__card-inner">
+                <div className="TopLeaderboard__number-wrapper">
+                  <Image
+                    src="/images/icon/First_Place.png"
+                    alt="Rank 1"
+                    width={32}
+                    height={32}
+                  />
+                </div>
+                <div className="TopLeaderboard__card-image">
+                  <Image
+                    src="/images/logo/sweet_flips_emblem_gold.png"
+                    alt="Gold Emblem"
+                    width={96}
+                    height={96}
+                  />
+                </div>
+                <div className="TopLeaderboard__card-content">
+                  <p className="TopLeaderboard__username">
+                    {topUsers[0].username}
+                  </p>
+                  <p className="TopLeaderboard__amount">
+                    {formatCurrency(topUsers[0].wagered)}
+                  </p>
+                  <p className="TopLeaderboard__prize">
+                    Prize: {formatRewardCurrency(topUsers[0].reward)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Card (Rank 3) */}
+            <div className="TopLeaderboard__card TopLeaderboard__card--right border border-purple-700 shadow-lg shadow-purple-900/50 duration-200 ease-in hover:scale-110 md:mt-10">
+              <div className="TopLeaderboard__card-inner">
+                <div className="TopLeaderboard__number-wrapper">
+                  <Image
+                    src="/images/icon/Third_Place.png"
+                    alt="Rank 3"
+                    width={32}
+                    height={32}
+                  />
+                </div>
+                <div className="TopLeaderboard__card-image">
+                  <Image
+                    src="/images/logo/sweet_flips_emblem_bronze.png"
+                    alt="Bronze Emblem"
+                    width={96}
+                    height={96}
+                  />
+                </div>
+                <div className="TopLeaderboard__card-content">
+                  <p className="TopLeaderboard__username">
+                    {topUsers[2].username}
+                  </p>
+                  <p className="TopLeaderboard__amount">
+                    {formatCurrency(topUsers[2].wagered)}
+                  </p>
+                  <p className="TopLeaderboard__prize">
+                    Prize: {formatRewardCurrency(topUsers[2].reward)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </>
         ) : (
           <p className="w-full py-10 text-center">
             Top user data is loading or not enough users to display top 3...
