@@ -88,6 +88,7 @@ export default async function handler(
     const response = await axios(config);
     const affiliateData = response.data;
 
+    console.log("affiliateData: ", affiliateData);
     // Ensure we have an array to process
     if (!Array.isArray(affiliateData)) {
       console.error(
@@ -98,11 +99,12 @@ export default async function handler(
     }
 
     const leaderboard = affiliateData.map((entry: any) => ({
-      username: entry.code,
+      username: entry.username,
       wagered: Number(entry.wagered) || 0,
       reward: 0,
     }));
 
+    console.log("leaderboard: ", leaderboard);
     const sortedLeaderboard = leaderboard.sort((a, b) => b.wagered - a.wagered);
 
     res.setHeader(

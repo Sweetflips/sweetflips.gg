@@ -1,6 +1,6 @@
 // src/components/Luxdrop/LuxdropLeaderboard.tsx
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Loader from "@/components/common/Loader";
 import { Timer } from "@/app/ui/timer/Timer";
 import { DateTime } from "luxon";
@@ -61,13 +61,16 @@ const rewardMapping: { [key: number]: number } = {
 };
 
 const LuxdropLeaderboard: React.FC = () => {
+  const hasFetched = useRef(false);
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   // Function to mask usernames (copied from RazedLeaderboard)
   const maskUsername = (username: string) => {
+    console.log("~~>> username is: ", username);
     if (!username) {
+      console.log("returning early, username was null or undefined");
       return "";
     }
 
@@ -84,40 +87,125 @@ const LuxdropLeaderboard: React.FC = () => {
     return username.slice(0, 2) + "*".repeat(len - 4) + username.slice(-2);
   };
 
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     setLoading(true);
+
+  //     if (process.env.NODE_ENV === "development") {
+  //       try {
+  //         const response = await fetch(API_PROXY_URL);
+  //         if (!response.ok)
+  //           throw new Error("API failed, using mock data for layout.");
+  //         const result = await response.json();
+  //         if (!result.data || !Array.isArray(result.data))
+  //           throw new Error("Invalid API format, using mock data.");
+
+  //         const processedData = result.data.map((user: any, index: number) => ({
+  //           ...user,
+  //           username: maskUsername(user.username),
+  //           wagered: Number(user.wagered) || 0,
+  //           reward: rewardMapping[index + 1] || 0,
+  //         }));
+  //         setData(processedData); // Use real data if successful
+  //       } catch (devError: any) {
+  //         console.warn(`DEV MODE: ${devError.message}`);
+  //         const processedMockData = mockLeaderboardData.map((user, index) => ({
+  //           ...user,
+  //           username: maskUsername(user.username),
+  //           // Ensure reward is assigned from rewardMapping for mock data as well
+  //           reward: rewardMapping[index + 1] || 0,
+  //         }));
+  //         setData(processedMockData); // Fallback to mock data on any error
+  //         setError(null); // Clear the error so the layout renders
+  //       } finally {
+  //         setLoading(false);
+  //       }
+  //       return; // End execution for dev mode
+  //     }
+
+  //     try {
+  //       const response = await fetch(API_PROXY_URL);
+  //       if (!response.ok) {
+  //         const errorData = await response.json();
+  //         throw new Error(
+  //           errorData.error || "Failed to fetch leaderboard data",
+  //         );
+  //       }
+  //       const result = await response.json();
+
+  //       if (!result.data || !Array.isArray(result.data)) {
+  //         // Expect data under a 'data' key
+  //         throw new Error("Invalid data format from proxy");
+  //       }
+
+  //       // Assign rewards based on the sorted rank from the proxy
+  //       const leaderboardWithRewards = result
+  //         .filter((user) => user.username != undefined)
+  //         .map((user: any, index: number) => ({
+  //           ...user,
+  //           username: maskUsername(user.username), // Apply username masking
+  //           wagered: Number(user.wagered) || 0, // Ensure wagered is a number
+  //           reward: rewardMapping[index + 1] || 0,
+  //         }));
+
+  //       setData(leaderboardWithRewards);
+  //     } catch (err: any) {
+  //       setError(err.message);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchData();
+  // }, []);
   useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
     const fetchData = async () => {
+      setLoading(true);
+
+      // Development mode: prioritize mock data or attempt API fetch
       if (process.env.NODE_ENV === "development") {
+        console.log("Running in development mode");
         try {
           const response = await fetch(API_PROXY_URL);
           if (!response.ok)
-            throw new Error("API failed, using mock data for layout.");
+            throw new Error("API failed, falling back to mock data");
           const result = await response.json();
-          if (!result.data || !Array.isArray(result.data))
-            throw new Error("Invalid API format, using mock data.");
+          if (!result.data || !Array.isArray(result.data)) {
+            throw new Error("Invalid API data, falling back to mock data");
+          }
 
-          const processedData = result.data.map((user: any, index: number) => ({
-            ...user,
-            username: maskUsername(user.username),
-            wagered: Number(user.wagered) || 0,
-            reward: rewardMapping[index + 1] || 0,
-          }));
-          setData(processedData); // Use real data if successful
+          // Process real data if fetch succeeds
+          const processedData = result.data
+            .filter((user: any) => user.username)
+            .map((user: any, index: number) => ({
+              username: maskUsername(user.username),
+              wagered: Number(user.wagered) || 0,
+              reward: rewardMapping[index + 1] || 0,
+            }));
+          console.log("Using real API data:", processedData);
+          setData(processedData);
         } catch (devError: any) {
-          console.warn(`DEV MODE: ${devError.message}`);
-          const processedMockData = mockLeaderboardData.map((user, index) => ({
-            ...user,
-            username: maskUsername(user.username),
-            // Ensure reward is assigned from rewardMapping for mock data as well
-            reward: rewardMapping[index + 1] || 0,
-          }));
-          setData(processedMockData); // Fallback to mock data on any error
-          setError(null); // Clear the error so the layout renders
+          console.warn(`DEV MODE: ${devError.message}, using mock data`);
+          // Fallback to mock data
+          const processedMockData = mockLeaderboardData
+            .filter((user) => user.username)
+            .map((user, index) => ({
+              username: maskUsername(user.username),
+              wagered: user.wagered,
+              reward: rewardMapping[index + 1] || 0,
+            }));
+          console.log("Using mock data:", processedMockData);
+          setData(processedMockData);
+          setError(null); // Clear any errors
         } finally {
           setLoading(false);
         }
-        return; // End execution for dev mode
+        return; // Exit after handling development mode
       }
 
+      // Production mode: fetch from API only
       try {
         const response = await fetch(API_PROXY_URL);
         if (!response.ok) {
@@ -127,23 +215,18 @@ const LuxdropLeaderboard: React.FC = () => {
           );
         }
         const result = await response.json();
-
         if (!result.data || !Array.isArray(result.data)) {
-          // Expect data under a 'data' key
           throw new Error("Invalid data format from proxy");
         }
 
-        // Assign rewards based on the sorted rank from the proxy
-        const leaderboardWithRewards = result.data.map(
-          (user: any, index: number) => ({
-            ...user,
-            username: maskUsername(user.username), // Apply username masking
-            wagered: Number(user.wagered) || 0, // Ensure wagered is a number
+        const processedData = result.data
+          .filter((user: any) => user.username)
+          .map((user: any, index: number) => ({
+            username: maskUsername(user.username),
+            wagered: Number(user.wagered) || 0,
             reward: rewardMapping[index + 1] || 0,
-          }),
-        );
-
-        setData(leaderboardWithRewards);
+          }));
+        setData(processedData);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -195,6 +278,8 @@ const LuxdropLeaderboard: React.FC = () => {
 
     return targetDate.toISO(); // ➜ will be interpreted correctly as UTC
   })();
+
+  console.log("Component mounted");
 
   return (
     <div className="mt-4 p-4 text-white">
