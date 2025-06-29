@@ -188,7 +188,9 @@ const RazedLeaderboard: React.FC = () => {
       : formattedAmount;
   };
 
-  const restUsers = data.slice(3, 25); // Displays users from rank 4 to 25
+  // Determine the number of users to display based on the event
+  const displayLimit = isSpecialWeekActive ? 20 : 25;
+  const restUsers = data.slice(3, displayLimit); // Displays users from rank 4 up to displayLimit
 
   // Luxon based countDownDate is replaced by targetDateForTimer.toISOString()
   const countDownDateISO = targetDateForTimer.toISOString();

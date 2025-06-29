@@ -188,7 +188,9 @@ const Homepage: React.FC = () => {
       : formattedAmount;
   };
 
-  const restUsers = data.slice(3, 25);
+  // Determine the number of users to display based on the event
+  const displayLimit = isSpecialWeekActive ? 20 : 25;
+  const restUsers = data.slice(3, displayLimit); // Displays users from rank 4 up to displayLimit
   const countDownDateISO = targetDateForTimer.toISOString();
 
   return (
