@@ -46,33 +46,27 @@ const monthlyRewardMapping: { [key: number]: number } = {
 
 // Define the WEEKLY reward mapping ($10,000 total for top 25)
 const weeklyRewardMapping: { [key: number]: number } = {
-  1: 3836, // Adjusted to make sum 10k
-  2: 2046,
-  3: 1279,
-  4: 281,
-  5: 256,
-  6: 243,
-  7: 230,
-  8: 217,
-  9: 205,
-  10: 192,
-  11: 179,
-  12: 166,
-  13: 153,
-  14: 141,
-  15: 128,
-  16: 115,
-  17: 102,
-  18: 90,
-  19: 83,
-  20: 70,
-  21: 64,
-  22: 58,
-  23: 51,
-  24: 38,
-  25: 19, // Sum: 10000
+  1: 3200,
+  2: 1800,
+  3: 1200,
+  4: 700,
+  5: 600,
+  6: 500,
+  7: 400,
+  8: 300,
+  9: 250,
+  10: 200,
+  11: 160,
+  12: 130,
+  13: 120,
+  14: 110,
+  15: 90,
+  16: 80,
+  17: 60,
+  18: 50,
+  19: 40,
+  20: 30,
 };
-
 
 const RazedLeaderboard: React.FC = () => {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
@@ -88,9 +82,12 @@ const RazedLeaderboard: React.FC = () => {
 
   // Define the specific start and end dates for the special weekly event (from coworker)
   const SPECIAL_PERIOD_START_DATE = new Date(Date.UTC(2025, 5, 23, 0, 0, 0, 0)); // June 23, 2025, 00:00:00.000 UTC
-  const SPECIAL_PERIOD_END_DATE = new Date(Date.UTC(2025, 5, 30, 23, 59, 59, 999)); // June 30, 2025, 23:59:59.999 UTC
+  const SPECIAL_PERIOD_END_DATE = new Date(
+    Date.UTC(2025, 5, 30, 23, 59, 59, 999),
+  ); // June 30, 2025, 23:59:59.999 UTC
 
-  const isSpecialWeekActive = now >= SPECIAL_PERIOD_START_DATE && now <= SPECIAL_PERIOD_END_DATE;
+  const isSpecialWeekActive =
+    now >= SPECIAL_PERIOD_START_DATE && now <= SPECIAL_PERIOD_END_DATE;
 
   let targetDateForTimer: Date;
   let currentRewardMapping: { [key: number]: number };
@@ -112,7 +109,9 @@ const RazedLeaderboard: React.FC = () => {
     leaderboardDescription = `Each month, a total of $40,000 is distributed across 25 users based on their total wagered amount.`;
     currentRewardMapping = monthlyRewardMapping;
     // Target end of the current actual month (last day, 23:59:59 UTC)
-    targetDateForTimer = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999));
+    targetDateForTimer = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999),
+    );
   }
   // --- End Date Logic ---
 
@@ -121,8 +120,8 @@ const RazedLeaderboard: React.FC = () => {
   const maskUsername = (username: string) => {
     const len = username.length;
     if (len <= 2) return username;
-    if (len <= 4) return username[0] + '*'.repeat(len - 2) + username[len - 1];
-    return username.slice(0, 2) + '*'.repeat(len - 4) + username.slice(-2);
+    if (len <= 4) return username[0] + "*".repeat(len - 2) + username[len - 1];
+    return username.slice(0, 2) + "*".repeat(len - 4) + username.slice(-2);
   };
 
   useEffect(() => {
@@ -133,13 +132,17 @@ const RazedLeaderboard: React.FC = () => {
         if (!Array.isArray(result.data)) {
           throw new Error("Invalid data format: expected 'data' array");
         }
-        const parsedData = result.data.map((user: any): LeaderboardEntry => ({
-          username: maskUsername(user.username),
-          wagered: parseFloat(user.wagered),
-          reward: 0,
-        }));
+        const parsedData = result.data.map(
+          (user: any): LeaderboardEntry => ({
+            username: maskUsername(user.username),
+            wagered: parseFloat(user.wagered),
+            reward: 0,
+          }),
+        );
         const sortedData: LeaderboardEntry[] = parsedData
-          .sort((a: LeaderboardEntry, b: LeaderboardEntry) => b.wagered - a.wagered)
+          .sort(
+            (a: LeaderboardEntry, b: LeaderboardEntry) => b.wagered - a.wagered,
+          )
           .map((user: LeaderboardEntry, index: number) => ({
             ...user,
             reward: currentRewardMapping[index + 1] || 0, // Use currentRewardMapping
@@ -169,7 +172,10 @@ const RazedLeaderboard: React.FC = () => {
   if (error) return <p className="text-red-500">Error: {error}</p>;
 
   const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(amount);
 
   const formatRewardCurrency = (amount: number) => {
     const formattedAmount = new Intl.NumberFormat("en-US", {
@@ -177,7 +183,9 @@ const RazedLeaderboard: React.FC = () => {
       currency: "USD",
       minimumFractionDigits: 0,
     }).format(amount);
-    return formattedAmount.endsWith(".00") ? formattedAmount.slice(0, -3) : formattedAmount;
+    return formattedAmount.endsWith(".00")
+      ? formattedAmount.slice(0, -3)
+      : formattedAmount;
   };
 
   const restUsers = data.slice(3, 25); // Displays users from rank 4 to 25
@@ -204,7 +212,7 @@ const RazedLeaderboard: React.FC = () => {
           height={100}
         />
       </div>
-      <div className="FooterBg relative mx-auto flex h-80 w-full transform flex-col items-center justify-between overflow-hidden rounded-xl p-4 transition-all sm:w-3/4 sm:flex-row sm:items-start md:w-5/6 shadow-[inset_0_0_20px_rgba(0,0,0,0.4)]">
+      <div className="FooterBg relative mx-auto flex h-80 w-full transform flex-col items-center justify-between overflow-hidden rounded-xl p-4 shadow-[inset_0_0_20px_rgba(0,0,0,0.4)] transition-all sm:w-3/4 sm:flex-row sm:items-start md:w-5/6">
         {/* Left Image */}
         <div className="hide-on-ipad absolute left-0 hidden sm:block">
           <Image
@@ -251,7 +259,7 @@ const RazedLeaderboard: React.FC = () => {
         {/* Centered Text Section */}
         <div className="absolute left-0 right-0 mx-auto mt-6 max-w-screen-lg px-4 text-center md:mt-10">
           {/* Prize Pool Text */}
-          <b className="text-5xl text-[#4D4EE0] sm:text-2xl md:text-3xl lg:text-4xl xl:text-4xl animate-pulse-glow">
+          <b className="animate-pulse-glow text-5xl text-[#4D4EE0] sm:text-2xl md:text-3xl lg:text-4xl xl:text-4xl">
             {leaderboardTitle}
           </b>
 
@@ -273,7 +281,7 @@ const RazedLeaderboard: React.FC = () => {
           </div>
 
           {/* Description Text */}
-          <p className="mx-auto mt-4 text-center text-white sm:text-xl md:mt-0 md:text-2xl lg:m-4 lg:text-3xl xl:text-xl leading-relaxed">
+          <p className="mx-auto mt-4 text-center leading-relaxed text-white sm:text-xl md:mt-0 md:text-2xl lg:m-4 lg:text-3xl xl:text-xl">
             {leaderboardDescription}
           </p>
         </div>
@@ -297,7 +305,7 @@ const RazedLeaderboard: React.FC = () => {
         {topUsers && topUsers.length >= 3 && (
           <>
             {/* Left Card */}
-            <div className="TopLeaderboard__card TopLeaderboard__card--left duration-200 ease-in hover:scale-110 md:mt-10 border border-purple-700 shadow-lg shadow-purple-900/50">
+            <div className="TopLeaderboard__card TopLeaderboard__card--left border border-purple-700 shadow-lg shadow-purple-900/50 duration-200 ease-in hover:scale-110 md:mt-10">
               <div className="TopLeaderboard__card-inner">
                 <div className="TopLeaderboard__number-wrapper">
                   <Image
@@ -332,7 +340,7 @@ const RazedLeaderboard: React.FC = () => {
             </div>
 
             {/* Middle Card */}
-            <div className="TopLeaderboard__card TopLeaderboard__card--middle duration-200 ease-in hover:scale-110 border border-purple-700 shadow-lg shadow-purple-900/50">
+            <div className="TopLeaderboard__card TopLeaderboard__card--middle border border-purple-700 shadow-lg shadow-purple-900/50 duration-200 ease-in hover:scale-110">
               <div className="TopLeaderboard__card-inner">
                 <div className="TopLeaderboard__number-wrapper">
                   <Image
@@ -367,7 +375,7 @@ const RazedLeaderboard: React.FC = () => {
             </div>
 
             {/* Right Card */}
-            <div className="TopLeaderboard__card TopLeaderboard__card--right duration-200 ease-in hover:scale-110 md:mt-10 border border-purple-700 shadow-lg shadow-purple-900/50">
+            <div className="TopLeaderboard__card TopLeaderboard__card--right border border-purple-700 shadow-lg shadow-purple-900/50 duration-200 ease-in hover:scale-110 md:mt-10">
               <div className="TopLeaderboard__card-inner">
                 <div className="TopLeaderboard__number-wrapper">
                   <Image
@@ -408,8 +416,10 @@ const RazedLeaderboard: React.FC = () => {
       <div className="flex items-center justify-center overflow-x-auto">
         <div className="w-full md:w-10/12 lg:w-8/12 xl:w-7/12">
           {/* Table Header (Only visible on larger screens) */}
-          <div className="max-w-[1000px] mx-auto"> {/* This is the new wrapper */}
-            <div className="bg-gray-800 hidden sm:grid grid-cols-4 rounded-lg text-center font-bold">
+          <div className="mx-auto max-w-[1000px]">
+            {" "}
+            {/* This is the new wrapper */}
+            <div className="bg-gray-800 hidden grid-cols-4 rounded-lg text-center font-bold sm:grid">
               <div className="px-3 py-2">Rank</div>
               <div className="px-3 py-2">Name</div>
               <div className="px-3 py-2">Wager</div>
@@ -427,12 +437,16 @@ const RazedLeaderboard: React.FC = () => {
                 {/* Row Content (Rank First on Desktop, Single Row on Mobile) */}
                 <div className="Leaderboard__card-inner grid grid-cols-3 text-center sm:grid-cols-4">
                   {/* Rank in the first column on Desktop, hidden on mobile */}
-                  <div className="hidden sm:block px-3 py-2 font-bold">
+                  <div className="hidden px-3 py-2 font-bold sm:block">
                     {index + 4}
                   </div>
                   <div className="px-3 py-2 font-bold">{user.username}</div>
-                  <div className="px-3 py-2">{formatCurrency(user.wagered)}</div>
-                  <div className="text-red-400 px-3 py-2"> {/* Ensure existing text color class is maintained if needed */}
+                  <div className="px-3 py-2">
+                    {formatCurrency(user.wagered)}
+                  </div>
+                  <div className="text-red-400 px-3 py-2">
+                    {" "}
+                    {/* Ensure existing text color class is maintained if needed */}
                     {formatRewardCurrency(user.reward!)}
                   </div>
                 </div>
@@ -441,7 +455,6 @@ const RazedLeaderboard: React.FC = () => {
           </div>
         </div>
       </div>
-
     </div>
   );
 };
