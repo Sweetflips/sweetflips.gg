@@ -39,17 +39,18 @@ const ProfilePage = () => {
     }
   }, []);
 
-  // This useEffect now handles BOTH initial load and subsequent hash changes
   useEffect(() => {
+    // Handles browser back/forward and direct URL loads
     const handleHashChange = () => {
       const hash = window.location.hash;
-      if (hash === "#orders") {
-        setActiveSection("orders");
-      } else if (hash === "#tokens") {
-        setActiveSection("tokens");
-      } else {
-        setActiveSection("details");
-      }
+      if (hash === "#orders") setActiveSection("orders");
+      else if (hash === "#tokens") setActiveSection("tokens");
+      else setActiveSection("details");
+    };
+
+    // ✅ Handles the custom event from the '+' button
+    const handleTokensTabEvent = () => {
+      setActiveSection("tokens");
     };
 
     // Run on initial component mount to set the correct tab
@@ -57,10 +58,15 @@ const ProfilePage = () => {
 
     // Listen for hash changes (e.g., from browser back/forward or the '+' button)
     window.addEventListener("hashchange", handleHashChange);
+    window.addEventListener("navigate-to-tokens-tab", handleTokensTabEvent);
 
     // Cleanup listener on component unmount
     return () => {
       window.removeEventListener("hashchange", handleHashChange);
+      window.removeEventListener(
+        "navigate-to-tokens-tab",
+        handleTokensTabEvent,
+      );
     };
   }, []); // Empty dependency array ensures this runs only once to set up the listener
 
