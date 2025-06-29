@@ -11,7 +11,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const cookies = parse(req.headers.cookie || '');
   const kickId = cookies.kick_id;
 
+  console.log(`[convert-tokens] Received request with kickId: ${kickId}`);
+
   if (!kickId) {
+    console.log('[convert-tokens] Unauthorized: Missing Kick ID');
     return res.status(401).json({ error: 'Unauthorized – missing Kick ID' });
   }
 
@@ -24,9 +27,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // Find user and userdata
   const user = await prisma.user.findUnique({ where: { kickId } });
+  console.log(`[convert-tokens] User record found for kickId ${kickId}: ${!!user}`);
+
   const userData = await prisma.userData.findUnique({ where: { kickId } });
+  console.log(`[convert-tokens] UserData record found for kickId ${kickId}: ${!!userData}`);
 
   if (!user || !userData) {
+    console.log(`[convert-tokens] User or userData not found for kickId ${kickId}. User: ${!!user}, UserData: ${!!userData}`);
     return res.status(404).json({ error: 'User or user data not found' });
   }
 
@@ -35,6 +42,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const conversionRate = tokenSettings?.conversionRate || 100;
 
   const availablePoints = userData.points - userData.converted_tokens;
+  console.log(`[convert-tokens] For kickId ${kickId}: availablePoints = ${availablePoints} (points: ${userData.points}, converted_tokens: ${userData.converted_tokens})`);
+
   const tokensToAdd = new Decimal(parsedAmount).div(conversionRate).toDecimalPlaces(2);
 
   if (tokensToAdd.lessThan(0.01)) {

@@ -33,13 +33,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     for (const entry of results) {
       // Try to find UserData by username
       const existingUserData = await prisma.userData.findFirst({
-        where: { username: entry.name },
+        where: {
+          username: {
+            equals: entry.name,
+            mode: 'insensitive',
+          },
+        },
       });
 
       // Determine kickId to attach if needed
       let kickIdToSet: string | null = null;
       const linkedUser = await prisma.user.findFirst({
-        where: { username: entry.name },
+        where: {
+          username: {
+            equals: entry.name,
+            mode: 'insensitive',
+          },
+        },
       });
 
       if (linkedUser) {

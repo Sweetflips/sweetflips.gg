@@ -15,8 +15,8 @@ type LeaderboardEntry = {
   reward: number;
 };
 
-// Define the reward mapping based on rank
-const rewardMapping: { [key: number]: number } = {
+// Define the reward mapping based on rank - THIS IS THE MONTHLY MAPPING
+const monthlyRewardMapping: { [key: number]: number } = {
   1: 15000,
   2: 8000,
   3: 5000,
@@ -41,36 +41,87 @@ const rewardMapping: { [key: number]: number } = {
   22: 225,
   23: 200,
   24: 150,
-  25: 75,
+  25: 75, // Sum: 39100 - Note: This does not sum to $40,000. Task is to replicate this for monthly.
 };
+
+// Define the WEEKLY reward mapping ($10,000 total for top 25)
+const weeklyRewardMapping: { [key: number]: number } = {
+  1: 3836, // Adjusted to make sum 10k
+  2: 2046,
+  3: 1279,
+  4: 281,
+  5: 256,
+  6: 243,
+  7: 230,
+  8: 217,
+  9: 205,
+  10: 192,
+  11: 179,
+  12: 166,
+  13: 153,
+  14: 141,
+  15: 128,
+  16: 115,
+  17: 102,
+  18: 90,
+  19: 83,
+  20: 70,
+  21: 64,
+  22: 58,
+  23: 51,
+  24: 38,
+  25: 19, // Sum: 10000
+};
+
 
 const RazedLeaderboard: React.FC = () => {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [timeLeft, setTimeLeft] = useState<string>("");
+  // const [timeLeft, setTimeLeft] = useState<string>(""); // Replaced by Timer component
 
   const fireworksLaunched = useRef(false); // Prevent multiple launches
-
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
-  // Function to open and close the popup
-  const togglePopup = () => {
-    setIsPopupOpen((prevState) => !prevState);
-  };
+  // --- Date Logic ---
+  const now = new Date(); // Current date in UTC
 
-  // Function to mask usernames with 4 asterisks in the middle
+  // Define the specific start and end dates for the special weekly event (from coworker)
+  const SPECIAL_PERIOD_START_DATE = new Date(Date.UTC(2025, 5, 23, 0, 0, 0, 0)); // June 23, 2025, 00:00:00.000 UTC
+  const SPECIAL_PERIOD_END_DATE = new Date(Date.UTC(2025, 5, 30, 23, 59, 59, 999)); // June 30, 2025, 23:59:59.999 UTC
+
+  const isSpecialWeekActive = now >= SPECIAL_PERIOD_START_DATE && now <= SPECIAL_PERIOD_END_DATE;
+
+  let targetDateForTimer: Date;
+  let currentRewardMapping: { [key: number]: number };
+  let prizePoolAmount: number;
+  let leaderboardTitle: string;
+  let leaderboardDescription: string;
+
+  if (isSpecialWeekActive) {
+    // Special Weekly Event Logic (June 23-30, 2025)
+    prizePoolAmount = 10000;
+    leaderboardTitle = `$${prizePoolAmount.toLocaleString()}`;
+    leaderboardDescription = `Special weekly event (June 23-30, 2025)! $10,000 distributed across 25 users.`;
+    currentRewardMapping = weeklyRewardMapping;
+    targetDateForTimer = SPECIAL_PERIOD_END_DATE;
+  } else {
+    // Standard Monthly Logic (all other times)
+    prizePoolAmount = 40000;
+    leaderboardTitle = `$${prizePoolAmount.toLocaleString()}`;
+    leaderboardDescription = `Each month, a total of $40,000 is distributed across 25 users based on their total wagered amount.`;
+    currentRewardMapping = monthlyRewardMapping;
+    // Target end of the current actual month (last day, 23:59:59 UTC)
+    targetDateForTimer = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999));
+  }
+  // --- End Date Logic ---
+
+  const togglePopup = () => setIsPopupOpen((prevState) => !prevState);
+
   const maskUsername = (username: string) => {
     const len = username.length;
-  
-    if (len <= 2) {
-      return username; // Too short to mask
-    }
-  
-    if (len <= 4) {
-      return username[0] + '*'.repeat(len - 2) + username[len - 1];
-    }
-  
+    if (len <= 2) return username;
+    if (len <= 4) return username[0] + '*'.repeat(len - 2) + username[len - 1];
     return username.slice(0, 2) + '*'.repeat(len - 4) + username.slice(-2);
   };
 
@@ -79,24 +130,20 @@ const RazedLeaderboard: React.FC = () => {
       try {
         const response = await fetch(API_PROXY_URL, { method: "GET" });
         const result = await response.json();
-  
         if (!Array.isArray(result.data)) {
           throw new Error("Invalid data format: expected 'data' array");
         }
-  
         const parsedData = result.data.map((user: any): LeaderboardEntry => ({
           username: maskUsername(user.username),
           wagered: parseFloat(user.wagered),
           reward: 0,
         }));
-  
         const sortedData: LeaderboardEntry[] = parsedData
           .sort((a: LeaderboardEntry, b: LeaderboardEntry) => b.wagered - a.wagered)
           .map((user: LeaderboardEntry, index: number) => ({
             ...user,
-            reward: rewardMapping[index + 1] || 0,
+            reward: currentRewardMapping[index + 1] || 0, // Use currentRewardMapping
           }));
-  
         setData(sortedData);
       } catch (err: any) {
         setError(err.message);
@@ -104,97 +151,39 @@ const RazedLeaderboard: React.FC = () => {
         setLoading(false);
       }
     };
-  
     fetchData();
-  }, []);  
+  }, [currentRewardMapping]); // Add currentRewardMapping to dependency array
 
   const topUsers = data.slice(0, 3);
 
   useEffect(() => {
     if (topUsers[0] && !fireworksLaunched.current) {
-      fireworksLaunched.current = true; // Prevent multiple launches
-      confetti({
-        particleCount: 100,
-        spread: 120,
-        origin: { y: 0.6 },
-      });
+      fireworksLaunched.current = true;
+      confetti({ particleCount: 100, spread: 120, origin: { y: 0.6 } });
     }
   }, [topUsers]);
 
-  useEffect(() => {
-    const updateTimer = () => {
-      const now = new Date();
-      const currentMonth = now.getMonth() + 1; // Get the current month (1-based)
-      const currentYear = now.getFullYear();
-
-      let targetDate: Date;
-
-      // If it's before the 23th, set the target date to the 23th of the current month
-      // If it's the 23th or later, set the target date to the 23th of the next month
-      if (now.getDate() < 24) {
-        targetDate = new Date(currentYear, currentMonth - 1, 23); // 23th of the current month
-      } else {
-        const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
-        const nextMonthYear =
-          currentMonth === 12 ? currentYear + 1 : currentYear;
-        targetDate = new Date(nextMonthYear, nextMonth - 1, 23); // 23th of the next month
-      }
-
-      const diff = targetDate.getTime() - now.getTime();
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const minutes = Math.floor((diff / 1000 / 60) % 60);
-      const seconds = Math.floor((diff / 1000) % 60);
-
-      setTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}s`);
-    };
-
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
+  // Old useEffect for timeLeft is removed as Timer component handles this.
 
   if (loading) return <Loader />;
   if (error) return <p className="text-red-500">Error: {error}</p>;
 
   const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
+    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
 
   const formatRewardCurrency = (amount: number) => {
     const formattedAmount = new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
-      minimumFractionDigits: 0, // Ensure there's no decimal part unless necessary
+      minimumFractionDigits: 0,
     }).format(amount);
-
-    return formattedAmount.endsWith(".00")
-      ? formattedAmount.slice(0, -3)
-      : formattedAmount;
+    return formattedAmount.endsWith(".00") ? formattedAmount.slice(0, -3) : formattedAmount;
   };
 
-  const restUsers = data.slice(3, 25);
+  const restUsers = data.slice(3, 25); // Displays users from rank 4 to 25
 
-  // Calculate the countdown date (16th of the current or next month)
-  const countDownDate = (() => {
-    const now = DateTime.utc();
-const currentMonth = now.month;
-const currentYear = now.year;
-const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
-const nextMonthYear = currentMonth === 12 ? currentYear + 1 : currentYear;
-
-let targetDate;
-if (now.day < 23) {
-  targetDate = DateTime.utc(currentYear, currentMonth, 23, 0, 0);
-} else {
-  targetDate = DateTime.utc(nextMonthYear, nextMonth, 23, 0, 0);
-}
-
-return targetDate.toISO(); // ISO in UTC
-  })();
+  // Luxon based countDownDate is replaced by targetDateForTimer.toISOString()
+  const countDownDateISO = targetDateForTimer.toISOString();
 
   return (
     <div className="mt-4 p-4 text-white">
@@ -261,9 +250,9 @@ return targetDate.toISO(); // ISO in UTC
 
         {/* Centered Text Section */}
         <div className="absolute left-0 right-0 mx-auto mt-6 max-w-screen-lg px-4 text-center md:mt-10">
-          {/* $40,000 Text */}
+          {/* Prize Pool Text */}
           <b className="text-5xl text-[#4D4EE0] sm:text-2xl md:text-3xl lg:text-4xl xl:text-4xl animate-pulse-glow">
-            $40,000
+            {leaderboardTitle}
           </b>
 
           {/* Image and Leaderboard Layout */}
@@ -285,9 +274,7 @@ return targetDate.toISO(); // ISO in UTC
 
           {/* Description Text */}
           <p className="mx-auto mt-4 text-center text-white sm:text-xl md:mt-0 md:text-2xl lg:m-4 lg:text-3xl xl:text-xl leading-relaxed">
-            Each month, a total of $40,000 is distributed across 25 users
-            <br></br>
-            based on their total wagered amount.
+            {leaderboardDescription}
           </p>
         </div>
       </div>
@@ -295,12 +282,12 @@ return targetDate.toISO(); // ISO in UTC
         Leaderboard ends in
       </div>
       <div className="relative mb-15 flex justify-center space-x-4">
-        {countDownDate && (
+        {countDownDateISO && (
           <div
             className="mx-12 flex flex-col items-center rounded-3xl md:mx-80"
             data-aos="fade-up"
           >
-            <Timer type="normal" date={countDownDate} />
+            <Timer type="normal" date={countDownDateISO} />
           </div>
         )}
       </div>

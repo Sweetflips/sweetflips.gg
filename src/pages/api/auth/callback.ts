@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { serialize } from "cookie";
 import { prisma } from "../../../../lib/prisma";
+import { getBaseUrl } from "../../../../lib/getBaseUrl";
 
 export default async function handler(
   req: NextApiRequest,
@@ -30,11 +31,7 @@ export default async function handler(
   const clientId = process.env.NEXT_PUBLIC_KICK_CLIENT_ID!;
   const clientSecret = process.env.KICK_CLIENT_SECRET!;
 
-  const VERCEL_URL = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : undefined;
-  const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
-  let baseUrl = VERCEL_URL || NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  let baseUrl = getBaseUrl();
 
   // Ensure no trailing slash
   if (baseUrl.endsWith("/")) {

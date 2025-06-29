@@ -2,11 +2,10 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { randomBytes, createHash, randomUUID } from 'crypto';
 import { prisma } from '../../../../lib/prisma';
 import { addMinutes } from 'date-fns';
+import { getBaseUrl } from '../../../../lib/getBaseUrl';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const VERCEL_URL = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined;
-  const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
-  let baseUrl = VERCEL_URL || NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  let baseUrl = getBaseUrl();
 
   // Ensure no trailing slash
   if (baseUrl.endsWith('/')) {

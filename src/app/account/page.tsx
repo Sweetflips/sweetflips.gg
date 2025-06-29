@@ -148,6 +148,7 @@ const handleSyncBotrix = async () => {
           {activeSection === 'tokens' && user && userData && (
             <div>
               <TokenExchange
+                user={user} // Pass the user object as a prop
                 available={userData.points - userData.converted_tokens}
                 onConverted={fetchUser}
               />

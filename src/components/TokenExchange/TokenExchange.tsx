@@ -5,36 +5,34 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
 interface TokenExchangeProps {
+  user: any; // Add user to props
   available: number;
   onConverted: () => void;
 }
 
-const TokenExchange = ({ available, onConverted }: TokenExchangeProps) => {
+const TokenExchange = ({ user, available, onConverted }: TokenExchangeProps) => {
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [conversionRate, setConversionRate] = useState<number>(100);
-  const [tokenBalance, setTokenBalance] = useState<number | null>(null);
+  // Removed tokenBalance state, will use user prop or globalBalance
   const { tokenBalance: globalBalance, refreshTokenBalance } = useToken();
 
   useEffect(() => {
-    const fetchInfo = async () => {
+    const fetchRate = async () => {
       try {
-        const res = await fetch('/api/user');
-        if (res.ok) {
-          const data = await res.json();
-          setTokenBalance(Number(data.user.tokens));
-        }
-
         const rateRes = await fetch('/api/token-settings');
         const rateData = await rateRes.json();
         setConversionRate(rateData.conversionRate);
       } catch (err) {
-        console.error('Failed to load user/token data');
+        console.error('Failed to load token settings');
       }
     };
-    fetchInfo();
-  }, []);
+    fetchRate();
+  }, []); // Only fetch conversion rate now
+
+  // Determine initial token balance from user prop or global context
+  const displayTokenBalance = user?.tokens !== undefined ? Number(user.tokens) : globalBalance;
 
   const handleConvert = async () => {
     setLoading(true);
@@ -52,8 +50,8 @@ const TokenExchange = ({ available, onConverted }: TokenExchangeProps) => {
       const newTokens = parseFloat(data.tokensAdded);
       setMessage(`✅ Converted ${data.converted} points for ${newTokens.toFixed(2)} Sweetflips Tokens!`);
       setAmount('');
-      setTokenBalance((prev) => (prev ?? 0) + newTokens);
-      onConverted();
+      // setTokenBalance((prev) => (prev ?? 0) + newTokens); // Removed: rely on prop/context update via onConverted
+      onConverted(); // This should trigger a re-fetch in parent, updating user prop
       await refreshTokenBalance(); // 🟣 Refresh global context
     } else {
       setMessage(`⚠️ ${data.error}`);
@@ -75,7 +73,7 @@ const TokenExchange = ({ available, onConverted }: TokenExchangeProps) => {
         </h2>
       </div>
 
-      {tokenBalance !== null && (
+      {displayTokenBalance !== null && typeof displayTokenBalance === 'number' && ( // Check type for toFixed
         <div className="mb-4 p-4 rounded-md bg-[#23162e] border border-purple-700 flex flex-col items-center text-center">
           <Image
             src="/images/logo/sweetflips_coin.png"
@@ -88,7 +86,7 @@ const TokenExchange = ({ available, onConverted }: TokenExchangeProps) => {
             Your Sweetflips Token Balance:
           </h2>
           <p className="text-xl font-bold text-[#9925FE]">
-            {tokenBalance.toFixed(2)} Tokens
+            {displayTokenBalance.toFixed(2)} Tokens
           </p>
         </div>
       )}

@@ -18,7 +18,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const username = user.name;
 
       const matchedUser = await prisma.user.findFirst({
-        where: { username },
+        where: {
+          username: {
+            equals: username,
+            mode: 'insensitive',
+          },
+        },
       });
 
       let kickIdToSet: string | null = null;

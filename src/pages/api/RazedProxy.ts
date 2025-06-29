@@ -5,26 +5,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const API_URL = process.env.BASE_RAZED_API_URL as string;
     const REFERRAL_KEY = process.env.AUTH_RAZED as string;
 
-    const now = new Date(); // Still okay to use for base reference (assumed UTC)
+    if (!API_URL || !REFERRAL_KEY) {
+      return res.status(500).json({ error: "Missing BASE_RAZED_API_URL or AUTH_RAZED in environment variables" });
+    }
 
-const currentUTCYear = now.getUTCFullYear();
-const currentUTCMonth = now.getUTCMonth(); // 0-indexed
-const currentUTCDay = now.getUTCDate();
+    const now = new Date(); // Current date in UTC
 
-let fromDate: Date;
-let toDate: Date;
+    // Define the specific start and end dates for the special weekly event
+    const SPECIAL_PERIOD_START_DATE = new Date(Date.UTC(2025, 5, 23, 0, 0, 0, 0)); // June 23, 2025, 00:00:00.000 UTC (month is 0-indexed)
+    const SPECIAL_PERIOD_END_DATE = new Date(Date.UTC(2025, 5, 30, 23, 59, 59, 999)); // June 30, 2025, 23:59:59.999 UTC
 
-if (currentUTCDay < 23) {
-  fromDate = new Date(Date.UTC(currentUTCYear, currentUTCMonth - 1, 23, 0, 0, 0));
-  toDate = new Date(Date.UTC(currentUTCYear, currentUTCMonth, 23, 23, 59, 59));
-} else {
-  fromDate = new Date(Date.UTC(currentUTCYear, currentUTCMonth, 23, 0, 0, 0));
-  toDate = new Date(Date.UTC(currentUTCYear, currentUTCMonth + 1, 23, 23, 59, 59));
-}
+    let fromDate: Date;
+    let toDate: Date;
+
+    // Check if 'now' is within the special weekly event period
+    if (now >= SPECIAL_PERIOD_START_DATE && now <= SPECIAL_PERIOD_END_DATE) {
+      // Special Weekly Event Logic (June 23-30, 2025)
+      fromDate = SPECIAL_PERIOD_START_DATE;
+      toDate = SPECIAL_PERIOD_END_DATE;
+    } else {
+      // Standard Monthly Logic (1st to last day of the current actual month)
+      fromDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0));
+      toDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999)); // Day 0 of next month is last day of current
+    }
 
     const formatDate = (date: Date) => {
       const pad = (n: number) => String(n).padStart(2, "0");
-      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+      // Use getUTC methods for formatting to ensure consistency
+      return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())}`;
     };
 
     const fromParam = formatDate(fromDate);
