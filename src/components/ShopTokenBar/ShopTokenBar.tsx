@@ -52,6 +52,7 @@ export default function ShopTokenBar() {
       {/* New "Add Coin" button, styled like header buttons */}
       <Link
         href="/account#tokens"
+        scroll={false}
         aria-label="Add Tokens"
         onClick={handleTokensLinkClick}
         className="ml-2 flex h-11 w-11 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-sweetflipsPanel text-white transition hover:shadow-lg hover:shadow-primary/40"
