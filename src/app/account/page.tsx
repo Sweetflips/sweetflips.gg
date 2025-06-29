@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation"; // 1. IMPORT useRouter
+import { useRouter } from "next/navigation"; // We still need this to update the URL
 import DefaultLayout from "../../components/Layouts/DefaultLayout";
 import Loader from "@/components/common/Loader";
 import TokenExchange from "@/components/TokenExchange/TokenExchange";
@@ -8,7 +8,7 @@ import UserOrders from "@/components/UserOrders/UserOrders";
 import { withAuth } from "@/components/withAuth";
 
 const ProfilePage = () => {
-  const router = useRouter(); // 2. INITIALIZE the router
+  const router = useRouter(); // Initialize router to manage URL history
   const [user, setUser] = useState<any>(null);
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -39,35 +39,40 @@ const ProfilePage = () => {
     }
   }, []);
 
-  // 3. FIX: This useEffect now properly listens for hash changes
+  // This useEffect now handles BOTH initial load and subsequent hash changes
   useEffect(() => {
     const handleHashChange = () => {
-      const hash = window.location.hash.slice(1);
-      if (hash === "orders" || hash === "tokens") {
-        setActiveSection(hash);
+      const hash = window.location.hash;
+      if (hash === "#orders") {
+        setActiveSection("orders");
+      } else if (hash === "#tokens") {
+        setActiveSection("tokens");
       } else {
         setActiveSection("details");
       }
     };
 
-    // Set initial state from the URL hash when the page loads
+    // Run on initial component mount to set the correct tab
     handleHashChange();
 
-    // Add a listener for when the hash changes (e.g., via back/forward buttons)
+    // Listen for hash changes (e.g., from browser back/forward or the '+' button)
     window.addEventListener("hashchange", handleHashChange);
 
-    // Clean up the listener when the component unmounts
+    // Cleanup listener on component unmount
     return () => {
       window.removeEventListener("hashchange", handleHashChange);
     };
-  }, []); // This empty array ensures the effect runs only once to set up the listener
+  }, []); // Empty dependency array ensures this runs only once to set up the listener
 
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
 
-  // 4. FIX: Use the Next.js router for navigation
+  // This function now reliably updates state AND the URL
   const handleTabClick = (section: "details" | "orders" | "tokens") => {
+    // 1. Update the state directly for an immediate UI change.
+    setActiveSection(section);
+    // 2. Use the router to update the URL hash without a full page reload.
     router.push(`/account#${section}`, { scroll: false });
   };
 
@@ -77,10 +82,9 @@ const ProfilePage = () => {
     try {
       const res = await fetch("/api/user/sync-botrix", { method: "POST" });
       const data = await res.json();
-
       if (res.ok) {
         setSyncMessage("");
-        fetchUser();
+        fetchUser(); // refresh token balance and points
       } else {
         setSyncMessage(`❌ ${data.error || "Failed to sync"}`);
       }
