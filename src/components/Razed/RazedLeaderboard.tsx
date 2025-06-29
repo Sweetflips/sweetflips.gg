@@ -99,7 +99,7 @@ const RazedLeaderboard: React.FC = () => {
     // Special Weekly Event Logic (June 23-30, 2025)
     prizePoolAmount = 10000;
     leaderboardTitle = `$${prizePoolAmount.toLocaleString()}`;
-    leaderboardDescription = `Special weekly event (June 23-30, 2025)! $10,000 distributed across 25 users.`;
+    leaderboardDescription = `Weekly leaderboard with $10,000 distributed across 20 users based on their total wagered amount until June 30th.`;
     currentRewardMapping = weeklyRewardMapping;
     targetDateForTimer = SPECIAL_PERIOD_END_DATE;
   } else {

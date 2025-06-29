@@ -8,7 +8,7 @@ import RegisterBlocks from "@/components/RegisterBlocks/RegisterBlocks";
 import BannerVideo from "@/components/BannerVideo/BannerVideo";
 // import BannerImage from "@/components/BannerImage/BannerImage";
 import GiveAwayCounter from "../GiveAwayCounter/GiveAwayCounter";
-import Image from 'next/image';
+import Image from "next/image";
 import RaffleTicketBanner from "../RaffleTicketBanner/RaffleTicketBanner";
 import confetti from "canvas-confetti";
 import Loader from "@/components/common/Loader";
@@ -76,7 +76,6 @@ const weeklyRewardMapping: { [key: number]: number } = {
   20: 30,
 };
 
-
 const Homepage: React.FC = () => {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -103,7 +102,7 @@ const Homepage: React.FC = () => {
   if (isSpecialWeekActive) {
     prizePoolAmount = 10000;
     leaderboardTitle = `$${prizePoolAmount.toLocaleString()}`;
-    leaderboardDescription = `Special weekly event (June 23-30, 2025)! $10,000 distributed across 25 users.`;
+    leaderboardDescription = `Weekly leaderboard with $10,000 distributed across 20 users based on their total wagered amount until June 30th.`;
     currentRewardMapping = weeklyRewardMapping;
     targetDateForTimer = SPECIAL_PERIOD_END_DATE;
   } else {
@@ -165,7 +164,13 @@ const Homepage: React.FC = () => {
   const topUsers = data.slice(0, 3);
 
   useEffect(() => {
-    if (topUsers.length > 0 && topUsers[0] && !fireworksLaunched.current && !loading) { // check loading state
+    if (
+      topUsers.length > 0 &&
+      topUsers[0] &&
+      !fireworksLaunched.current &&
+      !loading
+    ) {
+      // check loading state
       fireworksLaunched.current = true;
       confetti({ particleCount: 100, spread: 120, origin: { y: 0.6 } });
     }
@@ -195,16 +200,17 @@ const Homepage: React.FC = () => {
 
   return (
     <>
-      <div className="grid grid-cols-1 rounded-2xl h-auto">
+      <div className="grid h-auto grid-cols-1 rounded-2xl">
         <div className="col-span-12 xl:col-span-8">
           <BannerVideo />
           <HomeBanner />
           <RaffleTicketBanner />
           <RegisterBlocks />
           <GiveAwayCounter />
-
           {/* Razed Leaderboard Section START */}
-          <div className="mt-4 p-4 text-white"> {/* Adapted from RazedLeaderboard's main div */}
+          <div className="mt-4 p-4 text-white">
+            {" "}
+            {/* Adapted from RazedLeaderboard's main div */}
             {/* Floating Images - Copied from RazedLeaderboard, can be adjusted/removed if not desired on homepage */}
             <div className="floating-image1 animate-rotating">
               <Image
@@ -222,7 +228,6 @@ const Homepage: React.FC = () => {
                 height={100}
               />
             </div>
-
             {/* Header section - Copied from RazedLeaderboard */}
             <div className="FooterBg relative mx-auto flex h-80 w-full transform flex-col items-center justify-between overflow-hidden rounded-xl p-4 shadow-[inset_0_0_20px_rgba(0,0,0,0.4)] transition-all sm:w-3/4 sm:flex-row sm:items-start md:w-5/6">
               <div className="hide-on-ipad absolute left-0 hidden sm:block">
@@ -283,7 +288,6 @@ const Homepage: React.FC = () => {
                 </p>
               </div>
             </div>
-
             {/* Timer Section - Copied from RazedLeaderboard */}
             <div className="mb-4 mt-8 flex flex-col items-center text-2xl font-bold">
               Leaderboard ends in
@@ -300,7 +304,6 @@ const Homepage: React.FC = () => {
                 </div>
               )}
             </div>
-
             {/* Leaderboard Display - Copied and adapted from RazedLeaderboard */}
             {!loading && !error && data.length > 0 && (
               <>
@@ -312,15 +315,31 @@ const Homepage: React.FC = () => {
                       <div className="TopLeaderboard__card TopLeaderboard__card--left border border-purple-700 shadow-lg shadow-purple-900/50 duration-200 ease-in hover:scale-110 md:mt-10">
                         <div className="TopLeaderboard__card-inner">
                           <div className="TopLeaderboard__number-wrapper">
-                            <Image src="/images/icon/Second_Place.png" alt="Second Place" width={32} height={32} />
+                            <Image
+                              src="/images/icon/Second_Place.png"
+                              alt="Second Place"
+                              width={32}
+                              height={32}
+                            />
                           </div>
                           <div className="TopLeaderboard__card-image">
-                            <Image src="/images/logo/sweet_flips_emblem_silver.png" alt="Sweetflips Emblem Silver" width={96} height={96} />
+                            <Image
+                              src="/images/logo/sweet_flips_emblem_silver.png"
+                              alt="Sweetflips Emblem Silver"
+                              width={96}
+                              height={96}
+                            />
                           </div>
                           <div className="TopLeaderboard__card-content">
-                            <p className="TopLeaderboard__username">{topUsers[1].username}</p>
-                            <p className="TopLeaderboard__amount">{formatCurrency(topUsers[1].wagered)}</p>
-                            <p className="TopLeaderboard__prize">Prize: {formatRewardCurrency(topUsers[1].reward!)}</p>
+                            <p className="TopLeaderboard__username">
+                              {topUsers[1].username}
+                            </p>
+                            <p className="TopLeaderboard__amount">
+                              {formatCurrency(topUsers[1].wagered)}
+                            </p>
+                            <p className="TopLeaderboard__prize">
+                              Prize: {formatRewardCurrency(topUsers[1].reward!)}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -328,15 +347,31 @@ const Homepage: React.FC = () => {
                       <div className="TopLeaderboard__card TopLeaderboard__card--middle border border-purple-700 shadow-lg shadow-purple-900/50 duration-200 ease-in hover:scale-110">
                         <div className="TopLeaderboard__card-inner">
                           <div className="TopLeaderboard__number-wrapper">
-                            <Image src="/images/icon/First_Place.png" alt="First Place" width={32} height={32} />
+                            <Image
+                              src="/images/icon/First_Place.png"
+                              alt="First Place"
+                              width={32}
+                              height={32}
+                            />
                           </div>
                           <div className="TopLeaderboard__card-image">
-                            <Image src="/images/logo/sweet_flips_emblem_gold.png" alt="Sweetflips Emblem Gold" width={96} height={96} />
+                            <Image
+                              src="/images/logo/sweet_flips_emblem_gold.png"
+                              alt="Sweetflips Emblem Gold"
+                              width={96}
+                              height={96}
+                            />
                           </div>
                           <div className="TopLeaderboard__card-content">
-                            <p className="TopLeaderboard__username">{topUsers[0].username}</p>
-                            <p className="TopLeaderboard__amount">{formatCurrency(topUsers[0].wagered)}</p>
-                            <p className="TopLeaderboard__prize">Prize: {formatRewardCurrency(topUsers[0].reward!)}</p>
+                            <p className="TopLeaderboard__username">
+                              {topUsers[0].username}
+                            </p>
+                            <p className="TopLeaderboard__amount">
+                              {formatCurrency(topUsers[0].wagered)}
+                            </p>
+                            <p className="TopLeaderboard__prize">
+                              Prize: {formatRewardCurrency(topUsers[0].reward!)}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -344,15 +379,31 @@ const Homepage: React.FC = () => {
                       <div className="TopLeaderboard__card TopLeaderboard__card--right border border-purple-700 shadow-lg shadow-purple-900/50 duration-200 ease-in hover:scale-110 md:mt-10">
                         <div className="TopLeaderboard__card-inner">
                           <div className="TopLeaderboard__number-wrapper">
-                            <Image src="/images/icon/Third_Place.png" alt="Third Place" width={32} height={32} />
+                            <Image
+                              src="/images/icon/Third_Place.png"
+                              alt="Third Place"
+                              width={32}
+                              height={32}
+                            />
                           </div>
                           <div className="TopLeaderboard__card-image">
-                            <Image src="/images/logo/sweet_flips_emblem_bronze.png" alt="Sweetflips Emblem Bronze" width={96} height={96} />
+                            <Image
+                              src="/images/logo/sweet_flips_emblem_bronze.png"
+                              alt="Sweetflips Emblem Bronze"
+                              width={96}
+                              height={96}
+                            />
                           </div>
                           <div className="TopLeaderboard__card-content">
-                            <p className="TopLeaderboard__username">{topUsers[2].username}</p>
-                            <p className="TopLeaderboard__amount">{formatCurrency(topUsers[2].wagered)}</p>
-                            <p className="TopLeaderboard__prize">Prize: {formatRewardCurrency(topUsers[2].reward!)}</p>
+                            <p className="TopLeaderboard__username">
+                              {topUsers[2].username}
+                            </p>
+                            <p className="TopLeaderboard__amount">
+                              {formatCurrency(topUsers[2].wagered)}
+                            </p>
+                            <p className="TopLeaderboard__prize">
+                              Prize: {formatRewardCurrency(topUsers[2].reward!)}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -362,7 +413,7 @@ const Homepage: React.FC = () => {
 
                 {/* Rest of the Users Table */}
                 {restUsers.length > 0 && (
-                  <div className="flex items-center justify-center overflow-x-auto mt-8">
+                  <div className="mt-8 flex items-center justify-center overflow-x-auto">
                     <div className="w-full md:w-10/12 lg:w-8/12 xl:w-7/12">
                       <div className="mx-auto max-w-[1000px]">
                         <div className="bg-gray-800 hidden grid-cols-4 rounded-lg text-center font-bold sm:grid">
@@ -374,12 +425,23 @@ const Homepage: React.FC = () => {
                       </div>
                       <div>
                         {restUsers.map((user, index) => (
-                          <div key={index} className="Leaderboard__card relative my-2 rounded-lg p-1 shadow-lg md:my-4">
+                          <div
+                            key={index}
+                            className="Leaderboard__card relative my-2 rounded-lg p-1 shadow-lg md:my-4"
+                          >
                             <div className="Leaderboard__card-inner grid grid-cols-3 text-center sm:grid-cols-4">
-                              <div className="hidden px-3 py-2 font-bold sm:block">{index + 4}</div>
-                              <div className="px-3 py-2 font-bold">{user.username}</div>
-                              <div className="px-3 py-2">{formatCurrency(user.wagered)}</div>
-                              <div className="text-red-400 px-3 py-2">{formatRewardCurrency(user.reward!)}</div>
+                              <div className="hidden px-3 py-2 font-bold sm:block">
+                                {index + 4}
+                              </div>
+                              <div className="px-3 py-2 font-bold">
+                                {user.username}
+                              </div>
+                              <div className="px-3 py-2">
+                                {formatCurrency(user.wagered)}
+                              </div>
+                              <div className="text-red-400 px-3 py-2">
+                                {formatRewardCurrency(user.reward!)}
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -389,16 +451,18 @@ const Homepage: React.FC = () => {
                 )}
               </>
             )}
-             {!loading && !error && data.length === 0 && (
-                <div className="text-center py-10">
-                    <p className="text-xl text-gray-400">Leaderboard data is currently unavailable or empty.</p>
-                </div>
+            {!loading && !error && data.length === 0 && (
+              <div className="py-10 text-center">
+                <p className="text-gray-400 text-xl">
+                  Leaderboard data is currently unavailable or empty.
+                </p>
+              </div>
             )}
           </div>
           {/* Razed Leaderboard Section END */}
-
           {/* <YoutubeSlider /> */}
-          {/* <div className="mt-4"><Footer /></div> */} {/* Removed Footer component instance */}
+          {/* <div className="mt-4"><Footer /></div> */}{" "}
+          {/* Removed Footer component instance */}
         </div>
       </div>
     </>
