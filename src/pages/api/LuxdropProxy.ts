@@ -45,15 +45,33 @@ export default async function handler(
   }
 
   // --- ADDED: Date Logic for Monthly Leaderboard ---
-  const startDate = DateTime.utc(2025, 6, 29).toISODate(); // June 29th, 2025
-  const endDate = DateTime.utc(2025, 7, 28, 23, 59, 59).toISODate(); // July 28th, 2025 23:59:59 UTC
+  const now = DateTime.utc();
+
+  let startDate: DateTime;
+  let endDate: DateTime;
+
+  if (now.day >= 29) {
+    // If today is 29th or later, start date is 29th of current month
+    startDate = now.set({ day: 29, hour: 0, minute: 0, second: 0, millisecond: 0 });
+    // End date is 28th of next month
+    endDate = now.plus({ months: 1 }).set({ day: 28, hour: 23, minute: 59, second: 59, millisecond: 999 });
+  } else {
+    // If today is before 29th, start date is 29th of previous month
+    startDate = now.minus({ months: 1 }).set({ day: 29, hour: 0, minute: 0, second: 0, millisecond: 0 });
+    // End date is 28th of current month
+    endDate = now.set({ day: 28, hour: 23, minute: 59, second: 59, millisecond: 999 });
+  }
+
+  // Convert to ISO date strings for the API
+  const startDateISO = startDate.toISODate();
+  const endDateISO = endDate.toISODate();
   // ---
 
   // --- Construct the Axios Request ---
   const params = {
     codes: codesToFetch,
-    startDate: startDate, // Send the calculated start date
-    endDate: endDate, // Send the calculated end date
+    startDate: startDateISO, // Send the calculated start date
+    endDate: endDateISO, // Send the calculated end date
   };
 
   const config: AxiosRequestConfig = {
