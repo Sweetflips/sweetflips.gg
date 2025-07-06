@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 // import { withAuth } from '@/components/withAuth'; // Assuming not needed for this specific leaderboard display
 import YoutubeSlider from "@/components/YoutubeSlider/YoutubeSlider";
 // import TopLeaderboard from "@/components/TopLeaderboard/TopLeaderboard"; // Will be replaced
@@ -80,6 +81,9 @@ const Homepage: React.FC = () => {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [urlError, setUrlError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const searchParams = useSearchParams();
   const fireworksLaunched = useRef(false); // Prevent multiple launches
 
   // --- Date Logic ---
@@ -176,6 +180,28 @@ const Homepage: React.FC = () => {
     }
   }, [topUsers, loading]); // add loading to dependency array
 
+  // Handle URL parameters for error/success messages
+  useEffect(() => {
+    const error = searchParams.get('error');
+    const linked = searchParams.get('linked');
+    
+    if (error) {
+      setUrlError(decodeURIComponent(error));
+      // Clean up URL after showing error
+      const url = new URL(window.location.href);
+      url.searchParams.delete('error');
+      window.history.replaceState({}, '', url.toString());
+    }
+    
+    if (linked === 'success') {
+      setSuccessMessage('Kick account successfully linked!');
+      // Clean up URL after showing success
+      const url = new URL(window.location.href);
+      url.searchParams.delete('linked');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [searchParams]);
+
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -200,6 +226,70 @@ const Homepage: React.FC = () => {
 
   return (
     <>
+      {/* Error Message Display */}
+      {urlError && (
+        <div className="mb-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4">
+          <div className="flex items-center">
+            <svg
+              className="w-5 h-5 text-red-600 dark:text-red-400 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span className="text-red-800 dark:text-red-200 font-medium">
+              {urlError}
+            </span>
+            <button
+              onClick={() => setUrlError(null)}
+              className="ml-auto text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Success Message Display */}
+      {successMessage && (
+        <div className="mb-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-4">
+          <div className="flex items-center">
+            <svg
+              className="w-5 h-5 text-green-600 dark:text-green-400 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span className="text-green-800 dark:text-green-200 font-medium">
+              {successMessage}
+            </span>
+            <button
+              onClick={() => setSuccessMessage(null)}
+              className="ml-auto text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="grid h-auto grid-cols-1 rounded-2xl">
         <div className="col-span-12 xl:col-span-8">
           <BannerVideo />

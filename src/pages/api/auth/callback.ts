@@ -77,7 +77,8 @@ export default async function handler(
 
     if (!tokenData?.access_token) {
       console.error("❌ No access_token returned:", tokenData);
-      return res.status(400).json({ error: "Access token missing from Kick" });
+      const errorMessage = encodeURIComponent("Failed to get access token from Kick");
+      return res.redirect(`/?error=${errorMessage}`);
     }
 
     const accessToken = tokenData.access_token;
@@ -91,16 +92,16 @@ export default async function handler(
     });
 
     if (!userInfoRes.ok) {
-      return res
-        .status(400)
-        .json({ error: "Failed to fetch user info from Kick" });
+      const errorMessage = encodeURIComponent("Failed to fetch user info from Kick");
+      return res.redirect(`/?error=${errorMessage}`);
     }
 
     const userInfo = await userInfoRes.json();
     const kickUser = userInfo?.data?.[0];
 
     if (!kickUser || !kickUser.user_id || !kickUser.name || !kickUser.email) {
-      return res.status(400).json({ error: "Incomplete Kick user data" });
+      const errorMessage = encodeURIComponent("Incomplete Kick user data received");
+      return res.redirect(`/?error=${errorMessage}`);
     }
 
     // Handle account linking vs regular login
@@ -158,10 +159,10 @@ export default async function handler(
     }
   } catch (error) {
     console.error("Callback error:", error);
-    return res.status(500).json({ 
-      error: "OAuth callback failed",
-      details: error instanceof Error ? error.message : String(error)
-    });
+    const errorMessage = encodeURIComponent(
+      error instanceof Error ? error.message : "OAuth callback failed"
+    );
+    return res.redirect(`/?error=${errorMessage}`);
   }
 }
 
