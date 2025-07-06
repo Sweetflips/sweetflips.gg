@@ -37,6 +37,18 @@ const SignUp: React.FC = () => {
     setError("");
     setMessage("");
 
+    if (username.includes(' ')) {
+      setError("Username cannot contain spaces");
+      setLoading(false);
+      return;
+    }
+
+    if (username.length < 3) {
+      setError("Username must be at least 3 characters");
+      setLoading(false);
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       setLoading(false);
