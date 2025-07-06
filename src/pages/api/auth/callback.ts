@@ -57,7 +57,8 @@ export default async function handler(
 
   try {
     // Exchange code for tokens
-    const tokenResponse = await fetch("https://kick.com/oauth/token", {
+    console.log("Attempting token exchange with Kick OAuth");
+    const tokenResponse = await fetch("https://id.kick.com/oauth/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
@@ -70,7 +71,9 @@ export default async function handler(
       }),
     });
 
+    console.log("Token response status:", tokenResponse.status);
     const tokenData = await tokenResponse.json();
+    console.log("Token data:", tokenData);
 
     if (!tokenData?.access_token) {
       console.error("❌ No access_token returned:", tokenData);
@@ -155,7 +158,10 @@ export default async function handler(
     }
   } catch (error) {
     console.error("Callback error:", error);
-    return res.status(500).json({ error: "OAuth callback failed" });
+    return res.status(500).json({ 
+      error: "OAuth callback failed",
+      details: error instanceof Error ? error.message : String(error)
+    });
   }
 }
 
