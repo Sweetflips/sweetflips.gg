@@ -39,7 +39,7 @@ const SignInPage = () => {
     };
 
     // Check for verification success message
-    const verified = searchParams.get('verified');
+    const verified = searchParams?.get('verified');
     if (verified === 'true') {
       setMessage('Email verified successfully! You can now sign in.');
     }

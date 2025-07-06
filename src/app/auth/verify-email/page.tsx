@@ -14,8 +14,8 @@ const VerifyEmail: React.FC = () => {
 
   useEffect(() => {
     const verifyEmail = async () => {
-      const token = searchParams.get('token');
-      const type = searchParams.get('type');
+      const token = searchParams?.get('token');
+      const type = searchParams?.get('type');
 
       if (!token || !type) {
         setStatus('error');
