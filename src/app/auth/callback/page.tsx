@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Loader from '@/components/common/Loader';
-import { createClientForAuth } from '../../../../lib/supabase';
+import { createClientForAuth } from '@/lib/supabase';
 
 const CallbackPage = () => {
   const searchParams = useSearchParams();

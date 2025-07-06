@@ -5,7 +5,7 @@ import React, {
   useState,
   ReactNode,
 } from "react";
-import { createClientForAuth } from "../../lib/supabase";
+import { createClientForAuth } from "@/lib/supabase";
 
 interface AuthContextType {
   isLoggedIn: boolean;

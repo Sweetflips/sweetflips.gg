@@ -10,7 +10,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import Cookies from "universal-cookie";
 import axios from "axios";
-import { createClientForAuth } from "../../../../lib/supabase";
+import { createClientForAuth } from "@/lib/supabase";
 
 const SignInPage = () => {
   const [email, setEmail] = useState("");

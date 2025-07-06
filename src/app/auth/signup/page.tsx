@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
-import { createClientForAuth } from "../../../../lib/supabase";
+import { createClientForAuth } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
 const SignUp: React.FC = () => {

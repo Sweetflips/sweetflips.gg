@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
-import { createClientForAuth } from "../../../../lib/supabase";
+import { createClientForAuth } from "@/lib/supabase";
 import Link from "next/link";
 
 const VerifyEmail: React.FC = () => {
