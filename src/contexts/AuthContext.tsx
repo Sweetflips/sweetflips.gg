@@ -13,9 +13,14 @@ interface AuthContextType {
   loading: boolean;
   supabaseUser: any;
   refreshAuth: () => Promise<void>;
+  supabaseClient: any;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Create a single Supabase client instance outside component
+const supabaseClient = createClientForAuth();
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -39,8 +44,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } else {
         // API auth failed, check Supabase authentication (only on client side)
         if (typeof window !== 'undefined') {
-          const supabase = createClientForAuth();
-          const { data: { user } } = await supabase.auth.getUser();
+          const { data: { user } } = await supabaseClient.auth.getUser();
           
           if (user && user.email_confirmed_at) {
             setIsLoggedIn(true);
@@ -72,8 +76,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     
     // Listen for Supabase auth changes (only on client side)
     if (typeof window !== 'undefined') {
-      const supabase = createClientForAuth();
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      const { data: { subscription } } = supabaseClient.auth.onAuthStateChange(
         (event, session) => {
           if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
             setIsLoggedIn(true);
@@ -90,9 +93,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
+  const logout = async () => {
+    try {
+      // Handle Supabase logout
+      if (supabaseUser) {
+        await supabaseClient.auth.signOut();
+      }
+      
+      // Handle API logout
+      await fetch("/api/auth/logout", { method: "POST" });
+      
+      // Clear state
+      setIsLoggedIn(false);
+      setUserRole(null);
+      setSupabaseUser(null);
+      
+      // Redirect to home or login page
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
   return (
     <AuthContext.Provider
-      value={{ isLoggedIn, userRole, loading, supabaseUser, refreshAuth: checkUser }}
+      value={{ 
+        isLoggedIn, 
+        userRole, 
+        loading, 
+        supabaseUser, 
+        refreshAuth: checkUser,
+        supabaseClient,
+        logout 
+      }}
     >
       {children}
     </AuthContext.Provider>

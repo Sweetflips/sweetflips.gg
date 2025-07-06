@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
-import { createClientForAuth } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 
 const VerifyEmail: React.FC = () => {
@@ -11,6 +11,7 @@ const VerifyEmail: React.FC = () => {
   const [message, setMessage] = useState('');
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { supabaseClient } = useAuth();
 
   useEffect(() => {
     const verifyEmail = async () => {
@@ -24,7 +25,7 @@ const VerifyEmail: React.FC = () => {
       }
 
       try {
-        const supabase = createClientForAuth();
+        const supabase = supabaseClient;
         const { data, error } = await supabase.auth.verifyOtp({
           token_hash: token,
           type: type as any,

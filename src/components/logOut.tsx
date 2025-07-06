@@ -1,14 +1,13 @@
 "use client";
-import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import { useEffect } from 'react';
 
 const LogOut: React.FC = () => {
-  const router = useRouter();
+  const { logout } = useAuth();
 
   useEffect(() => {
-    localStorage.removeItem('isAuthenticated');
-    router.push('/auth/logout');
-  }, [router]);
+    logout();
+  }, [logout]);
 
   return null;
 };

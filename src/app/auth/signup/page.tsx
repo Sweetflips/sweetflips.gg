@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
-import { createClientForAuth } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 
 const SignUp: React.FC = () => {
@@ -16,6 +16,7 @@ const SignUp: React.FC = () => {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
+  const { supabaseClient } = useAuth();
 
   useEffect(() => {
     const checkIfLoggedIn = async () => {
@@ -62,7 +63,7 @@ const SignUp: React.FC = () => {
     }
 
     try {
-      const supabase = createClientForAuth();
+      const supabase = supabaseClient;
       const { data, error } = await supabase.auth.signUp({
         email,
         password,

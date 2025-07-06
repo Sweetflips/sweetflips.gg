@@ -7,6 +7,7 @@ import React, { useEffect, useState } from "react";
 import Loader from "@/components/common/Loader";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { TokenProvider } from "@/contexts/TokenContext"; // ✅ Import your new TokenProvider
+import { LinkAccountProvider } from "@/components/LinkAccountProvider/LinkAccountProvider";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
@@ -26,11 +27,13 @@ export default function RootLayout({
     <html lang="en">
       <body suppressHydrationWarning={true} className="flex flex-col min-h-screen dark:text-bodydark SidebarBg"> {/* Moved classes here */}
       <AuthProvider>
-  <TokenProvider>
-    {/* Removed intermediate div */}
-    {loading ? <Loader /> : children}
-  </TokenProvider>
-</AuthProvider>
+        <TokenProvider>
+          <LinkAccountProvider>
+            {/* Removed intermediate div */}
+            {loading ? <Loader /> : children}
+          </LinkAccountProvider>
+        </TokenProvider>
+      </AuthProvider>
       </body>
     </html>
   );

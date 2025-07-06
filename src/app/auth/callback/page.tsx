@@ -3,11 +3,12 @@
 import { useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Loader from '@/components/common/Loader';
-import { createClientForAuth } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 
 const CallbackPage = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { supabaseClient } = useAuth();
 
   useEffect(() => {
     const handleAuthCallback = async () => {
@@ -28,7 +29,7 @@ const CallbackPage = () => {
       // Handle Supabase email verification
       if (tokenHash && type) {
         try {
-          const supabase = createClientForAuth();
+          const supabase = supabaseClient;
           const { data, error } = await supabase.auth.verifyOtp({
             token_hash: tokenHash,
             type: type as any,

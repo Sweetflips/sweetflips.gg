@@ -6,6 +6,7 @@ import Loader from "@/components/common/Loader";
 import TokenExchange from "@/components/TokenExchange/TokenExchange";
 import UserOrders from "@/components/UserOrders/UserOrders";
 import { withAuth } from "@/components/withAuth";
+import { useAuth } from "@/contexts/AuthContext";
 
 const ProfilePage = () => {
   const router = useRouter(); // Initialize router to manage URL history
@@ -17,6 +18,7 @@ const ProfilePage = () => {
   >("details");
   const [syncing, setSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const { logout } = useAuth();
 
   const fetchUser = useCallback(async () => {
     setLoading(true);
@@ -143,17 +145,7 @@ const ProfilePage = () => {
 
           <div className="flex justify-center sm:ml-auto sm:justify-end">
             <button
-              onClick={async () => {
-                // Clear server-side session
-                await fetch("/api/auth/logout", { method: "GET" });
-                
-                // Clear Supabase session
-                const supabase = (await import("../../../lib/supabase")).createClientForAuth();
-                await supabase.auth.signOut();
-                
-                // Redirect to home
-                window.location.href = "/";
-              }}
+              onClick={logout}
               className="rounded-xl bg-[#9925FE] px-4 py-1.5 text-sm font-medium text-white transition hover:bg-opacity-90 sm:text-base"
             >
               Logout

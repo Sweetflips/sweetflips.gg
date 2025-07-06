@@ -11,10 +11,13 @@ model User {
   id            Int      @id @default(autoincrement())
   username      String
   email         String
-  kickId        String   @unique
+  kickId        String?  @unique
   tokens Decimal @db.Decimal(10, 2)
   refresh_token String?
   role          String?
+  auth_user_id  String?  @unique
+  kick_linked_at DateTime?
+  kick_link_requested_at DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

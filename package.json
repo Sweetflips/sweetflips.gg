@@ -57,6 +57,7 @@
     "slick-carousel": "^1.8.1",
     "ssh2-sftp-client": "^10.0.3",
     "universal-cookie": "^7.2.0",
+    "uuid": "^11.1.0",
     "zustand": "^5.0.4"
   },
   "devDependencies": {
@@ -78,6 +79,7 @@
     "@types/react-dom": "^18",
     "@types/react-slick": "^0.23.13",
     "@types/ssh2-sftp-client": "^9.0.3",
+    "@types/uuid": "^10.0.0",
     "autoprefixer": "^10.0.1",
     "daisyui": "^4.12.10",
     "eslint": "^8",

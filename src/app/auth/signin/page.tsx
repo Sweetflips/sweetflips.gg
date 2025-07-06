@@ -10,8 +10,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import Cookies from "universal-cookie";
 import axios from "axios";
-import { createClientForAuth } from "@/lib/supabase";
-
 const SignInPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,6 +19,7 @@ const SignInPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(true); // Added loading state
+  const { supabaseClient } = useAuth();
 
   // ✅ Redirect if already logged in and check for verification status
   useEffect(() => {
@@ -86,7 +85,7 @@ const SignInPage = () => {
     setMessage("");
 
     try {
-      const supabase = createClientForAuth();
+      const supabase = supabaseClient;
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
