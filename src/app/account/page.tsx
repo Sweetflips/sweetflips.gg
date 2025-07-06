@@ -143,7 +143,17 @@ const ProfilePage = () => {
 
           <div className="flex justify-center sm:ml-auto sm:justify-end">
             <button
-              onClick={() => (window.location.href = "/api/auth/logout")}
+              onClick={async () => {
+                // Clear server-side session
+                await fetch("/api/auth/logout", { method: "GET" });
+                
+                // Clear Supabase session
+                const supabase = (await import("../../../lib/supabase")).createClientForAuth();
+                await supabase.auth.signOut();
+                
+                // Redirect to home
+                window.location.href = "/";
+              }}
               className="rounded-xl bg-[#9925FE] px-4 py-1.5 text-sm font-medium text-white transition hover:bg-opacity-90 sm:text-base"
             >
               Logout

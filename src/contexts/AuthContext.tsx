@@ -5,11 +5,13 @@ import React, {
   useState,
   ReactNode,
 } from "react";
+import { createClientForAuth } from "../../lib/supabase";
 
 interface AuthContextType {
   isLoggedIn: boolean;
   userRole: string | null;
-  loading: boolean; // ✅ NEW: Add a loading state
+  loading: boolean;
+  supabaseUser: any;
   refreshAuth: () => Promise<void>;
 }
 
@@ -22,36 +24,75 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true); // ✅ NEW: Start in a loading state
+  const [loading, setLoading] = useState(true);
+  const [supabaseUser, setSupabaseUser] = useState<any>(null);
 
   const checkUser = async () => {
     try {
+      // Check existing API authentication
       const res = await fetch("/api/user");
       if (res.ok) {
         const data = await res.json();
         setIsLoggedIn(true);
         setUserRole(data.user?.role || null);
+        setSupabaseUser(null); // Clear Supabase user when API auth is working
       } else {
-        setIsLoggedIn(false);
-        setUserRole(null);
+        // API auth failed, check Supabase authentication (only on client side)
+        if (typeof window !== 'undefined') {
+          const supabase = createClientForAuth();
+          const { data: { user } } = await supabase.auth.getUser();
+          
+          if (user && user.email_confirmed_at) {
+            setIsLoggedIn(true);
+            setSupabaseUser(user);
+            setUserRole(null); // Supabase users might not have roles initially
+          } else {
+            setIsLoggedIn(false);
+            setUserRole(null);
+            setSupabaseUser(null);
+          }
+        } else {
+          setIsLoggedIn(false);
+          setUserRole(null);
+          setSupabaseUser(null);
+        }
       }
     } catch (err) {
       console.error("Failed to fetch user");
       setIsLoggedIn(false);
       setUserRole(null);
+      setSupabaseUser(null);
     } finally {
-      setLoading(false); // ✅ NEW: Set loading to false when check is done
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     checkUser();
+    
+    // Listen for Supabase auth changes (only on client side)
+    if (typeof window !== 'undefined') {
+      const supabase = createClientForAuth();
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        (event, session) => {
+          if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
+            setIsLoggedIn(true);
+            setSupabaseUser(session.user);
+          } else if (event === 'SIGNED_OUT') {
+            setIsLoggedIn(false);
+            setSupabaseUser(null);
+            setUserRole(null);
+          }
+        }
+      );
+
+      return () => subscription.unsubscribe();
+    }
   }, []);
 
   return (
-    // ✅ NEW: Pass loading state to the provider
     <AuthContext.Provider
-      value={{ isLoggedIn, userRole, loading, refreshAuth: checkUser }}
+      value={{ isLoggedIn, userRole, loading, supabaseUser, refreshAuth: checkUser }}
     >
       {children}
     </AuthContext.Provider>

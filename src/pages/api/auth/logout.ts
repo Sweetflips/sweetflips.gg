@@ -2,6 +2,7 @@ import { serialize } from 'cookie';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Clear the access_token cookie
   res.setHeader('Set-Cookie', serialize('access_token', '', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -10,6 +11,6 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     sameSite: 'lax',
   }));
 
-  // Optionally redirect to Kick logout or your own login page
-  res.redirect('/');
+  // Return success response for client-side logout handling
+  res.status(200).json({ success: true });
 }

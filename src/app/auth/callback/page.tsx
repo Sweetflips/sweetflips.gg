@@ -1,33 +1,69 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Loader from '@/components/common/Loader';
+import { createClientForAuth } from '../../../../lib/supabase';
 
 const CallbackPage = () => {
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   useEffect(() => {
-    if (!searchParams) {
-      console.error('[OAuth Callback] ❌ searchParams is null');
-      return;
-    }
+    const handleAuthCallback = async () => {
+      if (!searchParams) {
+        console.error('[Auth Callback] ❌ searchParams is null');
+        return;
+      }
 
-    const code = searchParams.get('code');
-    const state = searchParams.get('state');
+      const code = searchParams.get('code');
+      const state = searchParams.get('state');
+      
+      // Check for Supabase auth tokens (email verification)
+      const accessToken = searchParams.get('access_token');
+      const refreshToken = searchParams.get('refresh_token');
+      const tokenHash = searchParams.get('token_hash');
+      const type = searchParams.get('type');
 
-    console.log('[OAuth Callback] code:', code);
-    console.log('[OAuth Callback] state:', state);
+      // Handle Supabase email verification
+      if (tokenHash && type) {
+        try {
+          const supabase = createClientForAuth();
+          const { data, error } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: type as any,
+          });
 
-    if (!code || !state) {
-      console.error('❌ Missing code or state from URL');
-      return;
-    }
+          if (error) {
+            console.error('Email verification error:', error);
+            router.push('/auth/verify-email?error=' + encodeURIComponent(error.message));
+          } else if (data.user) {
+            console.log('Email verified successfully');
+            router.push('/auth/signin?verified=true');
+          }
+        } catch (error) {
+          console.error('Email verification error:', error);
+          router.push('/auth/verify-email?error=' + encodeURIComponent('Verification failed'));
+        }
+        return;
+      }
 
-    // Redirect to API route that does the actual token exchange using DB-stored code_verifier
-    const redirectUrl = `/api/auth/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`;
-    window.location.href = redirectUrl;
-  }, [searchParams]);
+      // Handle OAuth callback (existing Kick login)
+      if (code && state) {
+        console.log('[OAuth Callback] code:', code);
+        console.log('[OAuth Callback] state:', state);
+
+        // Redirect to API route that does the actual token exchange using DB-stored code_verifier
+        const redirectUrl = `/api/auth/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`;
+        window.location.href = redirectUrl;
+        return;
+      }
+
+      console.error('❌ No valid auth parameters found in callback');
+    };
+
+    handleAuthCallback();
+  }, [searchParams, router]);
 
   return <div><Loader /></div>;
 };

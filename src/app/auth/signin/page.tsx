@@ -6,20 +6,23 @@ import Link from "next/link";
 import Image from "next/image";
 import Breadcrumb from "../../../components/Breadcrumbs/Breadcrumb";
 import DefaultLayout from "../../../components/Layouts/DefaultLayout";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import Cookies from "universal-cookie";
 import axios from "axios";
+import { createClientForAuth } from "../../../../lib/supabase";
 
 const SignInPage = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(true); // Added loading state
 
-  // ✅ Redirect if already logged in
+  // ✅ Redirect if already logged in and check for verification status
   useEffect(() => {
     const checkIfLoggedIn = async () => {
       try {
@@ -34,24 +37,28 @@ const SignInPage = () => {
         setIsLoading(false);
       }
     };
+
+    // Check for verification success message
+    const verified = searchParams.get('verified');
+    if (verified === 'true') {
+      setMessage('Email verified successfully! You can now sign in.');
+    }
+
     checkIfLoggedIn();
-  }, [router]);
+  }, [router, searchParams]);
 
   const handleSubmit = async (event: any) => {
     event.preventDefault();
+    setLoading(true);
+    setError("");
+    setMessage("");
 
     try {
       const response = await axios.post("/", {
-        username,
+        username: email, // Using email as username for legacy compatibility
         password,
       });
-      // console.log("========");
-      // console.log(response);
-      // console.log("==========!!!!!");
       const data = await response.data;
-      // console.log("!!!!!!!!!!!!!!");
-      // console.log(data);
-      // console.log("!!!!??????????");
       const token = JSON.stringify(data.token);
       const cookie = new Cookies();
 
@@ -66,6 +73,40 @@ const SignInPage = () => {
       return data;
     } catch (error) {
       console.error("An error occurred during login:", error);
+      setError("Invalid email or password");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEmailSignIn = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const supabase = createClientForAuth();
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        setError(error.message);
+      } else if (data.user) {
+        // Check if email is verified
+        if (!data.user.email_confirmed_at) {
+          setError("Please verify your email before signing in");
+        } else {
+          setMessage("Signed in successfully!");
+          router.push("/account");
+        }
+      }
+    } catch (error: any) {
+      setError(error.message || "An error occurred during sign in");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -124,22 +165,23 @@ const SignInPage = () => {
                   priority={true} /* Optional: if logo is critical for LCP */
                 />
               </div>
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleEmailSignIn}>
                 <div className="mb-4">
                   {" "}
                   {/* Spacing between input groups remains mb-4 */}
                   <label className="mb-1.5 block font-medium text-white">
                     {" "}
                     {/* Changed mb-2.5 to mb-1.5 */}
-                    Username/Email
+                    Email
                   </label>
                   <div className="relative">
                     <input
-                      type="text"
-                      placeholder="Gebruikersnaam"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
+                      type="email"
+                      placeholder="Enter your email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       className="w-full px-4 py-2 mb-3 rounded-lg text-white bg-[#1d1628] border border-graydark focus:outline-none focus:ring-2 focus:ring-[#9925FE]"
+                      required
                     />
                     {/* Icon removed for style consistency, can be re-added if needed */}
                     {/* <span className="absolute right-4 top-4">
@@ -201,11 +243,13 @@ const SignInPage = () => {
                 </div>
                 <div className="mb-4">
                   {/* Changed mb-5 to mb-4 */}
-                  <input
+                  <button
                     type="submit"
-                    value="Sign In"
-                    className="bg-[#9925FE] hover:bg-purple-700 transition-all duration-200 w-full py-2 rounded-lg text-white font-semibold shadow-md shadow-[#9925fe]/40"
-                  />
+                    disabled={loading}
+                    className="bg-[#9925FE] hover:bg-purple-700 transition-all duration-200 w-full py-2 rounded-lg text-white font-semibold shadow-md shadow-[#9925fe]/40 disabled:opacity-50"
+                  >
+                    {loading ? "Signing In..." : "Sign In"}
+                  </button>
                 </div>
               </form>
               <div>
@@ -225,8 +269,26 @@ const SignInPage = () => {
                   </button>
                 </div>
               </div>
-              {message && <p>{message}</p>}
-              {error && <p className="text-red-500">{error}</p>}
+
+              <div className="mt-6 text-center">
+                <p className="text-white">
+                  Don't have an account?{" "}
+                  <Link href="/auth/signup" className="text-[#9925FE] hover:underline">
+                    Sign up
+                  </Link>
+                </p>
+              </div>
+
+              {message && (
+                <div className="mt-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+                  {message}
+                </div>
+              )}
+              {error && (
+                <div className="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                  {error}
+                </div>
+              )}
             </div>
           </div>
         </div>
