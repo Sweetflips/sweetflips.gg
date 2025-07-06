@@ -182,6 +182,8 @@ const Homepage: React.FC = () => {
 
   // Handle URL parameters for error/success messages
   useEffect(() => {
+    if (!searchParams) return;
+    
     const error = searchParams.get('error');
     const linked = searchParams.get('linked');
     
