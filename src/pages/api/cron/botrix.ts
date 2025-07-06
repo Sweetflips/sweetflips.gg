@@ -28,7 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       let kickIdToSet: string | null = null;
 
-      if (matchedUser) {
+      if (matchedUser && matchedUser.kickId) {
         const kickIdUsed = await prisma.userData.findUnique({
           where: { kickId: matchedUser.kickId },
         });
