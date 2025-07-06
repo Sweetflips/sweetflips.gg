@@ -89,6 +89,8 @@ export default async function handler(
     const affiliateData = response.data;
 
     console.log("affiliateData: ", affiliateData);
+
+    console.log("affiliateData: ", affiliateData);
     // Ensure we have an array to process
     if (!Array.isArray(affiliateData)) {
       console.error(
