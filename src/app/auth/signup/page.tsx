@@ -11,7 +11,7 @@ const SignUp: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -56,7 +56,7 @@ const SignUp: React.FC = () => {
         password,
         options: {
           data: {
-            name: name,
+            username: username,
           },
         },
       });
@@ -70,7 +70,7 @@ const SignUp: React.FC = () => {
         setEmail("");
         setPassword("");
         setConfirmPassword("");
-        setName("");
+        setUsername("");
       }
     } catch (error: any) {
       setError(error.message || "An error occurred during registration");
@@ -102,14 +102,14 @@ const SignUp: React.FC = () => {
               <form onSubmit={handleSignUp}>
                 <div className="mb-4">
                   <label className="mb-1.5 block font-medium text-white">
-                    Name
+                    Username
                   </label>
                   <div className="relative">
                     <input
                       type="text"
-                      placeholder="Enter your full name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Enter your username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
                       className="w-full px-4 py-2 mb-3 rounded-lg text-white bg-[#1d1628] border border-graydark focus:outline-none focus:ring-2 focus:ring-[#9925FE]"
                       required
                     />
