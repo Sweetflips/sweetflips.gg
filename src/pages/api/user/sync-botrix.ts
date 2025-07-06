@@ -52,7 +52,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
       });
 
-      if (linkedUser) {
+      if (linkedUser && linkedUser.kickId) {
         const alreadyUsed = await prisma.userData.findUnique({
           where: { kickId: linkedUser.kickId },
         });
