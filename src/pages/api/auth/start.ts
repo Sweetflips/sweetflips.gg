@@ -27,7 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     },
   });
 
-  const redirectUrl = `https://id.kick.com/oauth/authorize?response_type=code&client_id=${process.env.NEXT_PUBLIC_KICK_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${sessionId}&scope=user:read&code_challenge=${codeChallenge}&code_challenge_method=S256`;
+  const redirectUrl = `https://kick.com/oauth/authorize?response_type=code&client_id=${process.env.NEXT_PUBLIC_KICK_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${sessionId}&scope=user:read&code_challenge=${codeChallenge}&code_challenge_method=S256`;
 
   res.status(200).json({
     redirectUrl,

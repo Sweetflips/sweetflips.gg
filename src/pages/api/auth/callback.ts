@@ -57,7 +57,7 @@ export default async function handler(
 
   try {
     // Exchange code for tokens
-    const tokenResponse = await fetch("https://id.kick.com/oauth/token", {
+    const tokenResponse = await fetch("https://kick.com/oauth/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({

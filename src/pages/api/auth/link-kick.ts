@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { createClient } from "@supabase/supabase-js";
 import { prisma } from "../../../../lib/prisma";
 import { v4 as uuidv4 } from "uuid";
+import { randomBytes, createHash } from "crypto";
 
 const KICK_CLIENT_ID = process.env.NEXT_PUBLIC_KICK_CLIENT_ID!;
 const KICK_CLIENT_SECRET = process.env.KICK_CLIENT_SECRET!;
@@ -33,9 +34,10 @@ export default async function handler(
       return res.status(400).json({ error: "Kick account already linked" });
     }
 
-    // Generate OAuth session
+    // Generate OAuth session with PKCE
     const sessionId = uuidv4();
-    const codeVerifier = uuidv4();
+    const codeVerifier = randomBytes(32).toString('base64url');
+    const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     await prisma.oAuthSession.create({
@@ -54,12 +56,14 @@ export default async function handler(
       });
     }
 
-    // Build Kick OAuth URL
-    const authUrl = new URL("https://kick.com/oauth2/authorize");
+    // Build Kick OAuth URL with PKCE
+    const authUrl = new URL("https://kick.com/oauth/authorize");
     authUrl.searchParams.append("client_id", KICK_CLIENT_ID);
     authUrl.searchParams.append("response_type", "code");
-    authUrl.searchParams.append("scope", "profile:read");
+    authUrl.searchParams.append("scope", "user:read");
     authUrl.searchParams.append("redirect_uri", `${BASE_URL}/api/auth/callback`);
+    authUrl.searchParams.append("code_challenge", codeChallenge);
+    authUrl.searchParams.append("code_challenge_method", "S256");
     authUrl.searchParams.append("state", JSON.stringify({ 
       sessionId, 
       action: "link",
