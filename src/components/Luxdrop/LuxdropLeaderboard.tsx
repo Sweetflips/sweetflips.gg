@@ -14,28 +14,28 @@ type LeaderboardEntry = {
   reward: number;
 };
 
-// const mockLeaderboardData: LeaderboardEntry[] = [
-//   { username: "TopGamer", wagered: 150000, reward: 0 },
-//   { username: "ProPlayer", wagered: 125000, reward: 0 },
-//   { username: "LuckyCat", wagered: 98000, reward: 0 },
-//   { username: "DevUser4", wagered: 75000, reward: 0 },
-//   { username: "DevUser5", wagered: 72000, reward: 0 },
-//   { username: "DevUser6", wagered: 68000, reward: 0 },
-//   { username: "DevUser7", wagered: 65000, reward: 0 },
-//   { username: "DevUser8", wagered: 61000, reward: 0 },
-//   { username: "DevUser9", wagered: 58000, reward: 0 },
-//   { username: "DevUser10", wagered: 55000, reward: 0 },
-//   { username: "DevUser11", wagered: 51000, reward: 0 },
-//   { username: "DevUser12", wagered: 48000, reward: 0 },
-//   { username: "DevUser13", wagered: 45000, reward: 0 },
-//   { username: "DevUser14", wagered: 42000, reward: 0 },
-//   { username: "DevUser15", wagered: 40000, reward: 0 },
-//   { username: "DevUser16", wagered: 38000, reward: 0 },
-//   { username: "DevUser17", wagered: 36000, reward: 0 },
-//   { username: "DevUser18", wagered: 34000, reward: 0 },
-//   { username: "DevUser19", wagered: 32000, reward: 0 },
-//   { username: "DevUser20", wagered: 30000, reward: 0 },
-// ];
+const mockLeaderboardData: LeaderboardEntry[] = [
+  { username: "TopGamer", wagered: 150000, reward: 0 },
+  { username: "ProPlayer", wagered: 125000, reward: 0 },
+  { username: "LuckyCat", wagered: 98000, reward: 0 },
+  { username: "DevUser4", wagered: 75000, reward: 0 },
+  { username: "DevUser5", wagered: 72000, reward: 0 },
+  { username: "DevUser6", wagered: 68000, reward: 0 },
+  { username: "DevUser7", wagered: 65000, reward: 0 },
+  { username: "DevUser8", wagered: 61000, reward: 0 },
+  { username: "DevUser9", wagered: 58000, reward: 0 },
+  { username: "DevUser10", wagered: 55000, reward: 0 },
+  { username: "DevUser11", wagered: 51000, reward: 0 },
+  { username: "DevUser12", wagered: 48000, reward: 0 },
+  { username: "DevUser13", wagered: 45000, reward: 0 },
+  { username: "DevUser14", wagered: 42000, reward: 0 },
+  { username: "DevUser15", wagered: 40000, reward: 0 },
+  { username: "DevUser16", wagered: 38000, reward: 0 },
+  { username: "DevUser17", wagered: 36000, reward: 0 },
+  { username: "DevUser18", wagered: 34000, reward: 0 },
+  { username: "DevUser19", wagered: 32000, reward: 0 },
+  { username: "DevUser20", wagered: 30000, reward: 0 },
+];
 // Define the reward mapping based on rank
 const rewardMapping: { [key: number]: number } = {
   1: 8000,
@@ -88,8 +88,53 @@ const LuxdropLeaderboard: React.FC = () => {
   };
 
   useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
     const fetchData = async () => {
       setLoading(true);
+
+      // Development mode: prioritize mock data or attempt API fetch
+      if (process.env.NODE_ENV === "development") {
+        console.log("Running in development mode");
+        try {
+          const response = await fetch(API_PROXY_URL);
+          if (!response.ok)
+            throw new Error("API failed, falling back to mock data");
+          const result = await response.json();
+          if (!result.data || !Array.isArray(result.data)) {
+            throw new Error("Invalid API data, falling back to mock data");
+          }
+
+          // Process real data if fetch succeeds
+          const processedData = result.data
+            .filter((user: any) => user.username)
+            .map((user: any, index: number) => ({
+              username: maskUsername(user.username),
+              wagered: Number(user.wagered) || 0,
+              reward: rewardMapping[index + 1] || 0,
+            }));
+          console.log("Using real API data:", processedData);
+          setData(processedData);
+        } catch (devError: any) {
+          console.warn(`DEV MODE: ${devError.message}, using mock data`);
+          // Fallback to mock data
+          const processedMockData = mockLeaderboardData
+            .filter((user) => user.username)
+            .map((user, index) => ({
+              username: maskUsername(user.username),
+              wagered: user.wagered,
+              reward: rewardMapping[index + 1] || 0,
+            }));
+          console.log("Using mock data:", processedMockData);
+          setData(processedMockData);
+          setError(null); // Clear any errors
+        } finally {
+          setLoading(false);
+        }
+        return; // Exit after handling development mode
+      }
+
+      // Production mode: fetch from API only
       try {
         const response = await fetch(API_PROXY_URL);
         if (!response.ok) {
