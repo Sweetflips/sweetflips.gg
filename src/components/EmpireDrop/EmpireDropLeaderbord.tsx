@@ -92,7 +92,7 @@ const EmpireDropLeaderboard: React.FC = () => {
 
         const mappedData: User[] = result.ranking.map((entry: any) => ({
           username: entry.user.name,
-          wagerAmount: entry.total / 100,
+          wagerAmount: entry.total,
           rewardAmount: 0,
         }));
 

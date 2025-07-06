@@ -54,7 +54,7 @@ const TopLeaderboard: React.FC = () => {
         const parsedData = result.data.map((user: any): LeaderboardEntry => ({
           username: maskUsername(user.username),
           referred_by_code: user.referred_by_code,
-          wagered: parseFloat(user.wagered),
+          wagered: user.wagered,
           reward: 0,
         }));
   

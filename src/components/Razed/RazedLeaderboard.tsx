@@ -78,7 +78,7 @@ const RazedLeaderboard: React.FC = () => {
   
         const parsedData = result.data.map((user: any): LeaderboardEntry => ({
           username: maskUsername(user.username),
-          wagered: parseFloat(user.wagered),
+          wagered: user.wagered,
           reward: 0,
         }));
   
