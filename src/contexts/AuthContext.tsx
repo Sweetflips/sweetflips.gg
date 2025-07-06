@@ -6,6 +6,7 @@ import React, {
   ReactNode,
 } from "react";
 import { createClientForAuth } from "@/lib/supabase";
+import { AuthChangeEvent, Session } from "@supabase/supabase-js";
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -77,7 +78,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Listen for Supabase auth changes (only on client side)
     if (typeof window !== 'undefined') {
       const { data: { subscription } } = supabaseClient.auth.onAuthStateChange(
-        (event, session) => {
+        (event: AuthChangeEvent, session: Session | null) => {
           if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
             setIsLoggedIn(true);
             setSupabaseUser(session.user);
