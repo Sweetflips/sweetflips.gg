@@ -45,9 +45,8 @@ export default async function handler(
   }
 
   // --- ADDED: Date Logic for Monthly Leaderboard ---
-  const now = DateTime.utc();
-  const startDate = now.startOf("month").toISODate(); // e.g., "2024-05-01"
-  const endDate = now.endOf("month").toISODate(); // e.g., "2024-05-31"
+  const startDate = DateTime.utc(2025, 6, 29).toISODate(); // June 29th, 2025
+  const endDate = DateTime.utc(2025, 7, 28, 23, 59, 59).toISODate(); // July 28th, 2025 23:59:59 UTC
   // ---
 
   // --- Construct the Axios Request ---
