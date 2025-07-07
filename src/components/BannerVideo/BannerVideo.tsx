@@ -9,7 +9,14 @@ const BannerVideo: React.FC = () => {
         muted
         loop
         playsInline
-        style={{ backgroundColor: 'transparent', border: 'none' }}
+        style={{ 
+          backgroundColor: 'transparent', 
+          border: 'none',
+          outline: 'none',
+          boxShadow: 'none',
+          WebkitBoxShadow: 'none',
+          MozBoxShadow: 'none'
+        }}
       >
         <source src="../../videos/SweetflipsxRazed_Banner.webm" type="video/webm" />
         Your browser does not support the video tag.
