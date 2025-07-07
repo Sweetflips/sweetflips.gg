@@ -16,7 +16,7 @@ const BannerVideo: React.FC = () => {
           boxShadow: 'none',
           WebkitBoxShadow: 'none',
           MozBoxShadow: 'none',
-          aspectRatio: '16/9'
+          aspectRatio: 'auto'
         }}
       >
         <source src="../../videos/SweetflipsxRazed_Banner.webm" type="video/webm" />
