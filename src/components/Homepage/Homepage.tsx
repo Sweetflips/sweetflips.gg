@@ -11,7 +11,7 @@ import BannerVideo from "@/components/BannerVideo/BannerVideo";
 import GiveAwayCounter from "../GiveAwayCounter/GiveAwayCounter";
 import Image from "next/image";
 import RaffleTicketBanner from "../RaffleTicketBanner/RaffleTicketBanner";
-import confetti from "canvas-confetti";
+// import confetti from "canvas-confetti";
 import Loader from "@/components/common/Loader";
 import { Timer } from "@/app/ui/timer/Timer";
 // import Footer from "@/components/Footer/Footer"; // Removed Footer import
@@ -167,18 +167,18 @@ const Homepage: React.FC = () => {
 
   const topUsers = data.slice(0, 3);
 
-  useEffect(() => {
-    if (
-      topUsers.length > 0 &&
-      topUsers[0] &&
-      !fireworksLaunched.current &&
-      !loading
-    ) {
-      // check loading state
-      fireworksLaunched.current = true;
-      confetti({ particleCount: 100, spread: 120, origin: { y: 0.6 } });
-    }
-  }, [topUsers, loading]); // add loading to dependency array
+  // useEffect(() => {
+  //   if (
+  //     topUsers.length > 0 &&
+  //     topUsers[0] &&
+  //     !fireworksLaunched.current &&
+  //     !loading
+  //   ) {
+  //     // check loading state
+  //     fireworksLaunched.current = true;
+  //     confetti({ particleCount: 100, spread: 120, origin: { y: 0.6 } });
+  //   }
+  // }, [topUsers, loading]); // add loading to dependency array
 
   // Handle URL parameters for error/success messages
   useEffect(() => {

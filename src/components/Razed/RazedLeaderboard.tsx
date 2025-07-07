@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
-import confetti from "canvas-confetti";
+// import confetti from "canvas-confetti";
 import Loader from "@/components/common/Loader";
 import { Timer } from "@/app/ui/timer/Timer";
 import Footer from "@/components/Footer/Footer";
@@ -159,12 +159,12 @@ const RazedLeaderboard: React.FC = () => {
 
   const topUsers = data.slice(0, 3);
 
-  useEffect(() => {
-    if (topUsers[0] && !fireworksLaunched.current) {
-      fireworksLaunched.current = true;
-      confetti({ particleCount: 100, spread: 120, origin: { y: 0.6 } });
-    }
-  }, [topUsers]);
+  // useEffect(() => {
+  //   if (topUsers[0] && !fireworksLaunched.current) {
+  //     fireworksLaunched.current = true;
+  //     confetti({ particleCount: 100, spread: 120, origin: { y: 0.6 } });
+  //   }
+  // }, [topUsers]);
 
   // Old useEffect for timeLeft is removed as Timer component handles this.
 
