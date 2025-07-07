@@ -9,9 +9,19 @@ const GiveAwayCounter: React.FC = () => {
   // ✅ Fetch current value once on mount
   useEffect(() => {
     const fetchAmount = async () => {
-      const res = await fetch("/api/giveaway-counter");
-      const data = await res.json();
-      setAmount(data.amount);
+      try {
+        const res = await fetch("/api/giveaway-counter");
+        if (!res.ok) {
+          console.error(`Failed to fetch giveaway counter: ${res.status} ${res.statusText}`);
+          setAmount(0); // Set default value on error
+          return;
+        }
+        const data = await res.json();
+        setAmount(data.amount);
+      } catch (error) {
+        console.error("Error fetching giveaway counter:", error);
+        setAmount(0); // Set default value on error
+      }
     };
 
     fetchAmount();
@@ -21,7 +31,7 @@ const GiveAwayCounter: React.FC = () => {
     <div className="mt-12 px-4 text-white">
       <div className="mx-auto w-full max-w-7xl">
         <h2 className="mb-6 text-center text-4xl font-bold text-white drop-shadow-md">
-          Sweetflips Total Giveaway Amount
+          Sweetflips Total Given Away Since 2024
         </h2>
 
         <div className="RegisterBlocks-inner flex flex-col items-center justify-center gap-6 rounded-2xl p-6 shadow-[inset_0_1px_4px_rgba(255,255,255,0.05),_0_10px_30px_rgba(128,0,255,0.2)] lg:flex-row">

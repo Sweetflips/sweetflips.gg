@@ -3,11 +3,24 @@ import { prisma } from "../../../lib/prisma";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "GET") {
-    const counter = await prisma.giveawayCounter.findUnique({ where: { id: 1 } });
+    try {
+      let counter = await prisma.giveawayCounter.findUnique({ where: { id: 1 } });
 
-    if (!counter) return res.status(404).json({ error: "Not found" });
+      // If no counter exists, create one with default value
+      if (!counter) {
+        counter = await prisma.giveawayCounter.create({
+          data: {
+            id: 1,
+            amount: 0.0
+          }
+        });
+      }
 
-    return res.status(200).json({ amount: counter.amount });
+      return res.status(200).json({ amount: counter.amount });
+    } catch (error) {
+      console.error("Error fetching giveaway counter:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
   }
 
   res.setHeader("Allow", ["GET"]);
