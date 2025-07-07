@@ -2,9 +2,9 @@ import React from "react";
 
 const BannerVideo: React.FC = () => {
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start rounded-4xl w-full max-w-7xl mx-auto h-auto px-4">
+    <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start rounded-4xl w-full max-w-7xl mx-auto h-auto px-4 overflow-hidden">
       <video
-        className="w-full h-auto rounded-4xl object-cover"
+        className="w-full h-full rounded-4xl object-cover"
         autoPlay
         muted
         loop
@@ -15,7 +15,8 @@ const BannerVideo: React.FC = () => {
           outline: 'none',
           boxShadow: 'none',
           WebkitBoxShadow: 'none',
-          MozBoxShadow: 'none'
+          MozBoxShadow: 'none',
+          aspectRatio: '16/9'
         }}
       >
         <source src="../../videos/SweetflipsxRazed_Banner.webm" type="video/webm" />
