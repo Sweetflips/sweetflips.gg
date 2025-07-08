@@ -198,22 +198,6 @@ const RazedLeaderboard: React.FC = () => {
   return (
     <div className="mt-4 p-4 text-white">
       {/* Floating Image */}
-      <div className="floating-image1 animate-rotating">
-        <Image
-          src="/images/icon/Razed_coin.png"
-          alt="Razed Coin"
-          width={120}
-          height={120}
-        />
-      </div>
-      <div className="floating-image2 animate-rotating">
-        <Image
-          src="/images/icon/Razed_coin2.png"
-          alt="Razed Coin"
-          width={100}
-          height={100}
-        />
-      </div>
       <div className="FooterBg relative mx-auto flex h-80 w-full transform flex-col items-center justify-between overflow-hidden rounded-xl p-4 shadow-[inset_0_0_20px_rgba(0,0,0,0.4)] transition-all sm:w-3/4 sm:flex-row sm:items-start md:w-5/6">
         {/* Left Image */}
         <div className="hide-on-ipad absolute left-0 hidden sm:block">
