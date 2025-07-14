@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 
-type Day = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday";
+const validDays = [
+  "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
+] as const;
+
+type Day = typeof validDays[number];
 
 interface ScheduleEntry {
   day: string;
@@ -20,6 +24,10 @@ export default function StreamScheduleTabsClient({ schedule }: Props) {
 
   const groupedSchedule = schedule.reduce<Record<Day, ScheduleEntry[]>>((acc, entry) => {
     const day = entry.day as Day;
+    if (!validDays.includes(day)) {
+      console.warn(`Invalid day encountered: ${entry.day}`);
+      return acc;
+    }
     if (!acc[day]) acc[day] = [];
     acc[day].push(entry);
     return acc;
