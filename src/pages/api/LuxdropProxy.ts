@@ -95,13 +95,13 @@ export default async function handler(
   // --- Construct the Axios Request ---
   const params = {
     codes: codesToFetch,
-    startDate: startDateISO, // Send the calculated start date
-    endDate: endDateISO, // Send the calculated end date
+    from_date: startDateISO, // Send the calculated start date in correct format
+    to_date: endDateISO, // Send the calculated end date in correct format
   };
 
   const config: AxiosRequestConfig = {
     method: "get",
-    url: `${BASE_API_URL}/external/affiliates`,
+    url: `${BASE_API_URL}/api/luxdrop/custom-range`,
     params: params, // Pass the params object to Axios
     headers: {
       "x-api-key": API_KEY,
