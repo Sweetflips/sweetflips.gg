@@ -76,6 +76,13 @@ export default async function handler(
   // Convert to ISO date strings for the API
   const startDateISO = startDate.toISODate();
   const endDateISO = endDate.toISODate();
+  
+  // Debug logging for date range
+  console.log("=== LUXDROP DATE CALCULATION ===");
+  console.log("Current date:", now.toISODate());
+  console.log("Calculated start date:", startDateISO);
+  console.log("Calculated end date:", endDateISO);
+  console.log("================================");
   // ---
 
   // --- Construct the Axios Request ---
