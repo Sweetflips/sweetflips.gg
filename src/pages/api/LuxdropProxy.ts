@@ -50,16 +50,27 @@ export default async function handler(
   let startDate: DateTime;
   let endDate: DateTime;
 
-  if (now.day >= 29) {
-    // If today is 29th or later, start date is 29th of current month
-    startDate = now.set({ day: 29, hour: 0, minute: 0, second: 0, millisecond: 0 });
-    // End date is 28th of next month
-    endDate = now.plus({ months: 1 }).set({ day: 28, hour: 23, minute: 59, second: 59, millisecond: 999 });
+  // Special case for August 2025 transition month
+  if (now.year === 2025 && now.month === 7) {
+    // July 2025: Keep current 29th logic for start date, end on August 31st
+    if (now.day >= 29) {
+      startDate = now.set({ day: 29, hour: 0, minute: 0, second: 0, millisecond: 0 });
+    } else {
+      startDate = now.minus({ months: 1 }).set({ day: 29, hour: 0, minute: 0, second: 0, millisecond: 0 });
+    }
+    endDate = DateTime.utc(2025, 8, 31, 23, 59, 59, 999);
+  } else if (now.year === 2025 && now.month === 8) {
+    // August 2025: Keep current 29th logic for start date, end on August 31st
+    if (now.day >= 29) {
+      startDate = now.set({ day: 29, hour: 0, minute: 0, second: 0, millisecond: 0 });
+    } else {
+      startDate = now.minus({ months: 1 }).set({ day: 29, hour: 0, minute: 0, second: 0, millisecond: 0 });
+    }
+    endDate = DateTime.utc(2025, 8, 31, 23, 59, 59, 999);
   } else {
-    // If today is before 29th, start date is 29th of previous month
-    startDate = now.minus({ months: 1 }).set({ day: 29, hour: 0, minute: 0, second: 0, millisecond: 0 });
-    // End date is 28th of current month
-    endDate = now.set({ day: 28, hour: 23, minute: 59, second: 59, millisecond: 999 });
+    // From September 2025 onwards: 1st to last day of current month
+    startDate = now.set({ day: 1, hour: 0, minute: 0, second: 0, millisecond: 0 });
+    endDate = now.endOf('month').set({ hour: 23, minute: 59, second: 59, millisecond: 999 });
   }
 
   // Convert to ISO date strings for the API
