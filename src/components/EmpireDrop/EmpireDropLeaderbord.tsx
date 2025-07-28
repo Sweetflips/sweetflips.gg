@@ -143,24 +143,8 @@ const EmpireDropLeaderboard: React.FC = () => {
   const countDownDate = (() => {
     const now = DateTime.now().setZone("Europe/Amsterdam");
 
-    const currentMonth = now.month;
-    const currentYear = now.year;
-    const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
-
-    let targetDate;
-    if (now.day < 27) {
-      targetDate = DateTime.fromObject({
-        year: currentYear,
-        month: currentMonth,
-        day: 27,
-      }).setZone("Europe/Amsterdam");
-    } else {
-      targetDate = DateTime.fromObject({
-        year: currentYear,
-        month: nextMonth,
-        day: 27,
-      }).setZone("Europe/Amsterdam");
-    }
+    // Set target date to the end of the current month
+    const targetDate = now.endOf('month');
 
     return targetDate.toISO();
   })();

@@ -18,17 +18,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let afterDate: string;
     let beforeDate: string;
 
-    if (currentDay >= 27) {
-      afterDate = `${currentYear}-${currentMonth < 10 ? "0" : ""}${currentMonth}-27`;
-      const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
-      const nextMonthYear = currentMonth === 12 ? currentYear + 1 : currentYear;
-      beforeDate = `${nextMonthYear}-${nextMonth < 10 ? "0" : ""}${nextMonth}-28`;
-    } else {
-      const startMonth = currentMonth === 1 ? 12 : currentMonth - 1;
-      const startYear = currentMonth === 1 ? currentYear - 1 : currentYear;
-      afterDate = `${startYear}-${startMonth < 10 ? "0" : ""}${startMonth}-27`;
-      beforeDate = `${currentYear}-${currentMonth < 10 ? "0" : ""}${currentMonth}-28`;
-    }
+    // Run leaderboard for the current month (1st to end of month)
+    // Start from the 1st of the current month
+    afterDate = `${currentYear}-${currentMonth < 10 ? "0" : ""}${currentMonth}-01`;
+    
+    // End at the last day of the current month
+    const lastDayOfMonth = currentDate.endOf('month').day;
+    beforeDate = `${currentYear}-${currentMonth < 10 ? "0" : ""}${currentMonth}-${lastDayOfMonth < 10 ? "0" : ""}${lastDayOfMonth}`;
 
     const afterTimestamp = Math.floor(DateTime.fromISO(afterDate, { zone: 'Europe/Amsterdam' }).toSeconds());
     const beforeTimestamp = Math.floor(DateTime.fromISO(beforeDate, { zone: 'Europe/Amsterdam' }).toSeconds());
