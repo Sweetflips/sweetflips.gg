@@ -57,22 +57,10 @@ export default async function handler(
   let startDate: DateTime;
   let endDate: DateTime;
 
-  // Special case for August 2025 transition month
-  if (now.year === 2025 && now.month === 7) {
-    // July 2025: Keep current 29th logic for start date, end on August 31st
-    if (now.day >= 29) {
-      startDate = now.set({ day: 29, hour: 0, minute: 0, second: 0, millisecond: 0 });
-    } else {
-      startDate = now.minus({ months: 1 }).set({ day: 29, hour: 0, minute: 0, second: 0, millisecond: 0 });
-    }
-    endDate = DateTime.utc(2025, 8, 31, 23, 59, 59, 999);
-  } else if (now.year === 2025 && now.month === 8) {
-    // August 2025: Keep current 29th logic for start date, end on August 31st
-    if (now.day >= 29) {
-      startDate = now.set({ day: 29, hour: 0, minute: 0, second: 0, millisecond: 0 });
-    } else {
-      startDate = now.minus({ months: 1 }).set({ day: 29, hour: 0, minute: 0, second: 0, millisecond: 0 });
-    }
+  // Special transition period: July 28, 2025 - August 31, 2025
+  if ((now.year === 2025 && now.month === 7 && now.day >= 28) || (now.year === 2025 && now.month === 8)) {
+    // Transition period: July 28, 2025 00:00:00 UTC to August 31, 2025 23:59:59 UTC
+    startDate = DateTime.utc(2025, 7, 28, 0, 0, 0, 0);
     endDate = DateTime.utc(2025, 8, 31, 23, 59, 59, 999);
   } else {
     // From September 2025 onwards: 1st to last day of current month
@@ -98,6 +86,11 @@ export default async function handler(
     from_date: startDateISO, // Send the calculated start date in correct format
     to_date: endDateISO, // Send the calculated end date in correct format
   };
+
+  console.log("=== API REQUEST DEBUG ===");
+  console.log("Full API URL:", `${BASE_API_URL}/api/luxdrop/custom-range`);
+  console.log("Request params:", JSON.stringify(params, null, 2));
+  console.log("========================");
 
   const config: AxiosRequestConfig = {
     method: "get",
