@@ -24,19 +24,13 @@ const RegisterBlocks: React.FC = () => {
           </div>
         </a>
   
-        <a target="_blank" href="https://empiredrop.com/?r=sweetflips" className="duration-200 ease-in hover:scale-105 transition-transform w-full md:w-1/3">
+        <a target="_blank" href="https://luxdrop.com/?r=sweetflips" className="duration-200 ease-in hover:scale-105 transition-transform w-full md:w-1/3">
           <div className="h-44 rounded-lg RegisterBlocks-inner p-4 text-center border border-graydark flex flex-col justify-center mx-2">
             <div className="flex justify-center">
-              <Image
-                src="/images/logo/EmpireDrop_Logo.png"
-                alt="EmpireDrop Logo"
-                className=""
-                width={280}
-                height={106}
-              />
+              <div className="text-6xl font-bold text-purple-400">LuxDrop</div>
             </div>
             <p className="text-sm mt-4 mb-4">
-              Use code sweetflips on every deposit you do on <a target="_blank" href="https://empiredrop.com/?r=sweetflips" className="text-[rgb(223,86,255)] font-extrabold">EmpireDrop</a>
+              Use code sweetflips on every deposit you do on <a target="_blank" href="https://luxdrop.com/?r=sweetflips" className="text-[rgb(223,86,255)] font-extrabold">LuxDrop</a>
             </p>
           </div>
         </a>
