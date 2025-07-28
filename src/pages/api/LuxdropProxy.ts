@@ -2,6 +2,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import axios, { AxiosRequestConfig } from "axios";
 import { DateTime } from "luxon";
+import { HttpsProxyAgent } from "https-proxy-agent";
 
 export default async function handler(
   req: NextApiRequest,
@@ -96,27 +97,42 @@ export default async function handler(
     method: "get",
     url: `${BASE_API_URL}/api/luxdrop/custom-range`,
     params: params, // Pass the params object to Axios
+    timeout: 30000, // 30 second timeout
     headers: {
       "x-api-key": API_KEY,
       Accept: "application/json",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+      "Accept-Language": "en-US,en;q=0.9",
+      "Accept-Encoding": "gzip, deflate, br",
+      "Cache-Control": "no-cache",
+      "Pragma": "no-cache",
+      "Sec-Fetch-Dest": "empty",
+      "Sec-Fetch-Mode": "cors",
+      "Sec-Fetch-Site": "cross-site",
     },
   };
 
   // --- Conditionally Add Proxy to the Request ---
   if (proxyHost && proxyPort && proxyUsername && proxyPassword) {
-    config.proxy = {
-      host: proxyHost,
-      port: proxyPort,
-      auth: {
-        username: proxyUsername,
-        password: proxyPassword,
-      },
-      protocol: "http",
-    };
+    const proxyUrl = `http://${proxyUsername}:${proxyPassword}@${proxyHost}:${proxyPort}`;
+    const agent = new HttpsProxyAgent(proxyUrl);
+    config.httpsAgent = agent;
+    config.httpAgent = agent;
+    
+    console.log(`Using authenticated proxy: ${proxyHost}:${proxyPort}`);
+    console.log("Proxy configuration applied successfully");
   } else if (proxyHost || proxyPortString || proxyUsername || proxyPassword) {
     console.warn(
       "Proxy configuration is incomplete. Proceeding without proxy.",
     );
+    console.log("Available proxy vars:", {
+      host: proxyHost ? "SET" : "MISSING",
+      port: proxyPortString ? "SET" : "MISSING", 
+      username: proxyUsername ? "SET" : "MISSING",
+      password: proxyPassword ? "SET" : "MISSING"
+    });
+  } else {
+    console.log("No proxy configured - using direct connection");
   }
 
   try {
