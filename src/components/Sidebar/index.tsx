@@ -77,7 +77,7 @@ const menuGroups = [
         route: "#",
         children: [
           { label: "Razed", route: "/razed" },
-          { label: "EmpireDrop", route: "/empiredrop" },
+          { label: "LuxDrop", route: "/luxdrop" },
         ],
       },
       //       {
