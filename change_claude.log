@@ -1,21 +1,31 @@
-## Error Investigation - 2025-07-28
+## Luxdrop Leaderboard API and Caching Fixes
 
-### Issues Found:
+### Date: 2025-07-28
 
-1. **401 error on /api/user endpoint** - RESOLVED
-   - Root cause: Missing or expired Kick.com access_token cookie
-   - This is expected behavior when user is not authenticated
-   - Location: src/pages/api/user.ts:26
+### Issues Fixed:
+1. **API Configuration**: Fixed missing environment variables causing 500 errors
+2. **API Endpoint**: Corrected Luxdrop API endpoint from `/external/affiliates` to `/api/luxdrop/custom-range`
+3. **API Parameters**: Fixed parameter names from `startDate`/`endDate` to `from_date`/`to_date`
+4. **Date Logic**: Implemented proper transition period logic (July 28, 2025 - August 31, 2025 00:00:00 UTC)
+5. **Frontend Caching**: Removed `hasFetched` ref that prevented data refresh and added cache-busting parameters
 
-2. **500 error on /api/LuxdropProxy endpoint** - IDENTIFIED
-   - Root cause: Required environment variables are commented out in .env.local
-   - Missing variables: LUXDROP_LEADERBOARD_CODES, LUXDROP_API_KEY, BASE_LUXDROP_API_URL
-   - Location: src/pages/api/LuxdropProxy.ts:20-27
+### Key Changes:
 
-3. **Multiple Supabase client instances warning** - PENDING
-   - Warning about multiple GoTrueClient instances in same browser context
-   - May cause undefined behavior with concurrent usage
+#### LuxdropProxy.ts:
+- Updated API endpoint URL and parameter structure
+- Fixed date calculation for the transition period starting July 28, 2025 at 00:00:00 UTC
+- Added comprehensive debug logging for troubleshooting
 
-### Next Steps:
-- User needs to configure Luxdrop environment variables with actual values
-- Investigate Supabase client instantiation to prevent multiple instances
+#### LuxdropLeaderboard.tsx:
+- Removed `hasFetched` ref that was blocking API calls after initial load
+- Added cache-busting parameter `?t=${Date.now()}` to force fresh data
+- Fixed infinite loading issue caused by stale data
+
+### Result:
+- API now correctly returns low wagering amounts (~$64, $43, $40) for the current date range
+- Frontend displays real-time data instead of cached high amounts
+- Leaderboard properly shows the transition period starting July 28, 2025 00:00:00 UTC
+
+### Files Modified:
+- `/src/pages/api/LuxdropProxy.ts`
+- `/src/components/Luxdrop/LuxdropLeaderboard.tsx`

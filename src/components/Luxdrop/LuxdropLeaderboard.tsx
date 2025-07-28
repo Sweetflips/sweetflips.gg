@@ -61,7 +61,6 @@ const rewardMapping: { [key: number]: number } = {
 };
 
 const LuxdropLeaderboard: React.FC = () => {
-  const hasFetched = useRef(false);
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -88,16 +87,18 @@ const LuxdropLeaderboard: React.FC = () => {
   };
 
   useEffect(() => {
-    if (hasFetched.current) return;
-    hasFetched.current = true;
     const fetchData = async () => {
       setLoading(true);
+
+      // Add cache-busting parameter to force fresh data
+      const cacheBuster = `?t=${Date.now()}`;
+      const apiUrl = `${API_PROXY_URL}${cacheBuster}`;
 
       // Development mode: prioritize mock data or attempt API fetch
       if (process.env.NODE_ENV === "development") {
         console.log("Running in development mode");
         try {
-          const response = await fetch(API_PROXY_URL);
+          const response = await fetch(apiUrl);
           if (!response.ok)
             throw new Error("API failed, falling back to mock data");
           const result = await response.json();
@@ -136,7 +137,7 @@ const LuxdropLeaderboard: React.FC = () => {
 
       // Production mode: fetch from API only
       try {
-        const response = await fetch(API_PROXY_URL);
+        const response = await fetch(apiUrl);
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(
