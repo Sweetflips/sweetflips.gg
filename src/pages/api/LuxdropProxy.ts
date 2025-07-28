@@ -17,6 +17,13 @@ export default async function handler(
   const API_KEY = process.env.LUXDROP_API_KEY;
   const BASE_API_URL = process.env.BASE_LUXDROP_API_URL;
 
+  // Debug logging for environment variables
+  console.log("=== ENVIRONMENT VARIABLES DEBUG ===");
+  console.log("LUXDROP_LEADERBOARD_CODES:", codesToFetch ? "SET" : "MISSING");
+  console.log("LUXDROP_API_KEY:", API_KEY ? "SET" : "MISSING");
+  console.log("BASE_LUXDROP_API_URL:", BASE_API_URL ? "SET" : "MISSING");
+  console.log("===================================");
+
   if (!codesToFetch || !API_KEY || !BASE_API_URL) {
     console.error(
       "Server configuration error: Missing Luxdrop API or Leaderboard variables.",
