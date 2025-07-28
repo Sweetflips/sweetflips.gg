@@ -61,12 +61,9 @@ const rewardMapping: { [key: number]: number } = {
 };
 
 const LuxdropLeaderboard: React.FC = () => {
-  console.log("🚀 LuxdropLeaderboard component initializing...");
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  
-  console.log("📊 Component state:", { dataLength: data.length, loading, error });
 
   // Function to mask usernames (copied from RazedLeaderboard)
   const maskUsername = (username: string) => {
@@ -90,21 +87,15 @@ const LuxdropLeaderboard: React.FC = () => {
   };
 
   useEffect(() => {
-    console.log("⚡ useEffect triggered - starting data fetch");
-    console.log("🔧 NODE_ENV:", process.env.NODE_ENV);
-    
     const fetchData = async () => {
-      console.log("🔄 fetchData function called");
       setLoading(true);
 
       // Add cache-busting parameter to force fresh data
       const cacheBuster = `?t=${Date.now()}`;
       const apiUrl = `${API_PROXY_URL}${cacheBuster}`;
-      console.log("🌐 API URL:", apiUrl);
 
-      // Development mode: prioritize mock data or attempt API fetch
+      // Development mode: prioritize mock data or attempt API fetch  
       if (process.env.NODE_ENV === "development") {
-        console.log("🛠️ Running in DEVELOPMENT mode");
         console.log("Running in development mode");
         try {
           const response = await fetch(apiUrl);
@@ -145,16 +136,10 @@ const LuxdropLeaderboard: React.FC = () => {
       }
 
       // Production mode: fetch from API with fallback to mock data
-      console.log("🏭 Running in PRODUCTION mode");
       try {
-        console.log("📡 Making API request to:", apiUrl);
         const response = await fetch(apiUrl);
-        console.log("📨 API response status:", response.status, response.statusText);
-        
         if (!response.ok) {
-          console.log("❌ API response not ok, parsing error data...");
           const errorData = await response.json();
-          console.log("📄 Error data:", errorData);
           throw new Error(
             errorData.error || "Failed to fetch leaderboard data",
           );
@@ -173,8 +158,7 @@ const LuxdropLeaderboard: React.FC = () => {
           }));
         setData(processedData);
       } catch (err: any) {
-        console.error("🚨 Production API failed:", err);
-        console.warn("🔄 Using fallback data:", err.message);
+        console.warn("Production API failed, using fallback data:", err.message);
         // Fallback to mock data with current date appropriate values
         const fallbackData = [
           { username: "TopGamer", wagered: 64.40, reward: 0 },
@@ -196,18 +180,15 @@ const LuxdropLeaderboard: React.FC = () => {
             reward: rewardMapping[index + 1] || 0,
           }));
         
-        console.log("✅ Setting fallback data:", processedFallbackData);
         setData(processedFallbackData);
         setError(null); // Clear error since we have fallback data
       } finally {
-        console.log("🏁 Setting loading to false");
         setLoading(false);
       }
     };
 
-    console.log("🎯 About to call fetchData...");
     fetchData().catch(err => {
-      console.error("💥 fetchData threw an error:", err);
+      console.error("fetchData error:", err);
       setLoading(false);
       setError(err.message);
     });
