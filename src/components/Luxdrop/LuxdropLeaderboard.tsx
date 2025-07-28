@@ -217,16 +217,19 @@ const LuxdropLeaderboard: React.FC = () => {
   const countDownDate = (() => {
     const now = DateTime.utc();
 
-    const currentMonth = now.month;
-    const currentYear = now.year;
-    const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
-    const nextMonthYear = currentMonth === 12 ? currentYear + 1 : currentYear;
-
     let targetDate;
-    if (now.day < 28) {
-      targetDate = DateTime.utc(currentYear, currentMonth, 28, 0, 0);
+    
+    // Special transition period: July 28, 2025 - August 31, 2025
+    if ((now.year === 2025 && now.month === 7 && now.day >= 28) || (now.year === 2025 && now.month === 8)) {
+      // During transition period: countdown to August 31, 2025 23:59:59 UTC
+      targetDate = DateTime.utc(2025, 8, 31, 23, 59, 59, 999);
+    } else if (now.year === 2025 && now.month === 7 && now.day < 28) {
+      // Before transition period: countdown to July 28, 2025 00:00:00 UTC
+      targetDate = DateTime.utc(2025, 7, 28, 0, 0, 0, 0);
     } else {
-      targetDate = DateTime.utc(nextMonthYear, nextMonth, 28, 0, 0);
+      // From September 2025 onwards: 1st to last day of current month
+      const endOfMonth = now.endOf('month').set({ hour: 23, minute: 59, second: 59, millisecond: 999 });
+      targetDate = endOfMonth;
     }
 
     return targetDate.toISO(); // ➜ will be interpreted correctly as UTC
