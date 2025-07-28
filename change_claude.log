@@ -1,0 +1,21 @@
+## Error Investigation - 2025-07-28
+
+### Issues Found:
+
+1. **401 error on /api/user endpoint** - RESOLVED
+   - Root cause: Missing or expired Kick.com access_token cookie
+   - This is expected behavior when user is not authenticated
+   - Location: src/pages/api/user.ts:26
+
+2. **500 error on /api/LuxdropProxy endpoint** - IDENTIFIED
+   - Root cause: Required environment variables are commented out in .env.local
+   - Missing variables: LUXDROP_LEADERBOARD_CODES, LUXDROP_API_KEY, BASE_LUXDROP_API_URL
+   - Location: src/pages/api/LuxdropProxy.ts:20-27
+
+3. **Multiple Supabase client instances warning** - PENDING
+   - Warning about multiple GoTrueClient instances in same browser context
+   - May cause undefined behavior with concurrent usage
+
+### Next Steps:
+- User needs to configure Luxdrop environment variables with actual values
+- Investigate Supabase client instantiation to prevent multiple instances
