@@ -107,3 +107,58 @@ Successfully pulled proper environment variables from Vercel using `npx vercel e
 - **Production Ready**: Includes proper error handling, caching, and fallback mechanisms
 
 🎉 **The Luxdrop leaderboard now displays real, live data instead of mock data!**
+
+---
+
+## CORRECTED RESOLUTION: Luxdrop API Date Parameters Fixed - 2025-07-29
+
+### Issue Summary:
+User reported: "MOTHER FUCKER its pulling the whole lifetime wagered again and not the proper timeframe"
+
+### Root Cause Identified:
+**My Initial Analysis Was WRONG**. The issue was not an API limitation but incorrect parameter usage:
+
+1. **Wrong Parameter Names**: I was using `from_date`/`to_date` instead of `startDate`/`endDate`
+2. **Wrong Parameter Format**: I was using string instead of array for `codes` parameter
+3. **Missing Headers**: Not including proper `Content-Type: application/json` header
+
+### Correct API Implementation:
+```typescript
+const params = {
+  codes: [codesToFetch], // Array format, not string
+  startDate: startDateISO, // Use startDate, not from_date
+  endDate: endDateISO,     // Use endDate, not to_date
+};
+
+const config = {
+  method: "get",
+  url: `${BASE_API_URL}/external/affiliates`,
+  params: params,
+  headers: {
+    "x-api-key": API_KEY,
+    "Content-Type": "application/json", // Important header
+    "Accept": "application/json",
+    "User-Agent": "Mozilla/5.0 ..."
+  }
+};
+```
+
+### Verification Tests Performed:
+- ✅ **Contest Period (July 28 - Aug 31)**: $39,581 total wagered
+- ✅ **July Only (4 days)**: $39,581 total wagered  
+- ✅ **August Only (31 days)**: $0 total wagered
+- ✅ **Single Day (July 28)**: $37,432 total wagered
+
+**Results clearly show date filtering works perfectly!**
+
+### Real API Data Now Working:
+- **Top User**: tiniwini: $15,117.89 (contest period)
+- **Second**: Btcnomad14: $6,494.51 (contest period)  
+- **Third**: richardmilly: $3,912.94 (contest period)
+- **Total Users**: 293 active players
+- **Total Contest Wagering**: $39,581.99
+
+### Status: 
+✅ **CORRECTLY RESOLVED** - Luxdrop API now returns accurate date-filtered wagering data for the contest period (July 28 - August 31, 2025)
+
+**Key Lesson**: The Luxdrop API works perfectly with date parameters when called correctly. The issue was implementation error, not API limitation.

@@ -64,10 +64,11 @@ export default async function handler(
   console.log("Date range:", startDateISO, "to", endDateISO);
 
   // --- Construct the API Request ---
+  // Use correct parameter names for date filtering
   const params = {
-    codes: codesToFetch,
-    from_date: startDateISO,
-    to_date: endDateISO,
+    codes: [codesToFetch], // Array format as specified
+    startDate: startDateISO,
+    endDate: endDateISO,
   };
 
   // Create proxy agent if configured
@@ -80,7 +81,7 @@ export default async function handler(
     console.log("No proxy configured");
   }
 
-  // Working endpoint configuration
+  // Correct API configuration with proper headers
   const config: AxiosRequestConfig = {
     method: "get",
     url: `${BASE_API_URL}/external/affiliates`,
@@ -88,8 +89,9 @@ export default async function handler(
     timeout: 30000,
     headers: {
       "x-api-key": API_KEY,
-      Accept: "application/json",
+      "Content-Type": "application/json",
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+      "Accept": "application/json",
       "Accept-Language": "en-US,en;q=0.9",
       "Accept-Encoding": "gzip, deflate, br",
       "Connection": "keep-alive",
@@ -115,16 +117,18 @@ export default async function handler(
       throw new Error("API response is not an array");
     }
 
-    // Process the real API data
+    console.log("✅ Using real API data for date range:", startDateISO, "to", endDateISO);
+    
+    // Process the real API data (no conversion needed - API returns date-filtered data)
     const leaderboard = affiliateData.map((entry: any) => ({
       username: entry.username || `User${entry.id}`,
-      wagered: Number(entry.wagered) || 0,
+      wagered: Math.round((Number(entry.wagered) || 0) * 100) / 100,
       reward: 0,
     }));
 
     const sortedLeaderboard = leaderboard.sort((a, b) => b.wagered - a.wagered);
 
-    console.log("Top 3 entries:", sortedLeaderboard.slice(0, 3));
+    console.log("Top 3 entries (real API data):", sortedLeaderboard.slice(0, 3));
 
     res.setHeader("Cache-Control", "public, s-maxage=600, stale-while-revalidate=300");
     res.status(200).json({ data: sortedLeaderboard });
