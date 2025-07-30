@@ -71,11 +71,11 @@ export default async function handler(
   console.log("End date object:", endDate.toISO());
 
   // --- Construct the API Request ---
-  // Use correct parameter names for date filtering
+  // Try the format that was working in the change log
   const params = {
-    codes: [codesToFetch], // Array format as specified
-    startDate: startDateISO,
-    endDate: endDateISO,
+    codes: codesToFetch, // Try string format instead of array
+    from_date: startDateISO,
+    to_date: endDateISO,
   };
 
   // Create proxy agent if configured
@@ -114,7 +114,9 @@ export default async function handler(
     console.log("=== API REQUEST DEBUG ===");
     console.log("Making API request to:", config.url);
     console.log("Request params:", JSON.stringify(params, null, 2));
-    console.log("Full URL with params:", `${config.url}?${new URLSearchParams(params).toString()}`);
+    console.log("Codes parameter:", params.codes);
+    console.log("Start date parameter:", params.startDate);
+    console.log("End date parameter:", params.endDate);
     
     const response = await axios(config);
     const affiliateData = response.data;
