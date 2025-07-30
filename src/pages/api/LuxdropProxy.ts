@@ -71,11 +71,16 @@ export default async function handler(
   console.log("End date object:", endDate.toISO());
 
   // --- Construct the API Request ---
-  // Try the format that was working in the change log
+  // Test different parameter combinations
+  console.log("Testing with hardcoded contest dates:");
+  console.log("Hardcoded start: 2025-07-28");
+  console.log("Hardcoded end: 2025-08-31");
+  
+  // Force the contest period dates for testing
   const params = {
-    codes: codesToFetch, // Try string format instead of array
-    from_date: startDateISO,
-    to_date: endDateISO,
+    codes: codesToFetch,
+    from_date: "2025-07-28",
+    to_date: "2025-08-31",
   };
 
   // Create proxy agent if configured
@@ -115,8 +120,8 @@ export default async function handler(
     console.log("Making API request to:", config.url);
     console.log("Request params:", JSON.stringify(params, null, 2));
     console.log("Codes parameter:", params.codes);
-    console.log("Start date parameter:", params.startDate);
-    console.log("End date parameter:", params.endDate);
+    console.log("From date parameter:", params.from_date);
+    console.log("To date parameter:", params.to_date);
     
     const response = await axios(config);
     const affiliateData = response.data;
