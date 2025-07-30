@@ -61,7 +61,14 @@ export default async function handler(
   const startDateISO = startDate.toISODate();
   const endDateISO = endDate.toISODate();
   
+  console.log("=== DATE DEBUG ===");
+  console.log("Current time:", currentTime.toISO());
+  console.log("Current year:", currentTime.year);
+  console.log("Current month:", currentTime.month);
+  console.log("Current day:", currentTime.day);
   console.log("Date range:", startDateISO, "to", endDateISO);
+  console.log("Start date object:", startDate.toISO());
+  console.log("End date object:", endDate.toISO());
 
   // --- Construct the API Request ---
   // Use correct parameter names for date filtering
@@ -104,7 +111,11 @@ export default async function handler(
   }
 
   try {
+    console.log("=== API REQUEST DEBUG ===");
     console.log("Making API request to:", config.url);
+    console.log("Request params:", JSON.stringify(params, null, 2));
+    console.log("Full URL with params:", `${config.url}?${new URLSearchParams(params).toString()}`);
+    
     const response = await axios(config);
     const affiliateData = response.data;
 
