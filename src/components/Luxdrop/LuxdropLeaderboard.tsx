@@ -464,6 +464,13 @@ const LuxdropLeaderboard: React.FC = () => {
       <div className="mt-8 flex items-center justify-center overflow-x-auto">
         <div className="w-full md:w-10/12 lg:w-8/12 xl:w-7/12">
           <div className="mx-auto max-w-[1000px]">
+            {/* Mobile Header */}
+            <div className="bg-gray-800 grid grid-cols-3 rounded-lg text-center font-bold sm:hidden">
+              <div className="px-2 py-2 text-sm">Name</div>
+              <div className="px-2 py-2 text-sm">Wager</div>
+              <div className="px-2 py-2 text-sm">Reward</div>
+            </div>
+            {/* Desktop Header */}
             <div className="bg-gray-800 hidden grid-cols-4 rounded-lg text-center font-bold sm:grid">
               <div className="px-3 py-2">Rank</div>
               <div className="px-3 py-2">Name</div>
@@ -477,17 +484,19 @@ const LuxdropLeaderboard: React.FC = () => {
                   className="Leaderboard__card relative my-2 rounded-lg p-1 shadow-lg md:my-4"
                 >
                   <div className="Leaderboard__card-inner grid grid-cols-3 text-center sm:grid-cols-4">
-                    {" "}
-                    {/* Adjusted for mobile: remove rank */}
+                    {/* Rank visible on sm and up */}
                     <div className="hidden px-3 py-2 font-bold sm:block">
                       {index + 4}
-                    </div>{" "}
-                    {/* Rank visible on sm and up */}
-                    <div className="px-3 py-2 font-bold">{user.username}</div>
-                    <div className="px-3 py-2">
+                    </div>
+                    {/* Mobile: Show rank as prefix in username */}
+                    <div className="px-2 py-2 font-bold text-sm sm:px-3 sm:text-base">
+                      <span className="sm:hidden text-gray-400 mr-1">#{index + 4}</span>
+                      {user.username}
+                    </div>
+                    <div className="px-2 py-2 text-sm sm:px-3 sm:text-base">
                       {formatCurrency(user.wagered)}
                     </div>
-                    <div className="px-3 py-2 text-green-400">
+                    <div className="px-2 py-2 text-green-400 text-sm sm:px-3 sm:text-base">
                       {formatRewardCurrency(user.reward)}
                     </div>
                   </div>
