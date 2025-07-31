@@ -71,27 +71,19 @@ export default async function handler(
   console.log("End date object:", endDate.toISO());
 
   // --- Construct the API Request ---
-  // Test different parameter combinations
-  console.log("Testing with hardcoded contest dates:");
-  console.log("Hardcoded start: 2025-07-28");
-  console.log("Hardcoded end: 2025-08-31");
+  // Use correct parameter names: startDate/endDate (not from_date/to_date)
+  console.log("Using correct API parameters:");
+  console.log("Start date:", startDateISO);
+  console.log("End date:", endDateISO);
   
-  // Test without date parameters to see if API ignores them
-  const paramsWithDates = {
+  const params = {
     codes: codesToFetch,
-    from_date: "2025-07-28",
-    to_date: "2025-08-31",
+    startDate: startDateISO,
+    endDate: endDateISO,
   };
   
-  const paramsWithoutDates = {
-    codes: codesToFetch,
-  };
-  
-  // Use params with dates for now, but log both
-  const params = paramsWithDates;
-  console.log("=== PARAMETER COMPARISON ===");
-  console.log("With dates:", JSON.stringify(paramsWithDates, null, 2));
-  console.log("Without dates:", JSON.stringify(paramsWithoutDates, null, 2));
+  console.log("=== API PARAMETERS ===");
+  console.log("Request params:", JSON.stringify(params, null, 2));
 
   // Create proxy agent if configured
   let proxyAgent: any = null;
@@ -130,8 +122,8 @@ export default async function handler(
     console.log("Making API request to:", config.url);
     console.log("Request params:", JSON.stringify(params, null, 2));
     console.log("Codes parameter:", params.codes);
-    console.log("From date parameter:", params.from_date);
-    console.log("To date parameter:", params.to_date);
+    console.log("Start date parameter:", params.startDate);
+    console.log("End date parameter:", params.endDate);
     
     const response = await axios(config);
     const affiliateData = response.data;
@@ -151,10 +143,11 @@ export default async function handler(
     const totalWagered = affiliateData.reduce((sum: number, entry: any) => sum + (Number(entry.wagered) || 0), 0);
     console.log("Total wagered from API:", totalWagered);
     
-    // If total wagered is suspiciously high (>$100k), assume API is returning lifetime data
-    if (totalWagered > 100000) {
-      console.log("⚠️ API appears to be returning lifetime data instead of contest period. Using simulation.");
-      throw new Error("API returning lifetime data - falling back to simulation");
+    // With correct startDate/endDate parameters, API should return filtered data
+    // Only fallback if we get unreasonably high numbers (>$500k) indicating API issues
+    if (totalWagered > 500000) {
+      console.log("⚠️ API appears to be malfunctioning (extremely high wagering). Using fallback.");
+      throw new Error("API returning unrealistic data - falling back to simulation");
     }
 
     // Process the real API data (no conversion needed - API returns date-filtered data)
