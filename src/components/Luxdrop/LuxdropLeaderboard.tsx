@@ -36,8 +36,8 @@ const mockLeaderboardData: LeaderboardEntry[] = [
   { username: "DevUser19", wagered: 32000, reward: 0 },
   { username: "DevUser20", wagered: 30000, reward: 0 },
 ];
-// Define the reward mapping based on rank
-const rewardMapping: { [key: number]: number } = {
+// Define the current reward mapping based on rank
+const currentRewardMapping: { [key: number]: number } = {
   1: 8000,
   2: 4000,
   3: 2000,
@@ -58,6 +58,49 @@ const rewardMapping: { [key: number]: number } = {
   18: 50,
   19: 50,
   20: 50,
+};
+
+// Define the new reward mapping that goes live after 00:00:00 UTC tonight
+const newRewardMapping: { [key: number]: number } = {
+  1: 20000,
+  2: 10000,
+  3: 5000,
+  4: 2500,
+  5: 1750,
+  6: 1250,
+  7: 1000,
+  8: 900,
+  9: 850,
+  10: 800,
+  11: 750,
+  12: 700,
+  13: 650,
+  14: 600,
+  15: 500,
+  16: 450,
+  17: 400,
+  18: 350,
+  19: 325,
+  20: 275,
+  21: 250,
+  22: 225,
+  23: 200,
+  24: 150,
+  25: 125,
+  26: 0,
+  27: 0,
+  28: 0,
+  29: 0,
+  30: 0,
+};
+
+// Function to get the appropriate reward mapping based on current UTC time
+const getRewardMapping = (): { [key: number]: number } => {
+  const now = new Date();
+  // August 1st, 2025 at 00:00:00 UTC
+  const switchoverDate = new Date('2025-08-01T00:00:00.000Z');
+  
+  return now >= switchoverDate ? newRewardMapping : currentRewardMapping;
 };
 
 const LuxdropLeaderboard: React.FC = () => {
@@ -107,6 +150,7 @@ const LuxdropLeaderboard: React.FC = () => {
           }
 
           // Process real data if fetch succeeds
+          const rewardMapping = getRewardMapping();
           const processedData = result.data
             .filter((user: any) => user.username)
             .map((user: any, index: number) => ({
@@ -140,6 +184,7 @@ const LuxdropLeaderboard: React.FC = () => {
             { username: "LuxPlayer", wagered: 24.95 + (dayOfMonth * 0.2), reward: 0 },
           ];
           
+          const rewardMapping = getRewardMapping();
           const processedFallbackData = realisticFallbackData
             .map((user, index) => ({
               username: maskUsername(user.username),
@@ -169,6 +214,7 @@ const LuxdropLeaderboard: React.FC = () => {
           throw new Error("Invalid data format from proxy");
         }
 
+        const rewardMapping = getRewardMapping();
         const processedData = result.data
           .filter((user: any) => user.username)
           .map((user: any, index: number) => ({
@@ -202,6 +248,7 @@ const LuxdropLeaderboard: React.FC = () => {
           { username: "Lucky7", wagered: 21.30 + (dayOfMonth * 0.1), reward: 0 },
         ];
         
+        const rewardMapping = getRewardMapping();
         const processedFallbackData = fallbackData
           .map((user, index) => ({
             username: maskUsername(user.username),
