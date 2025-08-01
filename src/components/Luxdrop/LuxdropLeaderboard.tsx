@@ -38,30 +38,6 @@ const mockLeaderboardData: LeaderboardEntry[] = [
 ];
 // Define the current reward mapping based on rank
 const currentRewardMapping: { [key: number]: number } = {
-  1: 8000,
-  2: 4000,
-  3: 2000,
-  4: 1300,
-  5: 1000,
-  6: 700,
-  7: 600,
-  8: 500,
-  9: 400,
-  10: 300,
-  11: 250,
-  12: 200,
-  13: 150,
-  14: 150,
-  15: 100,
-  16: 100,
-  17: 100,
-  18: 50,
-  19: 50,
-  20: 50,
-};
-
-// Define the new reward mapping that goes live after 00:00:00 UTC tonight
-const newRewardMapping: { [key: number]: number } = {
   1: 20000,
   2: 10000,
   3: 5000,
@@ -94,13 +70,37 @@ const newRewardMapping: { [key: number]: number } = {
   30: 0,
 };
 
+// Define the new reward mapping that goes live after 00:00:00 UTC tonight
+const newRewardMapping: { [key: number]: number } = {
+  1: 8000,
+  2: 4000,
+  3: 2000,
+  4: 1300,
+  5: 1000,
+  6: 700,
+  7: 600,
+  8: 500,
+  9: 400,
+  10: 300,
+  11: 250,
+  12: 200,
+  13: 150,
+  14: 150,
+  15: 100,
+  16: 100,
+  17: 100,
+  18: 50,
+  19: 50,
+  20: 50,
+};
+
 // Function to get the appropriate reward mapping based on current UTC time
 const getRewardMapping = (): { [key: number]: number } => {
   const now = new Date();
   // August 1st, 2025 at 00:00:00 UTC
   const switchoverDate = new Date('2025-08-01T00:00:00.000Z');
   
-  return now >= switchoverDate ? newRewardMapping : currentRewardMapping;
+  return now >= switchoverDate ? currentRewardMapping : newRewardMapping;
 };
 
 const LuxdropLeaderboard: React.FC = () => {

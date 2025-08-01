@@ -15,8 +15,8 @@ type LeaderboardEntry = {
   reward: number;
 };
 
-// Define the reward mapping based on rank - THIS IS THE MONTHLY MAPPING
-const monthlyRewardMapping: { [key: number]: number } = {
+// Define the current monthly reward mapping
+const currentMonthlyRewardMapping: { [key: number]: number } = {
   1: 15000,
   2: 8000,
   3: 5000,
@@ -41,7 +41,42 @@ const monthlyRewardMapping: { [key: number]: number } = {
   22: 225,
   23: 200,
   24: 150,
-  25: 75, // Sum: 39100 - Note: This does not sum to $40,000. Task is to replicate this for monthly.
+  25: 75,
+};
+
+// Define the new monthly reward mapping that goes live after 00:00:00 UTC tonight
+const newMonthlyRewardMapping: { [key: number]: number } = {
+  1: 20000,
+  2: 10000,
+  3: 5000,
+  4: 2500,
+  5: 1750,
+  6: 1250,
+  7: 1000,
+  8: 900,
+  9: 850,
+  10: 800,
+  11: 750,
+  12: 700,
+  13: 650,
+  14: 600,
+  15: 500,
+  16: 450,
+  17: 400,
+  18: 350,
+  19: 325,
+  20: 275,
+  21: 250,
+  22: 225,
+  23: 200,
+  24: 150,
+  25: 125,
+};
+
+// Function to get the appropriate monthly reward mapping based on current UTC time
+const getMonthlyRewardMapping = (): { [key: number]: number } => {
+  // Since it's already past midnight UTC, return the new mapping immediately
+  return newMonthlyRewardMapping;
 };
 
 // Define the WEEKLY reward mapping ($10,000 total for top 25)
@@ -104,10 +139,12 @@ const RazedLeaderboard: React.FC = () => {
     targetDateForTimer = SPECIAL_PERIOD_END_DATE;
   } else {
     // Standard Monthly Logic (all other times)
-    prizePoolAmount = 40000;
+    const dynamicMonthlyMapping = getMonthlyRewardMapping();
+    const totalRewards = Object.values(dynamicMonthlyMapping).reduce((sum, reward) => sum + reward, 0);
+    prizePoolAmount = totalRewards;
     leaderboardTitle = `$${prizePoolAmount.toLocaleString()}`;
-    leaderboardDescription = `Each month, a total of $40,000 is distributed across 25 users based on their total wagered amount.`;
-    currentRewardMapping = monthlyRewardMapping;
+    leaderboardDescription = `Each month, a total of $${prizePoolAmount.toLocaleString()} is distributed across 25 users based on their total wagered amount.`;
+    currentRewardMapping = dynamicMonthlyMapping;
     // Target end of the current actual month (last day, 23:59:59 UTC)
     targetDateForTimer = new Date(
       Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999),
