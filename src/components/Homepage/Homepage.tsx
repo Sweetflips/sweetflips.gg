@@ -110,9 +110,9 @@ const Homepage: React.FC = () => {
     currentRewardMapping = weeklyRewardMapping;
     targetDateForTimer = SPECIAL_PERIOD_END_DATE;
   } else {
-    prizePoolAmount = 40000;
+    prizePoolAmount = 50000;
     leaderboardTitle = `$${prizePoolAmount.toLocaleString()}`;
-    leaderboardDescription = `Each month, a total of $40,000 is distributed across 25 users based on their total wagered amount.`;
+    leaderboardDescription = `Each month, a total of $50,000 is distributed across 25 users based on their total wagered amount.`;
     currentRewardMapping = monthlyRewardMapping;
     targetDateForTimer = new Date(
       Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999),
