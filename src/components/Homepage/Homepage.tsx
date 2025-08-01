@@ -24,22 +24,22 @@ type LeaderboardEntry = {
   reward: number;
 };
 
-// Define the reward mapping based on rank - THIS IS THE MONTHLY MAPPING
+// Define the reward mapping based on rank - UPDATED TO MATCH RAZED PAGE
 const monthlyRewardMapping: { [key: number]: number } = {
-  1: 15000,
-  2: 8000,
+  1: 20000,
+  2: 10000,
   3: 5000,
-  4: 1100,
-  5: 1000,
-  6: 950,
-  7: 900,
-  8: 850,
-  9: 800,
-  10: 750,
-  11: 700,
-  12: 650,
-  13: 600,
-  14: 550,
+  4: 2500,
+  5: 1750,
+  6: 1250,
+  7: 1000,
+  8: 900,
+  9: 850,
+  10: 800,
+  11: 750,
+  12: 700,
+  13: 650,
+  14: 600,
   15: 500,
   16: 450,
   17: 400,
@@ -50,7 +50,7 @@ const monthlyRewardMapping: { [key: number]: number } = {
   22: 225,
   23: 200,
   24: 150,
-  25: 75,
+  25: 125,
 };
 
 // Define the WEEKLY reward mapping ($10,000 total for top 25)
