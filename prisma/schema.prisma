@@ -22,6 +22,7 @@ model User {
   updatedAt     DateTime @updatedAt
 
   orders        Order[] // ✅ new relation to orders
+  tokenTransactions TokenTransaction[]
 }
 
 model UserData {
@@ -98,4 +99,23 @@ model OAuthSession {
   codeVerifier  String
   createdAt     DateTime @default(now())
   expiresAt     DateTime
+}
+
+model TokenTransaction {
+  id              String   @id @default(uuid())
+  userId          Int
+  transactionType String   // 'convert', 'spend', 'payout', 'admin_adjustment', 'purchase'
+  amount          Decimal  @db.Decimal(10, 2)
+  balanceBefore   Decimal  @db.Decimal(10, 2)
+  balanceAfter    Decimal  @db.Decimal(10, 2)
+  metadata        Json?    // Additional context (e.g., game ID, product ID, admin ID)
+  ipAddress       String?
+  userAgent       String?
+  createdAt       DateTime @default(now())
+  
+  user            User     @relation(fields: [userId], references: [id])
+  
+  @@index([userId])
+  @@index([transactionType])
+  @@index([createdAt])
 }

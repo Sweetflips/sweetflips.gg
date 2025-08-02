@@ -2,8 +2,10 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { parse } from 'cookie';
 import { prisma } from '../../../lib/prisma';
 import { Decimal } from '@prisma/client/runtime/library';
+import { tokenConversionRateLimit } from '../../../lib/rateLimiter';
+import { createAuditLog, checkSuspiciousActivity } from '../../../lib/auditLogger';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function convertTokensHandler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -56,29 +58,95 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'Not enough points to convert.' });
   }
 
-  // Perform DB update transaction
-  await prisma.$transaction([
-    prisma.userData.update({
-      where: { id: userData.id },
-      data: {
-        converted_tokens: {
-          increment: parsedAmount,
+  // Check for suspicious activity
+  const suspiciousCheck = await checkSuspiciousActivity(
+    prisma,
+    user.id,
+    'convert',
+    parsedAmount
+  );
+
+  if (suspiciousCheck.suspicious) {
+    console.warn(`[convert-tokens] Suspicious activity detected for user ${user.id}: ${suspiciousCheck.reason}`);
+    // You might want to alert admins or take other actions here
+  }
+
+  const balanceBefore = user.tokens;
+  const balanceAfter = balanceBefore.add(tokensToAdd);
+
+  // Perform DB update transaction with proper locking
+  try {
+    await prisma.$transaction(async (tx) => {
+      // Re-check available points within transaction to prevent race conditions
+      const lockedUserData = await tx.userData.findUnique({
+        where: { id: userData.id },
+      });
+      
+      if (!lockedUserData) {
+        throw new Error('User data not found');
+      }
+      
+      const currentAvailablePoints = lockedUserData.points - lockedUserData.converted_tokens;
+      if (parsedAmount > currentAvailablePoints) {
+        throw new Error('Not enough points to convert');
+      }
+
+      // Update user data
+      await tx.userData.update({
+        where: { id: userData.id },
+        data: {
+          converted_tokens: {
+            increment: parsedAmount,
+          },
         },
-      },
-    }),
-    prisma.user.update({
-      where: { id: user.id },
-      data: {
-        tokens: {
-          increment: tokensToAdd,
+      });
+
+      // Update user tokens
+      await tx.user.update({
+        where: { id: user.id },
+        data: {
+          tokens: {
+            increment: tokensToAdd,
+          },
         },
-      },
-    }),
-  ]);
+      });
+
+      // Create audit log
+      await createAuditLog(tx, {
+        userId: user.id,
+        transactionType: 'convert',
+        amount: tokensToAdd,
+        balanceBefore: balanceBefore,
+        balanceAfter: balanceAfter,
+        metadata: {
+          pointsConverted: parsedAmount,
+          conversionRate: conversionRate,
+          kickId: kickId,
+        },
+        req,
+      });
+    });
+  } catch (error) {
+    console.error('[convert-tokens] Transaction failed:', error);
+    return res.status(500).json({ 
+      error: error instanceof Error ? error.message : 'Failed to convert tokens' 
+    });
+  }
 
   return res.status(200).json({
     success: true,
     converted: parsedAmount,
     tokensAdded: tokensToAdd.toNumber(),
   });
+}
+
+// Apply rate limiting
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Check rate limit first
+  if (!tokenConversionRateLimit(req, res)) {
+    return; // Response already sent by rate limiter
+  }
+  
+  // Proceed with the handler
+  await convertTokensHandler(req, res);
 }

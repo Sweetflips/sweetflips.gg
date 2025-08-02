@@ -2,8 +2,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '../../../../../lib/prisma';
 import { parse } from 'cookie';
+import { adminRateLimit } from '../../../../../lib/rateLimiter';
+import { createAuditLog } from '../../../../../lib/auditLogger';
+import { Decimal } from '@prisma/client/runtime/library';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function adminUserHandler(req: NextApiRequest, res: NextApiResponse) {
   const {
     query: { id },
     method,
@@ -30,18 +33,65 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (method === 'PUT') {
     try {
       const { username, email, tokens, role } = req.body;
-      const updated = await prisma.user.update({
-        where: { id: Number(id) },
-        data: {
-          username,
-          email,
-          tokens,
-          role,
-        },
+      
+      // Use transaction for audit logging
+      const updated = await prisma.$transaction(async (tx) => {
+        // Get current user state
+        const currentUser = await tx.user.findUnique({
+          where: { id: Number(id) },
+        });
+        
+        if (!currentUser) {
+          throw new Error('User not found');
+        }
+        
+        const newTokens = new Decimal(tokens);
+        const tokensDiff = newTokens.minus(currentUser.tokens);
+        
+        // Update user
+        const updatedUser = await tx.user.update({
+          where: { id: Number(id) },
+          data: {
+            username,
+            email,
+            tokens: newTokens,
+            role,
+          },
+        });
+        
+        // Create audit log if tokens were changed
+        if (!tokensDiff.equals(0)) {
+          await createAuditLog(tx, {
+            userId: currentUser.id,
+            transactionType: 'admin_adjustment',
+            amount: tokensDiff.abs(),
+            balanceBefore: currentUser.tokens,
+            balanceAfter: newTokens,
+            metadata: {
+              adminId: requestingUser.id,
+              adminKickId: kickId,
+              adjustmentType: tokensDiff.greaterThan(0) ? 'credit' : 'debit',
+              previousValues: {
+                username: currentUser.username,
+                email: currentUser.email,
+                role: currentUser.role,
+              },
+              newValues: {
+                username,
+                email,
+                role,
+              },
+            },
+            req,
+          });
+        }
+        
+        return updatedUser;
       });
 
       return res.status(200).json(updated);
     } catch (error) {
+      console.error('Admin update error:', error);
       return res.status(500).json({ error: 'Failed to update user' });
     }
   }
@@ -60,4 +110,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   res.setHeader('Allow', ['PUT', 'DELETE']);
   res.status(405).end(`Method ${method} Not Allowed`);
+}
+
+// Apply rate limiting
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Check rate limit
+  if (!adminRateLimit(req, res)) {
+    return; // Response already sent by rate limiter
+  }
+  
+  // Proceed with the handler
+  await adminUserHandler(req, res);
 }
