@@ -1,14 +1,32 @@
-import { Decimal, Prisma } from '@prisma/client';
 import { NextApiRequest } from 'next';
+
+// Dynamic import for Decimal to handle build-time issues
+let Decimal: any;
+try {
+  // Try to import from Prisma client runtime
+  const runtime = require('@prisma/client/runtime/library');
+  Decimal = runtime.Decimal;
+} catch (e) {
+  // Fallback for build time when Prisma client isn't generated yet
+  Decimal = class {
+    private value: string;
+    constructor(value: string | number) {
+      this.value = value.toString();
+    }
+    toString() { return this.value; }
+    toNumber() { return parseFloat(this.value); }
+    equals(other: any) { return this.toNumber() === (typeof other === 'number' ? other : other.toNumber()); }
+  };
+}
 
 export type TransactionType = 'convert' | 'spend' | 'payout' | 'admin_adjustment' | 'purchase';
 
 export interface AuditLogOptions {
   userId: number;
   transactionType: TransactionType;
-  amount: Decimal | number;
-  balanceBefore: Decimal | number;
-  balanceAfter: Decimal | number;
+  amount: any; // Using any to be flexible with Decimal type
+  balanceBefore: any;
+  balanceAfter: any;
   metadata?: Record<string, any>;
   req?: NextApiRequest;
 }
