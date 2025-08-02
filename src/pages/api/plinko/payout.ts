@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { parse } from 'cookie';
 import { prisma } from '../../../../lib/prisma';
 import { Decimal } from '@prisma/client/runtime/library';
-import { strictRateLimit } from '../../../../lib/rateLimiter';
+import { plinkoRateLimit } from '../../../../lib/rateLimiter';
 import { createAuditLog } from '../../../../lib/auditLogger';
 import { validateAndCalculatePayout, deleteGameSession } from '../../../../lib/plinkoValidator';
 
@@ -106,14 +106,20 @@ async function plinkoPayoutHandler(req: NextApiRequest, res: NextApiResponse) {
 
 // Apply rate limiting
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Set CORS headers for all requests
+  res.setHeader('Access-Control-Allow-Origin', process.env.PLINKO_URL || '');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  
   // Handle OPTIONS request before rate limiting
   if (req.method === 'OPTIONS') {
-    return plinkoPayoutHandler(req, res);
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-plinko-secret');
+    return res.status(200).end();
   }
   
   // Check rate limit
-  if (!strictRateLimit(req, res)) {
-    return; // Response already sent by rate limiter
+  if (!plinkoRateLimit(req, res)) {
+    return; // Response already sent by rate limiter, but CORS headers are now set
   }
   
   // Proceed with the handler

@@ -145,3 +145,13 @@ export const adminRateLimit = createRateLimiter({
     return req.cookies?.kick_id || 'anonymous';
   }
 });
+
+// Plinko game rate limiter - more permissive for gameplay
+export const plinkoRateLimit = createRateLimiter({
+  windowMs: 60 * 1000, // 1 minute
+  maxRequests: 30, // Allow 30 bets per minute (1 every 2 seconds on average)
+  keyGenerator: (req) => {
+    // Rate limit by user ID primarily to prevent individual abuse
+    return req.cookies?.kick_id || req.socket?.remoteAddress || 'anonymous';
+  }
+});
