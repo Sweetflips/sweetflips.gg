@@ -51,11 +51,12 @@ let cleanupInterval: NodeJS.Timeout | null = null;
 if (typeof setInterval !== 'undefined' && process.env.NODE_ENV !== 'production') {
   cleanupInterval = setInterval(() => {
     const now = new Date();
-    for (const [sessionId, session] of gameSessions.entries()) {
+    // Use forEach instead of for...of to avoid TypeScript compatibility issues
+    gameSessions.forEach((session, sessionId) => {
       if (session.expiresAt < now) {
         gameSessions.delete(sessionId);
       }
-    }
+    });
   }, 5 * 60 * 1000);
 }
 
