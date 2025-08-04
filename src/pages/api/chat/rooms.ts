@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getUserFromRequest } from "@/lib/getUserFromRequest";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const user = await getUserFromRequest(req);
+  const user = await getUserFromRequest(req, res);
   
   if (!user) {
     return res.status(401).json({ error: "Unauthorized" });
