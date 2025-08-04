@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PixelAvatar from "../Avatar/PixelAvatar";
+import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 
 interface Message {
   id: string;
@@ -41,6 +42,7 @@ export default function ChatRoom({ roomId, roomName, currentUserId }: ChatRoomPr
   const inputRef = useRef<HTMLInputElement>(null);
   const previousMessageCount = useRef(0);
   const isInitialLoad = useRef(true);
+  const { getAuthHeaders, getAuthHeadersWithContentType } = useAuthHeaders();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -61,7 +63,8 @@ export default function ChatRoom({ roomId, roomName, currentUserId }: ChatRoomPr
 
   const fetchMessages = useCallback(async () => {
     try {
-      const response = await fetch(`/api/chat/rooms/${roomId}/messages`);
+      const headers = await getAuthHeaders();
+      const response = await fetch(`/api/chat/rooms/${roomId}/messages`, { headers });
       if (response.ok) {
         const data = await response.json();
         setMessages(data.messages);
@@ -71,7 +74,7 @@ export default function ChatRoom({ roomId, roomName, currentUserId }: ChatRoomPr
       console.error("Error fetching messages:", error);
       setIsLoading(false);
     }
-  }, [roomId]);
+  }, [roomId, getAuthHeaders]);
 
   // Load initial messages
   useEffect(() => {
@@ -93,11 +96,10 @@ export default function ChatRoom({ roomId, roomName, currentUserId }: ChatRoomPr
     setNewMessage("");
 
     try {
+      const headers = await getAuthHeadersWithContentType();
       const response = await fetch(`/api/chat/rooms/${roomId}/messages`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({
           content: messageContent,
         }),

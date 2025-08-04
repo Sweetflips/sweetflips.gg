@@ -59,7 +59,17 @@ export default function ChatPage() {
 
   const initializeChat = async () => {
     try {
-      const response = await fetch("/api/chat/rooms");
+      const headers: HeadersInit = {};
+      
+      // Add authorization header for Supabase users
+      if (supabaseClient) {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
+      }
+      
+      const response = await fetch("/api/chat/rooms", { headers });
       if (response.ok) {
         const data = await response.json();
         if (data.rooms.length > 0) {
@@ -67,11 +77,21 @@ export default function ChatPage() {
           setSelectedRoomName(data.rooms[0].name);
         } else {
           // Create general room if none exists
+          const createHeaders: HeadersInit = {
+            "Content-Type": "application/json",
+          };
+          
+          // Add authorization header for Supabase users
+          if (supabaseClient) {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session?.access_token) {
+              createHeaders['Authorization'] = `Bearer ${session.access_token}`;
+            }
+          }
+          
           const createResponse = await fetch("/api/chat/rooms", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: createHeaders,
             body: JSON.stringify({
               name: "General",
               isPrivate: false,
@@ -95,7 +115,17 @@ export default function ChatPage() {
     
     // Fetch room details to get the name
     try {
-      const response = await fetch("/api/chat/rooms");
+      const headers: HeadersInit = {};
+      
+      // Add authorization header for Supabase users
+      if (supabaseClient) {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
+      }
+      
+      const response = await fetch("/api/chat/rooms", { headers });
       if (response.ok) {
         const data = await response.json();
         const room = data.rooms.find((r: any) => r.id === roomId);

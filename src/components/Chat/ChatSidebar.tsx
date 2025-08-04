@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 
 interface ChatRoom {
   id: string;
@@ -23,6 +24,7 @@ export default function ChatSidebar({ selectedRoomId, onRoomSelect }: ChatSideba
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [newRoomName, setNewRoomName] = useState("");
+  const { getAuthHeaders, getAuthHeadersWithContentType } = useAuthHeaders();
 
   useEffect(() => {
     fetchRooms();
@@ -30,7 +32,8 @@ export default function ChatSidebar({ selectedRoomId, onRoomSelect }: ChatSideba
 
   const fetchRooms = async () => {
     try {
-      const response = await fetch("/api/chat/rooms");
+      const headers = await getAuthHeaders();
+      const response = await fetch("/api/chat/rooms", { headers });
       if (response.ok) {
         const data = await response.json();
         setRooms(data.rooms);
@@ -45,11 +48,10 @@ export default function ChatSidebar({ selectedRoomId, onRoomSelect }: ChatSideba
     if (!newRoomName.trim()) return;
 
     try {
+      const headers = await getAuthHeadersWithContentType();
       const response = await fetch("/api/chat/rooms", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({
           name: newRoomName,
           isPrivate: false,
