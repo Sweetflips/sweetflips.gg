@@ -9,7 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export default function AvatarPage() {
   const [showCreator, setShowCreator] = useState(false);
-  const [currentAvatar, setCurrentAvatar] = useState(null);
+  const [currentAvatar, setCurrentAvatar] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { isLoggedIn, loading: authLoading } = useAuth();
 
@@ -86,7 +86,16 @@ export default function AvatarPage() {
               <div className="flex flex-col items-center">
                 <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-700 dark:to-gray-800 rounded-2xl p-8">
                   <PixelAvatar
-                    {...currentAvatar}
+                    skin={currentAvatar.skin}
+                    hair={currentAvatar.hair}
+                    hairColor={currentAvatar.hairColor}
+                    facialHair={currentAvatar.facialHair}
+                    top={currentAvatar.top}
+                    jacket={currentAvatar.jacket}
+                    bottom={currentAvatar.bottom}
+                    shoes={currentAvatar.shoes}
+                    hat={currentAvatar.hat}
+                    glasses={currentAvatar.glasses}
                     size={128}
                     className="pixelated"
                   />
