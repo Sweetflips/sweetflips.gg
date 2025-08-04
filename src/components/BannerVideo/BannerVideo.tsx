@@ -25,8 +25,8 @@ const BannerVideo: React.FC = () => {
           objectPosition: 'center'
         }}
       >
-        <source src="/videos/Banner_V6.mov" type="video/quicktime" />
         <source src="/videos/Homepage_Banner.mp4" type="video/mp4" />
+        <source src="/videos/Banner_V6.mov" type="video/quicktime" />
         <source src="/videos/SweetflipsxRazed_Banner.webm" type="video/webm" />
         Your browser does not support the video tag.
       </video>
