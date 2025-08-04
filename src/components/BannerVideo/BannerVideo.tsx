@@ -12,7 +12,6 @@ const BannerVideo: React.FC = () => {
         loop
         playsInline
         preload="metadata"
-        loading="lazy"
         poster="/images/cover/Homepage_Banner.png"
         style={{ 
           backgroundColor: 'transparent', 
