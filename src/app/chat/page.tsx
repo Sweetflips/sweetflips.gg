@@ -10,7 +10,7 @@ export default function ChatPage() {
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [selectedRoomName, setSelectedRoomName] = useState<string>("");
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const { isLoggedIn, loading } = useAuth();
+  const { isLoggedIn, loading, supabaseClient } = useAuth();
 
   useEffect(() => {
     // Fetch current user data
@@ -28,10 +28,29 @@ export default function ChatPage() {
 
   const fetchCurrentUser = async () => {
     try {
-      const response = await fetch("/api/user");
+      // First try the new endpoint that handles both auth types
+      const headers: HeadersInit = {};
+      
+      // If we have a Supabase user, add the authorization header
+      if (isLoggedIn && currentUser === null && supabaseClient) {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
+      }
+      
+      const response = await fetch("/api/auth/current-user", { headers });
+      
       if (response.ok) {
         const data = await response.json();
         setCurrentUser(data.user);
+      } else {
+        // Fallback to old endpoint for backward compatibility
+        const oldResponse = await fetch("/api/user");
+        if (oldResponse.ok) {
+          const data = await oldResponse.json();
+          setCurrentUser(data.user);
+        }
       }
     } catch (error) {
       console.error("Error fetching user:", error);
