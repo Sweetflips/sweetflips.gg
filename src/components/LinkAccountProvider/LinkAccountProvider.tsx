@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import LinkKickAccountModal from "../LinkKickAccountModal/LinkKickAccountModal";
 
@@ -31,7 +31,7 @@ export const LinkAccountProvider: React.FC<LinkAccountProviderProps> = ({ childr
   const [hasChecked, setHasChecked] = useState(false);
   const { supabaseUser, isLoggedIn, loading, supabaseClient } = useAuth();
 
-  const checkLinkStatus = async () => {
+  const checkLinkStatus = useCallback(async () => {
     // Prevent multiple simultaneous checks
     if (hasChecked) return;
     
@@ -53,7 +53,7 @@ export const LinkAccountProvider: React.FC<LinkAccountProviderProps> = ({ childr
     } finally {
       setHasChecked(true);
     }
-  };
+  }, [hasChecked, supabaseUser?.id]);
 
   useEffect(() => {
     // Check for successful linking from URL params
@@ -72,7 +72,7 @@ export const LinkAccountProvider: React.FC<LinkAccountProviderProps> = ({ childr
     if (!loading && supabaseUser && isLoggedIn && !hasChecked) {
       checkLinkStatus();
     }
-  }, [loading, supabaseUser, isLoggedIn, hasChecked]);
+  }, [loading, supabaseUser, isLoggedIn, hasChecked, checkLinkStatus]);
 
   const handleModalClose = () => {
     setShowModal(false);

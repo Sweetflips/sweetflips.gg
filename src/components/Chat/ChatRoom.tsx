@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PixelAvatar from "../Avatar/PixelAvatar";
 
@@ -48,15 +48,7 @@ export default function ChatRoom({ roomId, roomName, currentUserId }: ChatRoomPr
     scrollToBottom();
   }, [messages]);
 
-  // Load initial messages
-  useEffect(() => {
-    fetchMessages();
-    // Set up polling for new messages
-    const interval = setInterval(fetchMessages, 2000); // Poll every 2 seconds
-    return () => clearInterval(interval);
-  }, [roomId]);
-
-  const fetchMessages = async () => {
+  const fetchMessages = useCallback(async () => {
     try {
       const response = await fetch(`/api/chat/rooms/${roomId}/messages`);
       if (response.ok) {
@@ -68,7 +60,15 @@ export default function ChatRoom({ roomId, roomName, currentUserId }: ChatRoomPr
       console.error("Error fetching messages:", error);
       setIsLoading(false);
     }
-  };
+  }, [roomId]);
+
+  // Load initial messages
+  useEffect(() => {
+    fetchMessages();
+    // Set up polling for new messages
+    const interval = setInterval(fetchMessages, 2000); // Poll every 2 seconds
+    return () => clearInterval(interval);
+  }, [roomId, fetchMessages]);
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();

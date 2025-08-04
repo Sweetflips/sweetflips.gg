@@ -24,7 +24,7 @@ export default function ChatPage() {
     if (!selectedRoomId && currentUser) {
       initializeChat();
     }
-  }, [currentUser]);
+  }, [currentUser, selectedRoomId]);
 
   const fetchCurrentUser = async () => {
     try {

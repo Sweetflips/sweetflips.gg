@@ -103,7 +103,7 @@ export default function AvatarPage() {
             ) : (
               <div className="text-center">
                 <p className="text-gray-500 dark:text-gray-400 mb-4">
-                  You haven't created an avatar yet
+                  You haven&apos;t created an avatar yet
                 </p>
                 <motion.button
                   whileHover={{ scale: 1.02 }}

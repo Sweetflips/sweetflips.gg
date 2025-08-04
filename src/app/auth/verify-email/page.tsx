@@ -53,7 +53,7 @@ const VerifyEmail: React.FC = () => {
     };
 
     verifyEmail();
-  }, [searchParams, router]);
+  }, [searchParams, router, supabaseClient]);
 
   return (
     <DefaultLayout>

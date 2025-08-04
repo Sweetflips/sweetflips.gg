@@ -64,7 +64,7 @@ const CallbackPage = () => {
     };
 
     handleAuthCallback();
-  }, [searchParams, router]);
+  }, [searchParams, router, supabaseClient]);
 
   return <div><Loader /></div>;
 };
