@@ -227,129 +227,191 @@ export default function AvatarCreator({ onClose }: AvatarCreatorProps) {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+    <div className="fixed inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm z-50">
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-[90vw] max-w-6xl h-[85vh] flex flex-col"
+        exit={{ opacity: 0, scale: 0.9 }}
+        className="relative w-[90vw] max-w-7xl h-[90vh] flex flex-col"
       >
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Edit Avatar</h2>
-          <button 
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="flex flex-1 overflow-hidden">
-          {/* Category sidebar */}
-          <div className="w-80 bg-gray-50 dark:bg-gray-900 p-4 overflow-y-auto">
-            {categories.map((category) => (
-              <motion.button
-                key={category.id}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`w-full flex items-center gap-4 p-4 mb-2 rounded-xl transition-colors ${
-                  selectedCategory === category.id
-                    ? "bg-blue-500 text-white"
-                    : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                }`}
-              >
-                <span className="text-2xl">{category.icon}</span>
-                <span className="font-medium">{category.name}</span>
-              </motion.button>
-            ))}
+        {/* Glow effect */}
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-purple-600/20 blur-3xl" />
+        
+        <div className="relative bg-[#1b1324] border border-purple-700/50 rounded-3xl shadow-2xl backdrop-blur-xl flex flex-col h-full overflow-hidden">
+          {/* Inner glow */}
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-pink-500/5 pointer-events-none" />
+          
+          {/* Header */}
+          <div className="relative z-10 flex items-center justify-between p-6 border-b border-purple-700/30">
+            <div>
+              <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+                Avatar Creator
+              </h2>
+              <p className="text-gray-400 mt-1">Design your unique pixel character</p>
+            </div>
+            <motion.button 
+              whileHover={{ scale: 1.1, rotate: 90 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={onClose}
+              className="p-3 bg-[#2a1b3d] hover:bg-[#3a2b4d] rounded-xl text-gray-400 hover:text-white transition-all border border-purple-700/30">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </motion.button>
           </div>
 
-          {/* Parts selection */}
-          <div className="flex-1 p-6 overflow-y-auto">
-            {selectedCategory === "hair" && (
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Hair Color</h3>
-                <div className="flex flex-wrap gap-3">
-                  {hairColors.map((color) => (
-                    <motion.button
-                      key={color.id}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => setSelectedHairColor(color.color)}
-                      className={`w-12 h-12 rounded-full border-4 ${
-                        selectedHairColor === color.color
-                          ? "border-blue-500"
-                          : "border-gray-300 dark:border-gray-600"
-                      }`}
-                      style={{ backgroundColor: color.color }}
+          <div className="relative z-10 flex flex-1 overflow-hidden">
+            {/* Category sidebar */}
+            <div className="w-80 bg-[#0d0816] border-r border-purple-700/30 p-6 overflow-y-auto">
+              <h3 className="text-lg font-semibold text-purple-400 mb-4">Categories</h3>
+              {categories.map((category) => (
+                <motion.button
+                  key={category.id}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setSelectedCategory(category.id)}
+                  className={`w-full flex items-center gap-4 p-4 mb-3 rounded-xl transition-all ${
+                    selectedCategory === category.id
+                      ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/30"
+                      : "bg-[#2a1b3d]/50 text-gray-300 hover:bg-[#2a1b3d] border border-purple-700/30"
+                  }`}
+                >
+                  <span className="text-2xl">{category.icon}</span>
+                  <span className="font-medium">{category.name}</span>
+                  {selectedCategory === category.id && (
+                    <motion.div 
+                      layoutId="activeCategory"
+                      className="ml-auto w-2 h-2 bg-white rounded-full"
                     />
+                  )}
+                </motion.button>
+              ))}
+            </div>
+
+            {/* Parts selection */}
+            <div className="flex-1 p-8 overflow-y-auto bg-[#1b1324]/50">
+              {selectedCategory === "hair" && (
+                <div className="mb-8">
+                  <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-6">
+                    Hair Color
+                  </h3>
+                  <div className="flex flex-wrap gap-4">
+                    {hairColors.map((color) => (
+                      <motion.button
+                        key={color.id}
+                        whileHover={{ scale: 1.15 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setSelectedHairColor(color.color)}
+                        className={`relative w-14 h-14 rounded-full border-4 transition-all ${
+                          selectedHairColor === color.color
+                            ? "border-purple-400 shadow-lg shadow-purple-500/50"
+                            : "border-purple-700/50"
+                        }`}
+                        style={{ backgroundColor: color.color }}
+                      >
+                        {selectedHairColor === color.color && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="absolute inset-0 rounded-full border-2 border-white"
+                          />
+                        )}
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-3 gap-4">
+                {categories
+                  .find((cat) => cat.id === selectedCategory)
+                  ?.parts.map((part) => (
+                    <motion.button
+                      key={part.id}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handlePartSelect(selectedCategory, part.id)}
+                      className={`relative aspect-square rounded-xl p-6 flex flex-col items-center justify-center gap-3 transition-all ${
+                        avatarState[selectedCategory as keyof AvatarState] === part.id
+                          ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/30"
+                          : "bg-[#2a1b3d]/50 text-gray-300 hover:bg-[#2a1b3d] border border-purple-700/30"
+                      }`}
+                    >
+                      {avatarState[selectedCategory as keyof AvatarState] === part.id && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-xl animate-pulse" />
+                      )}
+                      
+                      <div className="relative z-10">
+                        {selectedCategory === "skin" ? (
+                          <div
+                            className="w-20 h-20 rounded-full border-4 border-purple-700/50"
+                            style={{ backgroundColor: part.preview }}
+                          />
+                        ) : (
+                          <span className="text-5xl">{part.preview}</span>
+                        )}
+                      </div>
+                      <span className="text-sm font-semibold relative z-10">{part.name}</span>
+                    </motion.button>
                   ))}
+              </div>
+            </div>
+
+            {/* Avatar preview */}
+            <div className="w-96 bg-[#0d0816] border-l border-purple-700/30 p-8 flex flex-col items-center justify-center">
+              <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-8">
+                Preview
+              </h3>
+              
+              <div className="relative">
+                <div className="absolute -inset-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl blur-lg opacity-75 animate-pulse"></div>
+                <div className="relative bg-[#2a1b3d] rounded-2xl p-8 border border-purple-700/50">
+                  <div className="w-48 h-64 bg-[#1b1324] rounded-xl flex items-center justify-center border border-purple-700/30">
+                    <span className="text-gray-500">Avatar Preview</span>
+                  </div>
+                  <div className="mt-6 text-center">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600/20 to-green-500/20 border border-green-500/30 rounded-full">
+                      <span className="w-2 h-2 bg-[#53FC18] rounded-full animate-pulse shadow-lg shadow-green-500/50"></span>
+                      <span className="text-[#53FC18] text-sm font-medium">Online</span>
+                    </div>
+                    <h3 className="mt-3 text-xl font-bold text-white">Your Avatar</h3>
+                    <p className="text-sm text-gray-400 mt-1">Ready for action!</p>
+                  </div>
                 </div>
               </div>
-            )}
-
-            <div className="grid grid-cols-3 gap-4">
-              {categories
-                .find((cat) => cat.id === selectedCategory)
-                ?.parts.map((part) => (
-                  <motion.button
-                    key={part.id}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => handlePartSelect(selectedCategory, part.id)}
-                    className={`aspect-square rounded-xl p-6 flex flex-col items-center justify-center gap-2 transition-colors ${
-                      avatarState[selectedCategory as keyof AvatarState] === part.id
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                    }`}
-                  >
-                    {selectedCategory === "skin" ? (
-                      <div
-                        className="w-16 h-16 rounded-full"
-                        style={{ backgroundColor: part.preview }}
-                      />
-                    ) : (
-                      <span className="text-4xl">{part.preview}</span>
-                    )}
-                    <span className="text-sm font-medium">{part.name}</span>
-                  </motion.button>
-                ))}
-            </div>
-          </div>
-
-          {/* Avatar preview */}
-          <div className="w-96 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-800 dark:to-gray-900 p-6 flex flex-col items-center justify-center">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
-              <div className="w-48 h-64 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-                <span className="text-gray-500 dark:text-gray-400">Avatar Preview</span>
-              </div>
-              <div className="mt-4 text-center">
-                <span className="inline-flex items-center gap-2 px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full text-sm font-medium">
-                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                  Online
-                </span>
-                <h3 className="mt-2 text-lg font-semibold text-gray-800 dark:text-white">Username</h3>
+              
+              <div className="mt-8 text-center">
+                <p className="text-sm text-gray-400">
+                  Your avatar will be visible in chat and games
+                </p>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Action buttons */}
-        <div className="flex items-center justify-end gap-4 p-6 border-t border-gray-200 dark:border-gray-700">
-          <button 
-            onClick={onClose}
-            className="px-6 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg font-medium transition-colors">
-            Cancel
-          </button>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleSave}
-            className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
-          >
-            Done
-          </motion.button>
+          {/* Action buttons */}
+          <div className="relative z-10 flex items-center justify-between p-6 border-t border-purple-700/30">
+            <div className="text-sm text-gray-400">
+              <span className="text-purple-400">Tip:</span> Mix and match to create your unique style!
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onClose}
+                className="px-6 py-3 bg-[#2a1b3d] hover:bg-[#3a2b4d] text-gray-300 rounded-xl font-medium transition-all border border-purple-700/30">
+                Cancel
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleSave}
+                className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-semibold transition-all shadow-lg shadow-purple-500/30"
+              >
+                Save Avatar
+              </motion.button>
+            </div>
+          </div>
         </div>
       </motion.div>
     </div>
