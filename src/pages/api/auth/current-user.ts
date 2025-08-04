@@ -59,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       
       if (supabaseUser && !error) {
         // Find or create user in database
-        let user = await prisma.user.findUnique({
+        let user = await prisma.user.findFirst({
           where: { email: supabaseUser.email! },
         });
 
