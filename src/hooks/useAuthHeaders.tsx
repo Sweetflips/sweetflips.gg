@@ -3,8 +3,8 @@ import { useAuth } from "@/contexts/AuthContext";
 export const useAuthHeaders = () => {
   const { supabaseClient } = useAuth();
 
-  const getAuthHeaders = async (): Promise<HeadersInit> => {
-    const headers: HeadersInit = {};
+  const getAuthHeaders = async (): Promise<Record<string, string>> => {
+    const headers: Record<string, string> = {};
 
     if (supabaseClient) {
       try {
@@ -20,7 +20,7 @@ export const useAuthHeaders = () => {
     return headers;
   };
 
-  const getAuthHeadersWithContentType = async (): Promise<HeadersInit> => {
+  const getAuthHeadersWithContentType = async (): Promise<Record<string, string>> => {
     const headers = await getAuthHeaders();
     headers['Content-Type'] = 'application/json';
     return headers;
