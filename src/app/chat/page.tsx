@@ -167,39 +167,53 @@ export default function ChatPage() {
 
   return (
     <DefaultLayout>
-      <div className="mx-auto max-w-screen-2xl">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Chat</h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Connect with other users in real-time
+      <div className="mx-auto max-w-screen-2xl px-4">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+            Sweetflips Chat
+          </h1>
+          <p className="mt-2 text-gray-400">
+            Connect with the community in real-time
           </p>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden" style={{ height: "calc(100vh - 250px)" }}>
-          <div className="flex h-full">
-            <ChatSidebar
-              selectedRoomId={selectedRoomId || undefined}
-              onRoomSelect={handleRoomSelect}
-            />
+        <div className="relative">
+          {/* Glow effect background */}
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-purple-600/20 blur-3xl" />
+          
+          <div className="relative bg-[#1b1324] border border-purple-700/50 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl" style={{ height: "calc(100vh - 280px)" }}>
+            {/* Inner glow */}
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-pink-500/5 pointer-events-none" />
             
-            {selectedRoomId ? (
-              <div className="flex-1">
-                <ChatRoom
-                  roomId={selectedRoomId}
-                  roomName={selectedRoomName}
-                  currentUserId={currentUser.id}
-                />
-              </div>
-            ) : (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center text-gray-500 dark:text-gray-400">
-                  <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                  <p>Select a chat room to start messaging</p>
+            <div className="flex h-full relative z-10">
+              <ChatSidebar
+                selectedRoomId={selectedRoomId || undefined}
+                onRoomSelect={handleRoomSelect}
+              />
+              
+              {selectedRoomId ? (
+                <div className="flex-1 relative">
+                  <ChatRoom
+                    roomId={selectedRoomId}
+                    roomName={selectedRoomName}
+                    currentUserId={currentUser.id}
+                  />
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="relative">
+                      <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-purple-500 to-pink-500 blur-xl opacity-50" />
+                      <svg className="w-20 h-20 mx-auto mb-6 relative text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                    </div>
+                    <p className="text-lg text-gray-400 font-medium">Select a chat room to start messaging</p>
+                    <p className="text-sm text-gray-500 mt-2">Join the conversation with other Sweetflips members</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

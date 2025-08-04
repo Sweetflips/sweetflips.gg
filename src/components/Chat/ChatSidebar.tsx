@@ -71,15 +71,17 @@ export default function ChatSidebar({ selectedRoomId, onRoomSelect }: ChatSideba
   };
 
   return (
-    <div className="w-80 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+    <div className="w-80 bg-[#0d0816] border-r border-purple-700/30 flex flex-col">
+      <div className="p-6 border-b border-purple-700/30">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Chat Rooms</h3>
+          <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+            Channels
+          </h3>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setIsCreating(true)}
-            className="p-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+            className="p-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl transition-all shadow-lg shadow-purple-500/20"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -93,14 +95,14 @@ export default function ChatSidebar({ selectedRoomId, onRoomSelect }: ChatSideba
               type="text"
               value={newRoomName}
               onChange={(e) => setNewRoomName(e.target.value)}
-              placeholder="Room name..."
-              className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Channel name..."
+              className="w-full px-4 py-2.5 bg-[#2a1b3d] border border-purple-700/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
               autoFocus
             />
-            <div className="flex gap-2 mt-2">
+            <div className="flex gap-2 mt-3">
               <button
                 type="submit"
-                className="flex-1 px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm font-medium"
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg text-sm font-medium transition-all shadow-lg shadow-purple-500/20"
               >
                 Create
               </button>
@@ -110,7 +112,7 @@ export default function ChatSidebar({ selectedRoomId, onRoomSelect }: ChatSideba
                   setIsCreating(false);
                   setNewRoomName("");
                 }}
-                className="flex-1 px-3 py-1 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 rounded text-sm font-medium"
+                className="flex-1 px-4 py-2 bg-[#2a1b3d] hover:bg-[#3a2b4d] text-gray-300 rounded-lg text-sm font-medium transition-all border border-purple-700/30"
               >
                 Cancel
               </button>
@@ -121,45 +123,57 @@ export default function ChatSidebar({ selectedRoomId, onRoomSelect }: ChatSideba
 
       <div className="flex-1 overflow-y-auto">
         {rooms.length === 0 ? (
-          <div className="p-4 text-center text-gray-500 dark:text-gray-400">
-            No chat rooms yet. Create one to get started!
+          <div className="p-6 text-center text-gray-500">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-purple-500/10 flex items-center justify-center">
+              <svg className="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+              </svg>
+            </div>
+            <p className="text-sm">No channels yet</p>
+            <p className="text-xs text-gray-600 mt-1">Create one to get started!</p>
           </div>
         ) : (
-          <div className="p-2">
+          <div className="p-3">
             {rooms.map((room) => (
               <motion.button
                 key={room.id}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => onRoomSelect(room.id)}
-                className={`w-full p-3 mb-2 rounded-lg text-left transition-colors ${
+                className={`w-full p-4 mb-2 rounded-xl text-left transition-all relative overflow-hidden group ${
                   selectedRoomId === room.id
-                    ? "bg-blue-100 dark:bg-blue-900 border-l-4 border-blue-500"
-                    : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                    ? "bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/50"
+                    : "bg-[#2a1b3d]/30 hover:bg-[#2a1b3d]/50 border border-transparent"
                 }`}
               >
-                <div className="flex items-center justify-between mb-1">
-                  <h4 className="font-medium text-gray-800 dark:text-white">
-                    {room.isPrivate && (
-                      <span className="inline-block w-4 h-4 mr-1">
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                        </svg>
+                {selectedRoomId === room.id && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 to-pink-600/10 animate-pulse" />
+                )}
+                
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-1">
+                    <h4 className="font-semibold text-white flex items-center">
+                      {room.isPrivate && (
+                        <span className="mr-2 text-purple-400">
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                          </svg>
+                        </span>
+                      )}
+                      # {room.name}
+                    </h4>
+                    {room.memberCount && (
+                      <span className="text-xs text-purple-400 bg-purple-500/20 px-2 py-1 rounded-full">
+                        {room.memberCount} online
                       </span>
                     )}
-                    {room.name}
-                  </h4>
-                  {room.memberCount && (
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {room.memberCount} members
-                    </span>
+                  </div>
+                  {room.lastMessage && (
+                    <p className="text-sm text-gray-400 truncate">
+                      {room.lastMessage.content}
+                    </p>
                   )}
                 </div>
-                {room.lastMessage && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                    {room.lastMessage.content}
-                  </p>
-                )}
               </motion.button>
             ))}
           </div>

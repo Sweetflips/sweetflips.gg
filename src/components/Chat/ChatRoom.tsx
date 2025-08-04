@@ -135,15 +135,24 @@ export default function ChatRoom({ roomId, roomName, currentUserId }: ChatRoomPr
   }
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-900 rounded-lg shadow-lg">
+    <div className="flex flex-col h-full bg-transparent">
       {/* Chat header */}
-      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-        <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
-          {roomName}
-        </h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          {messages.length} messages
-        </p>
+      <div className="px-6 py-5 border-b border-purple-700/30 bg-[#0d0816]/50 backdrop-blur-sm">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-white flex items-center">
+              <span className="text-purple-400 mr-2">#</span>
+              {roomName}
+            </h2>
+            <p className="text-sm text-gray-400 mt-1">
+              {messages.length} messages
+            </p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-[#53FC18] rounded-full animate-pulse"></div>
+            <span className="text-sm text-gray-400">Live</span>
+          </div>
+        </div>
       </div>
 
       {/* Messages area */}
@@ -173,7 +182,7 @@ export default function ChatRoom({ roomId, roomName, currentUserId }: ChatRoomPr
                         className="rounded"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-semibold">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-semibold shadow-lg shadow-purple-500/20">
                         {message.user.username[0].toUpperCase()}
                       </div>
                     )}
@@ -189,20 +198,22 @@ export default function ChatRoom({ roomId, roomName, currentUserId }: ChatRoomPr
                 >
                   {showAvatar && (
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <span className={`text-sm font-semibold ${
+                        isCurrentUser ? "text-purple-400" : "text-purple-300"
+                      }`}>
                         {message.user.username}
                       </span>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                      <span className="text-xs text-gray-500">
                         {formatTime(message.createdAt)}
                       </span>
                     </div>
                   )}
 
                   <div
-                    className={`px-4 py-2 rounded-2xl ${
+                    className={`px-4 py-3 rounded-2xl ${
                       isCurrentUser
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200"
+                        ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/20"
+                        : "bg-[#2a1b3d] text-gray-100 border border-purple-700/30"
                     }`}
                   >
                     <p className="text-sm break-words">{message.content}</p>
@@ -216,24 +227,26 @@ export default function ChatRoom({ roomId, roomName, currentUserId }: ChatRoomPr
       </div>
 
       {/* Message input */}
-      <form onSubmit={sendMessage} className="p-4 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex gap-2">
+      <form onSubmit={sendMessage} className="p-6 border-t border-purple-700/30 bg-[#0d0816]/50 backdrop-blur-sm">
+        <div className="flex gap-3">
           <input
             ref={inputRef}
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type a message..."
-            className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-full text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="flex-1 px-5 py-3 bg-[#2a1b3d] border border-purple-700/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
           />
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             type="submit"
             disabled={!newMessage.trim()}
-            className="px-6 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white rounded-full font-medium transition-colors disabled:cursor-not-allowed"
+            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-600 disabled:to-gray-700 text-white rounded-xl font-medium transition-all shadow-lg shadow-purple-500/20 disabled:shadow-none disabled:cursor-not-allowed"
           >
-            Send
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
           </motion.button>
         </div>
       </form>
