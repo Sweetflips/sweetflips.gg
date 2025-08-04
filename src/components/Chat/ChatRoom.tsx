@@ -39,13 +39,24 @@ export default function ChatRoom({ roomId, roomName, currentUserId }: ChatRoomPr
   const [isLoading, setIsLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const previousMessageCount = useRef(0);
+  const isInitialLoad = useRef(true);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
-    scrollToBottom();
+    // Only auto-scroll if this is a new message (not initial load)
+    if (!isInitialLoad.current && messages.length > previousMessageCount.current) {
+      scrollToBottom();
+    }
+    previousMessageCount.current = messages.length;
+    
+    // After initial load, allow auto-scrolling
+    if (isInitialLoad.current && messages.length > 0) {
+      isInitialLoad.current = false;
+    }
   }, [messages]);
 
   const fetchMessages = useCallback(async () => {
@@ -64,6 +75,10 @@ export default function ChatRoom({ roomId, roomName, currentUserId }: ChatRoomPr
 
   // Load initial messages
   useEffect(() => {
+    // Reset initial load flag when room changes
+    isInitialLoad.current = true;
+    previousMessageCount.current = 0;
+    
     fetchMessages();
     // Set up polling for new messages
     const interval = setInterval(fetchMessages, 2000); // Poll every 2 seconds
@@ -91,6 +106,8 @@ export default function ChatRoom({ roomId, roomName, currentUserId }: ChatRoomPr
       if (response.ok) {
         // Message sent successfully, will be fetched in next poll
         inputRef.current?.focus();
+        // Scroll to bottom after sending message
+        setTimeout(() => scrollToBottom(), 100);
       }
     } catch (error) {
       console.error("Error sending message:", error);
