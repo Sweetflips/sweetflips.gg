@@ -12,8 +12,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Fixed date range: 28/07 to 31/08 (July 28th to August 31st)
-    const afterDate = "2024-07-28";
-    const beforeDate = "2024-08-31";
+    const afterDate = "2025-07-28";
+    const beforeDate = "2025-08-31";
 
     const afterTimestamp = Math.floor(DateTime.fromISO(afterDate, { zone: 'Europe/Amsterdam' }).toSeconds());
     const beforeTimestamp = Math.floor(DateTime.fromISO(beforeDate, { zone: 'Europe/Amsterdam' }).toSeconds());
