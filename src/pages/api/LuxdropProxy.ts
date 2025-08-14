@@ -16,33 +16,16 @@ export default async function handler(
   console.log("=== LUXDROP API CALLED ===");
 
   // --- Read API and Leaderboard Config from Environment ---
-  const codesToFetch = process.env.LUXDROP_LEADERBOARD_CODES;
-  const API_KEY = process.env.LUXDROP_API_KEY;
-  const BASE_API_URL = process.env.BASE_LUXDROP_API_URL;
+  const API_KEY = process.env.LUXDROP_API_KEY || "113ecb6008668493dffd81f3a4466633cea823ea07c801e75882558a66f722cd";
 
   console.log("Environment check:");
-  console.log("LUXDROP_LEADERBOARD_CODES:", codesToFetch ? "SET" : "MISSING");
   console.log("LUXDROP_API_KEY:", API_KEY ? "SET" : "MISSING");
-  console.log("BASE_LUXDROP_API_URL:", BASE_API_URL ? "SET" : "MISSING");
 
-  if (!codesToFetch || !API_KEY || !BASE_API_URL) {
-    console.error("Server configuration error: Missing Luxdrop API variables.");
-    return res.status(500).json({ error: "Server-side configuration is incomplete." });
-  }
-
-  // --- Read Proxy Details from Environment ---
-  const proxyHost = process.env.PROXY_HOST;
-  const proxyPortString = process.env.PROXY_PORT;
-  const proxyUsername = process.env.PROXY_USERNAME;
-  const proxyPassword = process.env.PROXY_PASSWORD;
-
-  let proxyPort: number | undefined = undefined;
-  if (proxyPortString) {
-    const parsedPort = parseInt(proxyPortString, 10);
-    if (!isNaN(parsedPort)) {
-      proxyPort = parsedPort;
-    }
-  }
+  // --- Use exact proxy configuration from working Python script ---
+  const proxyHost = "46.202.3.151";
+  const proxyPort = 7417;
+  const proxyUsername = "ozxnqgrw";
+  const proxyPassword = "kbqc558eowm4";
 
   // --- Date Logic for Contest Period Leaderboard ---
   const currentTime = DateTime.utc();
@@ -77,37 +60,25 @@ export default async function handler(
   console.log("=== API PARAMETERS ===");
   console.log("Request params:", JSON.stringify(params, null, 2));
 
-  // Create proxy agent if configured
-  let proxyAgent: any = null;
-  if (proxyHost && proxyPort && proxyUsername && proxyPassword) {
-    const proxyUrl = `http://${proxyUsername}:${proxyPassword}@${proxyHost}:${proxyPort}`;
-    proxyAgent = new HttpsProxyAgent(proxyUrl);
-    console.log("Using proxy:", `${proxyHost}:${proxyPort}`);
-  } else {
-    console.log("No proxy configured");
-  }
+  // Create proxy agent using exact working configuration
+  const proxyUrl = `http://${proxyUsername}:${proxyPassword}@${proxyHost}:${proxyPort}`;
+  const proxyAgent = new HttpsProxyAgent(proxyUrl);
+  console.log("Using exact working proxy:", `${proxyHost}:${proxyPort}`);
 
-  // Correct API configuration with proper headers
+  // Exact API configuration matching working Python script
   const config: AxiosRequestConfig = {
     method: "get",
-    url: `${BASE_API_URL}/external/affiliates`,
+    url: "https://api.luxdrop.com/external/affiliates", // Use exact URL from Python script
     params: params,
     timeout: 30000,
     headers: {
       "x-api-key": API_KEY,
-      "Content-Type": "application/json",
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
       "Accept": "application/json",
-      "Accept-Language": "en-US,en;q=0.9",
-      "Accept-Encoding": "gzip, deflate, br",
-      "Connection": "keep-alive",
     },
+    httpsAgent: proxyAgent,
+    httpAgent: proxyAgent,
   };
-
-  if (proxyAgent) {
-    config.httpsAgent = proxyAgent;
-    config.httpAgent = proxyAgent;
-  }
 
   try {
     console.log("=== API REQUEST DEBUG ===");
