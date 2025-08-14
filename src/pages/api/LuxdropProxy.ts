@@ -20,21 +20,25 @@ export default async function handler(
   const API_KEY = process.env.LUXDROP_API_KEY;
   const BASE_API_URL = process.env.BASE_LUXDROP_API_URL;
 
-  console.log("Environment check:");
-  console.log("LUXDROP_LEADERBOARD_CODES:", codesToFetch ? "SET" : "MISSING");
-  console.log("LUXDROP_API_KEY:", API_KEY ? "SET" : "MISSING");
-  console.log("BASE_LUXDROP_API_URL:", BASE_API_URL ? "SET" : "MISSING");
-
-  if (!codesToFetch || !API_KEY || !BASE_API_URL) {
-    console.error("Server configuration error: Missing Luxdrop API variables.");
-    return res.status(500).json({ error: "Server-side configuration is incomplete." });
-  }
-
   // --- Read Proxy Details from Environment ---
   const proxyHost = process.env.PROXY_HOST;
   const proxyPortString = process.env.PROXY_PORT;
   const proxyUsername = process.env.PROXY_USERNAME;
   const proxyPassword = process.env.PROXY_PASSWORD;
+
+  console.log("=== ENVIRONMENT VARIABLES VALIDATION ===");
+  console.log("LUXDROP_LEADERBOARD_CODES:", codesToFetch ? `SET (${codesToFetch})` : "MISSING");
+  console.log("LUXDROP_API_KEY:", API_KEY ? `SET (${API_KEY.substring(0, 8)}...)` : "MISSING");
+  console.log("BASE_LUXDROP_API_URL:", BASE_API_URL ? `SET (${BASE_API_URL})` : "MISSING");
+  console.log("PROXY_HOST:", proxyHost ? `SET (${proxyHost})` : "NOT SET");
+  console.log("PROXY_PORT:", proxyPortString ? `SET (${proxyPortString})` : "NOT SET");
+  console.log("PROXY_USERNAME:", proxyUsername ? "SET" : "NOT SET");
+  console.log("PROXY_PASSWORD:", proxyPassword ? "SET" : "NOT SET");
+
+  if (!codesToFetch || !API_KEY || !BASE_API_URL) {
+    console.error("Server configuration error: Missing Luxdrop API variables.");
+    return res.status(500).json({ error: "Server-side configuration is incomplete." });
+  }
 
   let proxyPort: number | undefined = undefined;
   if (proxyPortString) {
@@ -95,6 +99,10 @@ export default async function handler(
     console.log("No proxy configured");
   }
 
+  // Add temporary bypass for high wagering check for debugging
+  const BYPASS_HIGH_WAGERING_CHECK = process.env.BYPASS_HIGH_WAGERING_CHECK === 'true';
+  console.log("BYPASS_HIGH_WAGERING_CHECK:", BYPASS_HIGH_WAGERING_CHECK ? "ENABLED" : "DISABLED");
+
   // Correct API configuration with proper headers
   const config: AxiosRequestConfig = {
     method: "get",
@@ -120,20 +128,57 @@ export default async function handler(
   try {
     console.log("=== API REQUEST DEBUG ===");
     console.log("Making API request to:", config.url);
+    console.log("Full request URL with params:", `${config.url}?${new URLSearchParams(params).toString()}`);
+    console.log("Request method:", config.method);
+    console.log("Request timeout:", config.timeout);
     console.log("Request params:", JSON.stringify(params, null, 2));
+    console.log("Request headers (safe):", {
+      "Content-Type": config.headers?.["Content-Type"],
+      "User-Agent": config.headers?.["User-Agent"],
+      "Accept": config.headers?.["Accept"],
+      "Accept-Language": config.headers?.["Accept-Language"],
+      "Accept-Encoding": config.headers?.["Accept-Encoding"],
+      "Connection": config.headers?.["Connection"],
+      "x-api-key": API_KEY ? `${API_KEY.substring(0, 8)}...` : "NOT SET"
+    });
+    console.log("Proxy configuration:", proxyAgent ? "ENABLED" : "DISABLED");
     console.log("Codes parameter:", params.codes);
     console.log("Start date parameter:", params.startDate);
     console.log("End date parameter:", params.endDate);
     
     const response = await axios(config);
+    
+    console.log("=== API RESPONSE DEBUG ===");
+    console.log("✅ Successfully received response from Luxdrop API!");
+    console.log("Response status:", response.status);
+    console.log("Response status text:", response.statusText);
+    console.log("Response headers:", {
+      "content-type": response.headers["content-type"],
+      "content-length": response.headers["content-length"],
+      "cache-control": response.headers["cache-control"],
+      "server": response.headers["server"],
+      "date": response.headers["date"]
+    });
+    
     const affiliateData = response.data;
-
-    console.log("✅ Successfully received data from Luxdrop API!");
-    console.log("Data type:", typeof affiliateData);
+    console.log("=== API RESPONSE STRUCTURE ANALYSIS ===");
+    console.log("Response data type:", typeof affiliateData);
     console.log("Is array:", Array.isArray(affiliateData));
-    console.log("Entries:", Array.isArray(affiliateData) ? affiliateData.length : 'N/A');
+    console.log("Response data keys (if object):", typeof affiliateData === 'object' && !Array.isArray(affiliateData) ? Object.keys(affiliateData) : 'N/A');
+    console.log("Entries count:", Array.isArray(affiliateData) ? affiliateData.length : 'N/A');
+    
+    if (Array.isArray(affiliateData) && affiliateData.length > 0) {
+      console.log("First entry structure:", Object.keys(affiliateData[0]));
+      console.log("Sample data preview:", {
+        username: affiliateData[0].username || affiliateData[0].name || affiliateData[0].id,
+        wagered: affiliateData[0].wagered || affiliateData[0].amount || affiliateData[0].total,
+        otherFields: Object.keys(affiliateData[0]).filter(key => !['username', 'name', 'id', 'wagered', 'amount', 'total'].includes(key))
+      });
+    }
 
     if (!Array.isArray(affiliateData)) {
+      console.error("❌ API response structure error: Expected array but got:", typeof affiliateData);
+      console.error("Response data content preview:", JSON.stringify(affiliateData, null, 2).substring(0, 500));
       throw new Error("API response is not an array");
     }
 
@@ -141,13 +186,18 @@ export default async function handler(
     
     // Check if API is returning reasonable contest period data
     const totalWagered = affiliateData.reduce((sum: number, entry: any) => sum + (Number(entry.wagered) || 0), 0);
+    console.log("=== WAGERING VALIDATION ===");
     console.log("Total wagered from API:", totalWagered);
+    console.log("High wagering check bypass:", BYPASS_HIGH_WAGERING_CHECK ? "ENABLED" : "DISABLED");
     
     // With correct startDate/endDate parameters, API should return filtered data
     // Only fallback if we get unreasonably high numbers (>$500k) indicating API issues
-    if (totalWagered > 500000) {
+    if (totalWagered > 500000 && !BYPASS_HIGH_WAGERING_CHECK) {
       console.log("⚠️ API appears to be malfunctioning (extremely high wagering). Using fallback.");
+      console.log("Consider setting BYPASS_HIGH_WAGERING_CHECK=true to skip this check");
       throw new Error("API returning unrealistic data - falling back to simulation");
+    } else if (totalWagered > 500000 && BYPASS_HIGH_WAGERING_CHECK) {
+      console.log("⚠️ High wagering detected but bypass is enabled - continuing with API data");
     }
 
     // Process the real API data (no conversion needed - API returns date-filtered data)
@@ -165,11 +215,109 @@ export default async function handler(
     res.status(200).json({ data: sortedLeaderboard });
 
   } catch (error: any) {
-    console.error("❌ Real API failed:", error.message);
-    console.error("Status:", error.response?.status);
+    console.error("=== COMPREHENSIVE ERROR ANALYSIS ===");
+    console.error("❌ Real API failed with detailed error information:");
+    
+    // Log the complete error object structure
+    console.error("Error type:", typeof error);
+    console.error("Error constructor:", error.constructor?.name);
+    console.error("Error message:", error.message);
+    console.error("Error code:", error.code);
+    console.error("Error stack (first 10 lines):", error.stack?.split('\n').slice(0, 10).join('\n'));
+    
+    // Log axios-specific error details
+    if (error.response) {
+      console.error("=== HTTP RESPONSE ERROR DETAILS ===");
+      console.error("Response status:", error.response.status);
+      console.error("Response status text:", error.response.statusText);
+      console.error("Response headers:", JSON.stringify(error.response.headers, null, 2));
+      console.error("Response data type:", typeof error.response.data);
+      console.error("Response data preview:", typeof error.response.data === 'string' 
+        ? error.response.data.substring(0, 500) 
+        : JSON.stringify(error.response.data, null, 2).substring(0, 500)
+      );
+      
+      // Specific status code analysis
+      if (error.response.status === 401) {
+        console.error("🔐 AUTHENTICATION ERROR - Check API key validity");
+      } else if (error.response.status === 403) {
+        console.error("🚫 FORBIDDEN - Possible Cloudflare blocking or API key permissions");
+      } else if (error.response.status === 404) {
+        console.error("🔍 NOT FOUND - Check API endpoint URL and parameters");
+      } else if (error.response.status === 429) {
+        console.error("⏱️ RATE LIMITED - Too many requests");
+      } else if (error.response.status >= 500) {
+        console.error("🔥 SERVER ERROR - Luxdrop API server issue");
+      }
+    } else if (error.request) {
+      console.error("=== NETWORK REQUEST ERROR DETAILS ===");
+      console.error("Request was made but no response received");
+      console.error("Request details:", {
+        method: error.config?.method,
+        url: error.config?.url,
+        timeout: error.config?.timeout,
+        proxy: error.config?.httpsAgent ? "ENABLED" : "DISABLED"
+      });
+      console.error("Network error details:", {
+        code: error.code,
+        errno: error.errno,
+        syscall: error.syscall,
+        hostname: error.hostname,
+        address: error.address,
+        port: error.port
+      });
+      
+      // Network-specific error analysis
+      if (error.code === 'ENOTFOUND') {
+        console.error("🌐 DNS RESOLUTION FAILED - Check internet connection and API URL");
+      } else if (error.code === 'ECONNREFUSED') {
+        console.error("🔗 CONNECTION REFUSED - API server may be down");
+      } else if (error.code === 'ETIMEDOUT') {
+        console.error("⏰ REQUEST TIMEOUT - API server not responding within timeout");
+      } else if (error.code === 'ECONNRESET') {
+        console.error("🔄 CONNECTION RESET - Network connection was reset");
+      }
+    } else {
+      console.error("=== GENERAL ERROR DETAILS ===");
+      console.error("Error occurred in request setup:", error.message);
+    }
+    
+    // Log the complete request configuration for debugging
+    console.error("=== REQUEST CONFIGURATION DEBUG ===");
+    console.error("Request URL:", config.url);
+    console.error("Request method:", config.method);
+    console.error("Request params:", JSON.stringify(params, null, 2));
+    console.error("Request timeout:", config.timeout);
+    console.error("Proxy configuration:", {
+      enabled: !!proxyAgent,
+      host: proxyHost,
+      port: proxyPort,
+      hasAuth: !!(proxyUsername && proxyPassword)
+    });
+    console.error("Request headers (safe):", {
+      "Content-Type": config.headers?.["Content-Type"],
+      "User-Agent": config.headers?.["User-Agent"],
+      "Accept": config.headers?.["Accept"],
+      "x-api-key": API_KEY ? `${API_KEY.substring(0, 8)}...` : "NOT SET"
+    });
+    
+    // Environment variables status at time of error
+    console.error("=== ENVIRONMENT STATE AT ERROR ===");
+    console.error("Environment variables status:", {
+      LUXDROP_LEADERBOARD_CODES: codesToFetch ? "SET" : "MISSING",
+      LUXDROP_API_KEY: API_KEY ? "SET" : "MISSING", 
+      BASE_LUXDROP_API_URL: BASE_API_URL ? "SET" : "MISSING",
+      PROXY_HOST: proxyHost ? "SET" : "NOT SET",
+      PROXY_PORT: proxyPortString ? "SET" : "NOT SET",
+      PROXY_USERNAME: proxyUsername ? "SET" : "NOT SET",
+      PROXY_PASSWORD: proxyPassword ? "SET" : "NOT SET",
+      BYPASS_HIGH_WAGERING_CHECK: process.env.BYPASS_HIGH_WAGERING_CHECK || "NOT SET"
+    });
     
     // Fallback to realistic contest period simulation based on change log data
+    console.log("=== FALLBACK DATA GENERATION ===");
     console.log("Using contest period simulation data (API failed)");
+    console.log("Fallback reason: API request failed - see error details above");
     
     // Based on change log: tiniwini: $15,117.89, Btcnomad14: $6,494.51, etc.
     // Total contest wagering was $39,581.99 according to working version
