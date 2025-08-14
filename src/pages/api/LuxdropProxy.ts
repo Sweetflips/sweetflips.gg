@@ -16,16 +16,29 @@ export default async function handler(
   console.log("=== LUXDROP API CALLED ===");
 
   // --- Read API and Leaderboard Config from Environment ---
-  const API_KEY = process.env.LUXDROP_API_KEY || "113ecb6008668493dffd81f3a4466633cea823ea07c801e75882558a66f722cd";
+  const API_KEY = process.env.LUXDROP_API_KEY;
 
   console.log("Environment check:");
   console.log("LUXDROP_API_KEY:", API_KEY ? "SET" : "MISSING");
 
-  // --- Use exact proxy configuration from working Python script ---
-  const proxyHost = "46.202.3.151";
-  const proxyPort = 7417;
-  const proxyUsername = "ozxnqgrw";
-  const proxyPassword = "kbqc558eowm4";
+  if (!API_KEY) {
+    console.error("Server configuration error: Missing Luxdrop API key.");
+    return res.status(500).json({ error: "Server-side configuration is incomplete." });
+  }
+
+  // --- Read Proxy Details from Environment ---
+  const proxyHost = process.env.PROXY_HOST;
+  const proxyPortString = process.env.PROXY_PORT;
+  const proxyUsername = process.env.PROXY_USERNAME;
+  const proxyPassword = process.env.PROXY_PASSWORD;
+
+  let proxyPort: number | undefined = undefined;
+  if (proxyPortString) {
+    const parsedPort = parseInt(proxyPortString, 10);
+    if (!isNaN(parsedPort)) {
+      proxyPort = parsedPort;
+    }
+  }
 
   // --- Date Logic for Contest Period Leaderboard ---
   const currentTime = DateTime.utc();
@@ -60,10 +73,15 @@ export default async function handler(
   console.log("=== API PARAMETERS ===");
   console.log("Request params:", JSON.stringify(params, null, 2));
 
-  // Create proxy agent using exact working configuration
-  const proxyUrl = `http://${proxyUsername}:${proxyPassword}@${proxyHost}:${proxyPort}`;
-  const proxyAgent = new HttpsProxyAgent(proxyUrl);
-  console.log("Using exact working proxy:", `${proxyHost}:${proxyPort}`);
+  // Create proxy agent if configured
+  let proxyAgent: any = null;
+  if (proxyHost && proxyPort && proxyUsername && proxyPassword) {
+    const proxyUrl = `http://${proxyUsername}:${proxyPassword}@${proxyHost}:${proxyPort}`;
+    proxyAgent = new HttpsProxyAgent(proxyUrl);
+    console.log("Using proxy:", `${proxyHost}:${proxyPort}`);
+  } else {
+    console.log("No proxy configured");
+  }
 
   // Exact API configuration matching working Python script
   const config: AxiosRequestConfig = {
@@ -76,9 +94,12 @@ export default async function handler(
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
       "Accept": "application/json",
     },
-    httpsAgent: proxyAgent,
-    httpAgent: proxyAgent,
   };
+
+  if (proxyAgent) {
+    config.httpsAgent = proxyAgent;
+    config.httpAgent = proxyAgent;
+  }
 
   try {
     console.log("=== API REQUEST DEBUG ===");
