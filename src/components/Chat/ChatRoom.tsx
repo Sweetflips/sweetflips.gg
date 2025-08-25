@@ -25,9 +25,10 @@ interface ChatRoomProps {
   roomId: string;
   roomName: string;
   currentUserId: number;
+  onOpenSidebar?: () => void;
 }
 
-export default function ChatRoom({ roomId, roomName, currentUserId }: ChatRoomProps) {
+export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSidebar }: ChatRoomProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -71,7 +72,10 @@ export default function ChatRoom({ roomId, roomName, currentUserId }: ChatRoomPr
 
   // Load initial messages
   useEffect(() => {
-    // Reset initial load flag when room changes
+    // Reset state when room changes
+    setIsLoading(true);
+    setMessages([]);
+    setNewMessage("");
     isInitialLoad.current = true;
     previousMessageCount.current = 0;
     
@@ -122,7 +126,7 @@ export default function ChatRoom({ roomId, roomName, currentUserId }: ChatRoomPr
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
       </div>
     );
   }
@@ -130,26 +134,39 @@ export default function ChatRoom({ roomId, roomName, currentUserId }: ChatRoomPr
   return (
     <div className="flex flex-col h-full bg-transparent">
       {/* Chat header */}
-      <div className="px-6 py-5 border-b border-purple-700/30 bg-[#0d0816]/50 backdrop-blur-sm">
+      <div className="px-3 sm:px-6 py-3 sm:py-5 border-b border-purple-700/30 bg-[#0d0816]/50 backdrop-blur-sm">
         <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-white flex items-center">
-              <span className="text-purple-400 mr-2">#</span>
-              {roomName}
-            </h2>
-            <p className="text-sm text-gray-400 mt-1">
-              {messages.length} messages
-            </p>
+          <div className="flex items-center">
+            {/* Mobile menu button */}
+            {onOpenSidebar && (
+              <button
+                onClick={onOpenSidebar}
+                className="md:hidden mr-3 p-1.5 bg-purple-600/20 border border-purple-500/30 rounded-lg"
+              >
+                <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            )}
+            <div>
+              <h2 className="text-lg sm:text-2xl font-bold text-white flex items-center">
+                <span className="text-purple-400 mr-1 sm:mr-2">#</span>
+                {roomName}
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-400 mt-0.5 sm:mt-1">
+                {messages.length} messages
+              </p>
+            </div>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 sm:space-x-2">
             <div className="w-2 h-2 bg-[#53FC18] rounded-full animate-pulse"></div>
-            <span className="text-sm text-gray-400">Live</span>
+            <span className="text-xs sm:text-sm text-gray-400">Live</span>
           </div>
         </div>
       </div>
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4">
         <AnimatePresence initial={false}>
           {messages.map((message, index) => {
             const isCurrentUser = message.userId === currentUserId;
@@ -180,9 +197,9 @@ export default function ChatRoom({ roomId, roomName, currentUserId }: ChatRoomPr
                             e.currentTarget.nextElementSibling?.classList.remove('hidden');
                           }}
                         />
-                        {/* Hover preview of full avatar */}
+                        {/* Hover preview of full avatar - desktop only */}
                         {message.user.avatar?.base64Image && (
-                          <div className="absolute z-50 hidden group-hover:block bottom-12 left-0 p-2 bg-[#0d0816] rounded-lg shadow-xl border border-purple-500/30">
+                          <div className="absolute z-50 hidden sm:group-hover:block bottom-12 left-0 p-2 bg-[#0d0816] rounded-lg shadow-xl border border-purple-500/30">
                             <img
                               src={message.user.avatar.base64Image}
                               alt={`${message.user.username}'s avatar`}
@@ -215,7 +232,7 @@ export default function ChatRoom({ roomId, roomName, currentUserId }: ChatRoomPr
                 <div
                   className={`flex flex-col ${
                     isCurrentUser ? "items-end" : "items-start"
-                  } max-w-[70%]`}
+                  } max-w-[85%] sm:max-w-[70%]`}
                 >
                   {showAvatar && (
                     <div className="flex items-center gap-2 mb-1">
@@ -231,7 +248,7 @@ export default function ChatRoom({ roomId, roomName, currentUserId }: ChatRoomPr
                   )}
 
                   <div
-                    className={`px-4 py-3 rounded-2xl ${
+                    className={`px-3 sm:px-4 py-2 sm:py-3 rounded-xl sm:rounded-2xl ${
                       isCurrentUser
                         ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/20"
                         : "bg-[#2a1b3d] text-gray-100 border border-purple-700/30"
@@ -248,24 +265,24 @@ export default function ChatRoom({ roomId, roomName, currentUserId }: ChatRoomPr
       </div>
 
       {/* Message input */}
-      <form onSubmit={sendMessage} className="p-6 border-t border-purple-700/30 bg-[#0d0816]/50 backdrop-blur-sm">
-        <div className="flex gap-3">
+      <form onSubmit={sendMessage} className="p-3 sm:p-6 border-t border-purple-700/30 bg-[#0d0816]/50 backdrop-blur-sm">
+        <div className="flex gap-2 sm:gap-3">
           <input
             ref={inputRef}
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type a message..."
-            className="flex-1 px-5 py-3 bg-[#2a1b3d] border border-purple-700/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+            className="flex-1 px-3 sm:px-5 py-2.5 sm:py-3 bg-[#2a1b3d] border border-purple-700/50 rounded-lg sm:rounded-xl text-white text-sm sm:text-base placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
           />
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             type="submit"
             disabled={!newMessage.trim()}
-            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-600 disabled:to-gray-700 text-white rounded-xl font-medium transition-all shadow-lg shadow-purple-500/20 disabled:shadow-none disabled:cursor-not-allowed"
+            className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-600 disabled:to-gray-700 text-white rounded-lg sm:rounded-xl font-medium transition-all shadow-lg shadow-purple-500/20 disabled:shadow-none disabled:cursor-not-allowed"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 sm:w-5 h-4 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
             </svg>
           </motion.button>
