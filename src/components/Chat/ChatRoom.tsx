@@ -12,8 +12,11 @@ interface Message {
   user: {
     id: number;
     username: string;
-    avatarUrl?: string;
-    avatarThumbnail?: string;
+    avatar?: { // Avatar from database
+      base64Image?: string | null;
+      avatarId?: string;
+      gender?: string;
+    } | null;
   };
   createdAt: string;
 }
@@ -164,18 +167,46 @@ export default function ChatRoom({ roomId, roomName, currentUserId }: ChatRoomPr
                 }`}
               >
                 {showAvatar ? (
-                  <div className="flex-shrink-0">
-                    {message.user.avatarThumbnail ? (
-                      <img
-                        src={message.user.avatarThumbnail}
-                        alt={message.user.username}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-semibold shadow-lg shadow-purple-500/20">
-                        {message.user.username[0].toUpperCase()}
-                      </div>
-                    )}
+                  <div className="flex-shrink-0 relative group">
+                    {(message.user.avatar?.base64Image) ? (
+                      <>
+                        <img
+                          src={message.user.avatar.base64Image}
+                          alt={message.user.username}
+                          className="w-10 h-10 rounded-full object-cover border-2 border-purple-500/30 transition-transform group-hover:scale-110 cursor-pointer"
+                          onError={(e) => {
+                            // Fallback to initial if image fails to load
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                          }}
+                        />
+                        {/* Hover preview of full avatar */}
+                        {message.user.avatar?.base64Image && (
+                          <div className="absolute z-50 hidden group-hover:block bottom-12 left-0 p-2 bg-[#0d0816] rounded-lg shadow-xl border border-purple-500/30">
+                            <img
+                              src={message.user.avatar.base64Image}
+                              alt={`${message.user.username}'s avatar`}
+                              className="w-32 h-32 rounded-lg object-cover"
+                            />
+                            <div className="mt-2 text-xs text-center text-gray-400">
+                              {message.user.username}
+                            </div>
+                            {message.user.avatar?.avatarId && (
+                              <div className="mt-1 text-xs text-center">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-500/20 text-purple-300">
+                                  3D Avatar
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </>
+                    ) : null}
+                    <div className={`w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-semibold shadow-lg shadow-purple-500/20 ${
+                      message.user.avatar?.base64Image ? 'hidden' : ''
+                    }`}>
+                      {message.user.username[0].toUpperCase()}
+                    </div>
                   </div>
                 ) : (
                   <div className="w-10 flex-shrink-0" />

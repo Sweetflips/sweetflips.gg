@@ -56,10 +56,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
         include: {
           user: {
-            select: {
-              id: true,
-              username: true,
-              avatar: true,
+            include: {
+              avatar: {
+                select: {
+                  base64Image: true,
+                  avatarId: true,
+                  gender: true,
+                },
+              },
             },
           },
         },
@@ -90,10 +94,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
         include: {
           user: {
-            select: {
-              id: true,
-              username: true,
-              avatar: true,
+            include: {
+              avatar: {
+                select: {
+                  base64Image: true,
+                  avatarId: true,
+                  gender: true,
+                },
+              },
             },
           },
         },
