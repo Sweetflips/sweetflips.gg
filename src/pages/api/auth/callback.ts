@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { serialize } from "cookie";
 import { prisma } from "../../../../lib/prisma";
 import { getBaseUrl } from "../../../../lib/getBaseUrl";
+import { COOKIE_OPTIONS } from "../../../../lib/cookies";
 
 export default async function handler(
   req: NextApiRequest,
@@ -130,8 +131,13 @@ export default async function handler(
       }
     }
 
-    // Set secure access_token cookie
-    res.setHeader("Set-Cookie", [
+    // Find the user in our database to get their internal ID
+    const user = await prisma.user.findUnique({
+      where: { kickId: kickUser.user_id.toString() }
+    });
+
+    // Set secure access_token cookie and Unity-accessible cookies
+    const cookies = [
       serialize("access_token", accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
@@ -146,7 +152,28 @@ export default async function handler(
         maxAge: 60 * 60 * 24,
         path: "/",
       }),
-    ]);
+      // Unity-accessible cookies (not httpOnly)
+      serialize("authToken", accessToken, {
+        ...COOKIE_OPTIONS,
+        httpOnly: false, // Allow JavaScript/Unity access
+      }),
+      serialize("userId", user?.id.toString() || "0", {
+        ...COOKIE_OPTIONS,
+        httpOnly: false, // Allow JavaScript/Unity access
+      }),
+    ];
+
+    // Add auth_user_id cookie if available
+    if (auth_user_id) {
+      cookies.push(
+        serialize("authUserId", auth_user_id, {
+          ...COOKIE_OPTIONS,
+          httpOnly: false, // Allow JavaScript/Unity access
+        })
+      );
+    }
+
+    res.setHeader("Set-Cookie", cookies);
 
     // Cleanup: delete session
     await prisma.oAuthSession.delete({ where: { id: sessionId } });

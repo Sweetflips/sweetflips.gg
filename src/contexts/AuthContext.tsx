@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { createClientForAuth } from "@/lib/supabase";
 import { AuthChangeEvent, Session } from "@supabase/supabase-js";
+import { storeAuthForUnity, clearAuthData } from "@/lib/cookies";
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -42,6 +43,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsLoggedIn(true);
         setUserRole(data.user?.role || null);
         setSupabaseUser(null); // Clear Supabase user when API auth is working
+        
+        // Store auth data for Unity if we have a session token
+        if (data.user?.id) {
+          // Get the session token from cookies or headers
+          const token = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('session='))
+            ?.split('=')[1];
+          
+          if (token) {
+            storeAuthForUnity(token, data.user.id);
+          }
+        }
       } else {
         // API auth failed, check Supabase authentication (only on client side)
         if (typeof window !== 'undefined') {
@@ -51,6 +65,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setIsLoggedIn(true);
             setSupabaseUser(user);
             setUserRole(null); // Supabase users might not have roles initially
+            
+            // Store auth data for Unity
+            const session = await supabaseClient.auth.getSession();
+            if (session.data.session?.access_token) {
+              storeAuthForUnity(
+                session.data.session.access_token,
+                user.user_metadata?.user_id || 0,
+                user.id
+              );
+            }
           } else {
             setIsLoggedIn(false);
             setUserRole(null);
@@ -82,10 +106,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
             setIsLoggedIn(true);
             setSupabaseUser(session.user);
+            
+            // Store auth data for Unity when user signs in
+            if (session?.access_token) {
+              storeAuthForUnity(
+                session.access_token,
+                session.user.user_metadata?.user_id || 0,
+                session.user.id
+              );
+            }
           } else if (event === 'SIGNED_OUT') {
             setIsLoggedIn(false);
             setSupabaseUser(null);
             setUserRole(null);
+            
+            // Clear auth data from cookies
+            clearAuthData();
           }
         }
       );
@@ -108,6 +144,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsLoggedIn(false);
       setUserRole(null);
       setSupabaseUser(null);
+      
+      // Clear auth data from cookies
+      clearAuthData();
       
       // Redirect to home or login page
       window.location.href = "/";

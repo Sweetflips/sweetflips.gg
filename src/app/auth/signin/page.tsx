@@ -10,6 +10,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import Cookies from "universal-cookie";
 import axios from "axios";
+import { storeAuthForUnity } from "@/lib/cookies";
 const SignInPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -98,6 +99,15 @@ const SignInPage = () => {
         if (!data.user.email_confirmed_at) {
           setError("Please verify your email before signing in");
         } else {
+          // Store auth data for Unity
+          if (data.session?.access_token) {
+            storeAuthForUnity(
+              data.session.access_token,
+              data.user.user_metadata?.user_id || 0,
+              data.user.id
+            );
+          }
+          
           setMessage("Signed in successfully!");
           router.push("/account");
         }

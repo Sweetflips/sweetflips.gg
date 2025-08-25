@@ -24,6 +24,127 @@
       </div>
     </div>
     <script>
+      // Authentication functions for Unity WebGL
+      window.GetAuthToken = function() {
+        // Try to get token from cookies first
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+          var cookie = cookies[i].trim();
+          if (cookie.indexOf('authToken=') === 0) {
+            return decodeURIComponent(cookie.substring('authToken='.length));
+          }
+        }
+        
+        // Try localStorage
+        var token = localStorage.getItem('authToken');
+        if (token) return token;
+        
+        // Try sessionStorage
+        token = sessionStorage.getItem('authToken');
+        if (token) return token;
+        
+        // Try window object
+        if (window.authToken) return window.authToken;
+        
+        console.log('GetAuthToken: No authentication token found');
+        return '';
+      };
+      
+      window.GetUserId = function() {
+        // Try to get user ID from cookies first
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+          var cookie = cookies[i].trim();
+          if (cookie.indexOf('userId=') === 0) {
+            var userId = cookie.substring('userId='.length);
+            return parseInt(userId, 10) || 0;
+          }
+        }
+        
+        // Try localStorage
+        var userId = localStorage.getItem('userId');
+        if (userId) return parseInt(userId, 10) || 0;
+        
+        // Try sessionStorage
+        userId = sessionStorage.getItem('userId');
+        if (userId) return parseInt(userId, 10) || 0;
+        
+        // Try window object
+        if (window.userId) return parseInt(window.userId, 10) || 0;
+        
+        console.log('GetUserId: No user ID found');
+        return 0;
+      };
+      
+      window.GetAuthUserId = function() {
+        // Try to get auth user ID from cookies first
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+          var cookie = cookies[i].trim();
+          if (cookie.indexOf('authUserId=') === 0) {
+            return decodeURIComponent(cookie.substring('authUserId='.length));
+          }
+        }
+        
+        // Try localStorage
+        var authUserId = localStorage.getItem('authUserId');
+        if (authUserId) return authUserId;
+        
+        // Try sessionStorage
+        authUserId = sessionStorage.getItem('authUserId');
+        if (authUserId) return authUserId;
+        
+        // Try window object
+        if (window.authUserId) return window.authUserId;
+        
+        console.log('GetAuthUserId: No auth user ID found');
+        return '';
+      };
+      
+      // Function to request auth token (Unity can call this)
+      window.requestAuthToken = function() {
+        // Dispatch event to parent page
+        window.parent.postMessage({
+          type: 'unityRequestAuthToken',
+          source: 'unity',
+          timestamp: Date.now()
+        }, '*');
+        
+        // Also dispatch a custom event
+        var event = new CustomEvent('unityRequestAuthToken', {
+          detail: { source: 'unity', timestamp: Date.now() }
+        });
+        window.dispatchEvent(event);
+      };
+      
+      // Function to receive auth data from parent page
+      window.setAuthData = function(token, userId, authUserId) {
+        if (token) {
+          localStorage.setItem('authToken', token);
+          sessionStorage.setItem('authToken', token);
+          window.authToken = token;
+        }
+        
+        if (userId) {
+          localStorage.setItem('userId', userId.toString());
+          sessionStorage.setItem('userId', userId.toString());
+          window.userId = userId;
+        }
+        
+        if (authUserId) {
+          localStorage.setItem('authUserId', authUserId);
+          sessionStorage.setItem('authUserId', authUserId);
+          window.authUserId = authUserId;
+        }
+        
+        console.log('Auth data set successfully');
+        
+        // Notify Unity if instance exists
+        if (window.unityInstance) {
+          window.unityInstance.SendMessage('AuthenticationManager', 'OnAuthTokenReceived', token);
+          window.unityInstance.SendMessage('AuthenticationManager', 'OnUserIdReceived', userId.toString());
+        }
+      };
 
       var container = document.querySelector("#unity-container");
       var canvas = document.querySelector("#unity-canvas");
@@ -115,10 +236,30 @@
         createUnityInstance(canvas, config, (progress) => {
           progressBarFull.style.width = 100 * progress + "%";
               }).then((unityInstance) => {
+                // Store Unity instance globally
+                window.unityInstance = unityInstance;
+                
                 loadingBar.style.display = "none";
                 fullscreenButton.onclick = () => {
                   unityInstance.SetFullscreen(1);
                 };
+                
+                // Check if auth data is already available and send to Unity
+                var token = window.GetAuthToken();
+                var userId = window.GetUserId();
+                var authUserId = window.GetAuthUserId();
+                
+                if (token) {
+                  console.log('Sending existing auth token to Unity');
+                  unityInstance.SendMessage('AuthenticationManager', 'OnAuthTokenReceived', token);
+                }
+                if (userId > 0) {
+                  console.log('Sending existing user ID to Unity:', userId);
+                  unityInstance.SendMessage('AuthenticationManager', 'OnUserIdReceived', userId.toString());
+                }
+                if (authUserId) {
+                  console.log('Sending existing auth user ID to Unity:', authUserId);
+                }
               }).catch((message) => {
                 alert(message);
               });
