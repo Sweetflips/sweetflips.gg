@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import prisma from '@/lib/prisma';
-import { getUserFromRequest } from '@/lib/auth-utils';
+import { prisma } from '../../../../lib/prisma';
+import { getUserFromRequest } from '../../../lib/auth-utils';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'PUT' && req.method !== 'PATCH') {

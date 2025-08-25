@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import PixelAvatar from "../Avatar/PixelAvatar";
+// Avatar will be loaded from the new avatar system
 import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 
 interface Message {
@@ -12,18 +12,8 @@ interface Message {
   user: {
     id: number;
     username: string;
-    avatar?: {
-      skin: string;
-      hair: string;
-      hairColor: string;
-      facialHair?: string;
-      top: string;
-      jacket?: string;
-      bottom: string;
-      shoes: string;
-      hat?: string;
-      glasses?: string;
-    };
+    avatarUrl?: string;
+    avatarThumbnail?: string;
   };
   createdAt: string;
 }
@@ -175,11 +165,11 @@ export default function ChatRoom({ roomId, roomName, currentUserId }: ChatRoomPr
               >
                 {showAvatar ? (
                   <div className="flex-shrink-0">
-                    {message.user.avatar ? (
-                      <PixelAvatar
-                        {...message.user.avatar}
-                        size={40}
-                        className="rounded"
+                    {message.user.avatarThumbnail ? (
+                      <img
+                        src={message.user.avatarThumbnail}
+                        alt={message.user.username}
+                        className="w-10 h-10 rounded-full object-cover"
                       />
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-semibold shadow-lg shadow-purple-500/20">
