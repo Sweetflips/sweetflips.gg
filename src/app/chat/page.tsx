@@ -19,11 +19,17 @@ export default function ChatPage() {
   const router = useRouter();
 
   useEffect(() => {
+    // Redirect to login if not authenticated
+    if (!loading && !isLoggedIn) {
+      router.push('/login');
+      return;
+    }
+    
     // Fetch current user data
     if (isLoggedIn) {
       fetchCurrentUser();
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, loading, router]);
 
   useEffect(() => {
     // Auto-select first room or create general room
@@ -238,21 +244,9 @@ export default function ChatPage() {
     );
   }
 
+  // This should not render anymore due to redirect, but keep as fallback
   if (!isLoggedIn || !currentUser) {
-    return (
-      <DefaultLayout>
-        <div className="flex items-center justify-center h-[600px]">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
-              Please sign in to use chat
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400">
-              You need to be logged in to access the chat feature.
-            </p>
-          </div>
-        </div>
-      </DefaultLayout>
-    );
+    return null;
   }
 
   return (
