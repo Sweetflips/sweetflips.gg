@@ -13,7 +13,8 @@ public class SimpleAvatarUploader : MonoBehaviour
 {
     [Header("API Configuration")]
     [SerializeField] private string apiUrl = "https://sweetflips.gg/api/avatar/upload-public";
-    [SerializeField] private int testUserId = 1; // Set this to your test user ID
+    [SerializeField] private int testUserId = 1; // Set this to your test user ID (for public.User table)
+    [SerializeField] private string authUserId = ""; // Or use auth user ID (UUID from auth.users table)
     
     [Header("Status")]
     [SerializeField] private bool isUploading = false;
@@ -32,10 +33,14 @@ public class SimpleAvatarUploader : MonoBehaviour
         isUploading = true;
         
         // Prepare the request data
-        var requestData = new
+        // Use either userId (int) or authUserId (UUID string) based on your user type
+        object requestData;
+        if (!string.IsNullOrEmpty(authUserId))
         {
-            userId = testUserId, // Using test user ID - no auth required
-            avatarProperties = new
+            requestData = new
+            {
+                authUserId = authUserId, // Using auth.users UUID
+                avatarProperties = new
             {
                 // Core properties from Ready Player Me
                 Id = avatarProperties.Id,
@@ -58,8 +63,32 @@ public class SimpleAvatarUploader : MonoBehaviour
                 isPublic = true,
                 expression = "happy",
                 renderPose = "standing"
-            }
-        };
+                }
+            };
+        }
+        else
+        {
+            requestData = new
+            {
+                userId = testUserId, // Using public.User table ID
+                avatarProperties = new
+                {
+                    // Core properties from Ready Player Me
+                    Id = avatarProperties.Id,
+                    Partner = avatarProperties.Partner,
+                    Gender = avatarProperties.Gender?.ToString() ?? "neutral",
+                    BodyType = avatarProperties.BodyType.ToString(),
+                    Assets = ConvertAssetsToJson(avatarProperties.Assets),
+                    Base64Image = avatarProperties.Base64Image,
+                    isDraft = avatarProperties.isDraft,
+                    avatarUrl = $"https://api.readyplayer.me/v1/avatars/{avatarProperties.Id}.glb",
+                    avatarLink = $"https://readyplayer.me/avatar/{avatarProperties.Id}",
+                    isPublic = true,
+                    expression = "happy",
+                    renderPose = "standing"
+                }
+            };
+        }
         
         // Convert to JSON
         string jsonData = JsonConvert.SerializeObject(requestData);

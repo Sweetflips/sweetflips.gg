@@ -16,7 +16,7 @@ export default function AvatarCreatorPage() {
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
+  const { supabaseUser, isLoggedIn } = useAuth();
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -53,10 +53,10 @@ export default function AvatarCreatorPage() {
         window.unityInstance = instance;
         
         // Pass user info to Unity if authenticated
-        if (user) {
+        if (supabaseUser) {
           setTimeout(() => {
-            // Send user ID to Unity
-            instance.SendMessage('AuthManager', 'SetUserId', user.id.toString());
+            // Send user ID to Unity (using Supabase auth user ID)
+            instance.SendMessage('AuthManager', 'SetAuthUserId', supabaseUser.id);
             
             // If you have an auth token, send it too
             const token = localStorage.getItem('supabase.auth.token');
@@ -91,7 +91,7 @@ export default function AvatarCreatorPage() {
         });
       }
     };
-  }, [user]);
+  }, [supabaseUser]);
 
   // Function to be called from Unity
   useEffect(() => {
@@ -178,7 +178,7 @@ export default function AvatarCreatorPage() {
             />
           </div>
           
-          {!user && (
+          {!isLoggedIn && (
             <div className="mt-8 text-center text-white/70">
               <p>Sign in to save your avatar to your profile</p>
             </div>
