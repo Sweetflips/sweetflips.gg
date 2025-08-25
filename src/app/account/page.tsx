@@ -26,6 +26,7 @@ const ProfilePage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [hasAvatar, setHasAvatar] = useState<boolean | null>(null);
   const [checkingAvatar, setCheckingAvatar] = useState(false);
+  const [chatInitialized, setChatInitialized] = useState(false);
   const { logout, supabaseClient } = useAuth();
 
   const fetchUser = useCallback(async () => {
@@ -87,8 +88,11 @@ const ProfilePage = () => {
 
   // Initialize chat when chat tab is active
   useEffect(() => {
-    if (activeSection === "chat" && user && !selectedRoomId) {
-      initializeChat();
+    if (activeSection === "chat" && user) {
+      console.log("Initializing chat for user:", user.id);
+      if (!selectedRoomId) {
+        initializeChat();
+      }
       if (user?.id) {
         checkUserAvatar(user.id);
       }
@@ -145,23 +149,33 @@ const ProfilePage = () => {
 
   const initializeChat = async () => {
     try {
+      console.log("Starting chat initialization...");
+      setChatInitialized(false);
       const headers: HeadersInit = {};
       
       // Add authorization header for Supabase users
       if (supabaseClient) {
         const { data: { session } } = await supabaseClient.auth.getSession();
+        console.log("Session exists:", !!session);
         if (session?.access_token) {
           headers['Authorization'] = `Bearer ${session.access_token}`;
         }
       }
       
+      console.log("Fetching chat rooms...");
       const response = await fetch("/api/chat/rooms", { headers });
+      console.log("Rooms response status:", response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log("Rooms data:", data);
+        
         if (data.rooms.length > 0) {
+          console.log("Setting room:", data.rooms[0]);
           setSelectedRoomId(data.rooms[0].id);
           setSelectedRoomName(data.rooms[0].name);
         } else {
+          console.log("No rooms found, creating General room...");
           // Create general room if none exists
           const createHeaders: HeadersInit = {
             "Content-Type": "application/json",
@@ -184,15 +198,27 @@ const ProfilePage = () => {
             }),
           });
           
+          console.log("Create room response status:", createResponse.status);
+          
           if (createResponse.ok) {
             const newRoom = await createResponse.json();
+            console.log("Created room:", newRoom);
             setSelectedRoomId(newRoom.room.id);
             setSelectedRoomName(newRoom.room.name);
+          } else {
+            const errorData = await createResponse.text();
+            console.error("Failed to create room:", errorData);
           }
         }
+        setChatInitialized(true);
+      } else {
+        const errorText = await response.text();
+        console.error("Failed to fetch rooms:", response.status, errorText);
+        setChatInitialized(true); // Set to true even on error to show UI
       }
     } catch (error) {
       console.error("Error initializing chat:", error);
+      setChatInitialized(true); // Set to true even on error to show UI
     }
   };
 
@@ -349,11 +375,117 @@ const ProfilePage = () => {
             </div>
           )}
 
-          {activeSection === "chat" && user && (
+          {activeSection === "chat" && (
             <>
-              {/* Avatar Setup Modal */}
-              <AnimatePresence>
-                {hasAvatar === false && !checkingAvatar && (
+              {!user ? (
+                <div className="flex items-center justify-center h-96">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+                    <p className="text-gray-400">Loading user data...</p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Show chat immediately, avatar modal can overlay if needed */}
+                  <div className="relative">
+                    <div className="mb-4 flex items-center justify-between">
+                      <h2 className="text-xl font-bold">Community Chat</h2>
+                      
+                      {/* Mobile menu button */}
+                      <button
+                        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                        className="md:hidden p-2 bg-purple-600/20 border border-purple-500/30 rounded-lg"
+                      >
+                        <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          {isSidebarOpen ? (
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          ) : (
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                          )}
+                        </svg>
+                      </button>
+                    </div>
+
+                    <div className="relative bg-[#1b1324] border border-purple-700/50 rounded-lg sm:rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl" style={{ height: "600px" }}>
+                      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-pink-500/5 pointer-events-none" />
+                      
+                      <div className="flex h-full relative z-10">
+                        {/* Mobile sidebar overlay */}
+                        <AnimatePresence>
+                          {isSidebarOpen && (
+                            <>
+                              <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setIsSidebarOpen(false)}
+                                className="md:hidden fixed inset-0 bg-black/50 z-40"
+                              />
+                              <motion.div
+                                initial={{ x: -300 }}
+                                animate={{ x: 0 }}
+                                exit={{ x: -300 }}
+                                transition={{ type: "tween", duration: 0.3 }}
+                                className="md:hidden fixed left-0 top-0 h-full z-50"
+                              >
+                                <ChatSidebar
+                                  selectedRoomId={selectedRoomId || undefined}
+                                  onRoomSelect={handleRoomSelect}
+                                  isMobile={true}
+                                />
+                              </motion.div>
+                            </>
+                          )}
+                        </AnimatePresence>
+                        
+                        {/* Desktop sidebar */}
+                        <div className="hidden md:block">
+                          <ChatSidebar
+                            selectedRoomId={selectedRoomId || undefined}
+                            onRoomSelect={handleRoomSelect}
+                          />
+                        </div>
+                        
+                        {selectedRoomId ? (
+                          <div className="flex-1 relative">
+                            <ChatRoom
+                              roomId={selectedRoomId}
+                              roomName={selectedRoomName}
+                              currentUserId={user.id}
+                              onOpenSidebar={() => setIsSidebarOpen(true)}
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex-1 flex items-center justify-center p-4">
+                            <div className="text-center">
+                              <div className="relative">
+                                <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-purple-500 to-pink-500 blur-xl opacity-50" />
+                                <svg className="w-16 sm:w-20 h-16 sm:h-20 mx-auto mb-4 sm:mb-6 relative text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                </svg>
+                              </div>
+                              <p className="text-base sm:text-lg text-gray-400 font-medium">
+                                {!chatInitialized ? "Initializing chat..." : "Select a chat room to start messaging"}
+                              </p>
+                              <p className="text-xs sm:text-sm text-gray-500 mt-2">Join the conversation with other Sweetflips members</p>
+                              
+                              {/* Mobile prompt to open sidebar */}
+                              <button
+                                onClick={() => setIsSidebarOpen(true)}
+                                className="md:hidden mt-4 px-4 py-2 bg-purple-600/20 border border-purple-500/30 rounded-lg text-purple-400 text-sm"
+                              >
+                                Open Channels
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Avatar Setup Modal - now overlays on top of chat */}
+                  <AnimatePresence>
+                    {hasAvatar === false && !checkingAvatar && (
                   <>
                     {/* Backdrop */}
                     <motion.div
@@ -456,100 +588,8 @@ const ProfilePage = () => {
                   </>
                 )}
               </AnimatePresence>
-
-              <div className="relative">
-                <div className="mb-4 flex items-center justify-between">
-                  <h2 className="text-xl font-bold">Community Chat</h2>
-                  
-                  {/* Mobile menu button */}
-                  <button
-                    onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                    className="md:hidden p-2 bg-purple-600/20 border border-purple-500/30 rounded-lg"
-                  >
-                    <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      {isSidebarOpen ? (
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      ) : (
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                      )}
-                    </svg>
-                  </button>
-                </div>
-
-                <div className="relative bg-[#1b1324] border border-purple-700/50 rounded-lg sm:rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl" style={{ height: "600px" }}>
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-pink-500/5 pointer-events-none" />
-                  
-                  <div className="flex h-full relative z-10">
-                    {/* Mobile sidebar overlay */}
-                    <AnimatePresence>
-                      {isSidebarOpen && (
-                        <>
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setIsSidebarOpen(false)}
-                            className="md:hidden fixed inset-0 bg-black/50 z-40"
-                          />
-                          <motion.div
-                            initial={{ x: -300 }}
-                            animate={{ x: 0 }}
-                            exit={{ x: -300 }}
-                            transition={{ type: "tween", duration: 0.3 }}
-                            className="md:hidden fixed left-0 top-0 h-full z-50"
-                          >
-                            <ChatSidebar
-                              selectedRoomId={selectedRoomId || undefined}
-                              onRoomSelect={handleRoomSelect}
-                              isMobile={true}
-                            />
-                          </motion.div>
-                        </>
-                      )}
-                    </AnimatePresence>
-                    
-                    {/* Desktop sidebar */}
-                    <div className="hidden md:block">
-                      <ChatSidebar
-                        selectedRoomId={selectedRoomId || undefined}
-                        onRoomSelect={handleRoomSelect}
-                      />
-                    </div>
-                    
-                    {selectedRoomId ? (
-                      <div className="flex-1 relative">
-                        <ChatRoom
-                          roomId={selectedRoomId}
-                          roomName={selectedRoomName}
-                          currentUserId={user.id}
-                          onOpenSidebar={() => setIsSidebarOpen(true)}
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex-1 flex items-center justify-center p-4">
-                        <div className="text-center">
-                          <div className="relative">
-                            <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-purple-500 to-pink-500 blur-xl opacity-50" />
-                            <svg className="w-16 sm:w-20 h-16 sm:h-20 mx-auto mb-4 sm:mb-6 relative text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                            </svg>
-                          </div>
-                          <p className="text-base sm:text-lg text-gray-400 font-medium">Select a chat room to start messaging</p>
-                          <p className="text-xs sm:text-sm text-gray-500 mt-2">Join the conversation with other Sweetflips members</p>
-                          
-                          {/* Mobile prompt to open sidebar */}
-                          <button
-                            onClick={() => setIsSidebarOpen(true)}
-                            className="md:hidden mt-4 px-4 py-2 bg-purple-600/20 border border-purple-500/30 rounded-lg text-purple-400 text-sm"
-                          >
-                            Open Channels
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+                </>
+              )}
             </>
           )}
         </section>
