@@ -66,14 +66,43 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setSupabaseUser(user);
             setUserRole(null); // Supabase users might not have roles initially
             
-            // Store auth data for Unity
+            // Get or create user record in our database
             const session = await supabaseClient.auth.getSession();
             if (session.data.session?.access_token) {
-              storeAuthForUnity(
-                session.data.session.access_token,
-                user.user_metadata?.user_id || 0,
-                user.id
-              );
+              try {
+                const res = await fetch('/api/auth/ensure-user', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${session.data.session.access_token}`,
+                    'Content-Type': 'application/json'
+                  }
+                });
+                
+                if (res.ok) {
+                  const data = await res.json();
+                  // Store auth data for Unity with the actual user ID from database
+                  storeAuthForUnity(
+                    session.data.session.access_token,
+                    data.user.id, // Use the actual database user ID
+                    user.id
+                  );
+                } else {
+                  // Fallback if ensure-user fails
+                  storeAuthForUnity(
+                    session.data.session.access_token,
+                    0,
+                    user.id
+                  );
+                }
+              } catch (error) {
+                console.error('Failed to ensure user record:', error);
+                // Still store auth data even if ensure-user fails
+                storeAuthForUnity(
+                  session.data.session.access_token,
+                  0,
+                  user.id
+                );
+              }
             }
           } else {
             setIsLoggedIn(false);

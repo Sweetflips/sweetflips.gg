@@ -101,11 +101,41 @@ const SignInPage = () => {
         } else {
           // Store auth data for Unity
           if (data.session?.access_token) {
-            storeAuthForUnity(
-              data.session.access_token,
-              data.user.user_metadata?.user_id || 0,
-              data.user.id
-            );
+            // Ensure user record exists in our database
+            try {
+              const ensureRes = await fetch('/api/auth/ensure-user', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${data.session.access_token}`,
+                  'Content-Type': 'application/json'
+                }
+              });
+              
+              if (ensureRes.ok) {
+                const userData = await ensureRes.json();
+                // Store with actual database user ID
+                storeAuthForUnity(
+                  data.session.access_token,
+                  userData.user.id,
+                  data.user.id
+                );
+              } else {
+                // Fallback if ensure-user fails
+                storeAuthForUnity(
+                  data.session.access_token,
+                  0,
+                  data.user.id
+                );
+              }
+            } catch (error) {
+              console.error('Failed to ensure user record:', error);
+              // Still store auth data even if ensure fails
+              storeAuthForUnity(
+                data.session.access_token,
+                0,
+                data.user.id
+              );
+            }
           }
           
           setMessage("Signed in successfully!");
