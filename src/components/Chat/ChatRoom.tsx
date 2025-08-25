@@ -32,10 +32,13 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const previousMessageCount = useRef(0);
   const isInitialLoad = useRef(true);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const errorCountRef = useRef(0);
   const { getAuthHeaders, getAuthHeadersWithContentType } = useAuthHeaders();
 
   const scrollToBottom = () => {
@@ -63,10 +66,23 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
         const data = await response.json();
         setMessages(data.messages);
         setIsLoading(false);
+        setHasError(false);
+        errorCountRef.current = 0; // Reset error count on success
+      } else {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
     } catch (error) {
       console.error("Error fetching messages:", error);
       setIsLoading(false);
+      setHasError(true);
+      errorCountRef.current++;
+      
+      // Stop polling after 5 consecutive errors
+      if (errorCountRef.current >= 5 && pollingIntervalRef.current) {
+        console.log("Too many errors, stopping message polling");
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
     }
   }, [roomId, getAuthHeaders]);
 
@@ -76,13 +92,30 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
     setIsLoading(true);
     setMessages([]);
     setNewMessage("");
+    setHasError(false);
     isInitialLoad.current = true;
     previousMessageCount.current = 0;
+    errorCountRef.current = 0;
     
+    // Clear any existing polling interval
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+    
+    // Initial fetch
     fetchMessages();
-    // Set up polling for new messages
-    const interval = setInterval(fetchMessages, 2000); // Poll every 2 seconds
-    return () => clearInterval(interval);
+    
+    // Set up polling for new messages with a longer interval
+    pollingIntervalRef.current = setInterval(fetchMessages, 5000); // Poll every 5 seconds instead of 2
+    
+    // Cleanup function
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    };
   }, [roomId, fetchMessages]);
 
   const sendMessage = async (e: React.FormEvent) => {
@@ -123,10 +156,40 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
     });
   };
 
+  const retryFetch = () => {
+    setHasError(false);
+    errorCountRef.current = 0;
+    fetchMessages();
+    
+    // Restart polling if it was stopped
+    if (!pollingIntervalRef.current) {
+      pollingIntervalRef.current = setInterval(fetchMessages, 5000);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+      </div>
+    );
+  }
+
+  if (hasError && messages.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <svg className="w-12 h-12 mx-auto mb-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-gray-400 mb-4">Failed to load messages</p>
+          <button
+            onClick={retryFetch}
+            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     );
   }
@@ -159,8 +222,23 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
             </div>
           </div>
           <div className="flex items-center space-x-1 sm:space-x-2">
-            <div className="w-2 h-2 bg-[#53FC18] rounded-full animate-pulse"></div>
-            <span className="text-xs sm:text-sm text-gray-400">Live</span>
+            {hasError ? (
+              <>
+                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                <span className="text-xs sm:text-sm text-red-400">Connection Error</span>
+                <button
+                  onClick={retryFetch}
+                  className="ml-2 text-xs text-purple-400 hover:text-purple-300"
+                >
+                  Retry
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="w-2 h-2 bg-[#53FC18] rounded-full animate-pulse"></div>
+                <span className="text-xs sm:text-sm text-gray-400">Live</span>
+              </>
+            )}
           </div>
         </div>
       </div>

@@ -25,6 +25,8 @@ export default function ChatSidebar({ selectedRoomId, onRoomSelect, isMobile = f
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [newRoomName, setNewRoomName] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   const { getAuthHeaders, getAuthHeadersWithContentType } = useAuthHeaders();
 
   useEffect(() => {
@@ -33,14 +35,22 @@ export default function ChatSidebar({ selectedRoomId, onRoomSelect, isMobile = f
 
   const fetchRooms = async () => {
     try {
+      setIsLoading(true);
+      setHasError(false);
       const headers = await getAuthHeaders();
       const response = await fetch("/api/chat/rooms", { headers });
       if (response.ok) {
         const data = await response.json();
         setRooms(data.rooms);
+        setHasError(false);
+      } else {
+        throw new Error(`Failed to fetch rooms: ${response.status}`);
       }
     } catch (error) {
       console.error("Error fetching rooms:", error);
+      setHasError(true);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -123,7 +133,25 @@ export default function ChatSidebar({ selectedRoomId, onRoomSelect, isMobile = f
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {rooms.length === 0 ? (
+        {isLoading ? (
+          <div className="p-4 sm:p-6 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto"></div>
+            <p className="text-sm text-gray-400 mt-2">Loading channels...</p>
+          </div>
+        ) : hasError ? (
+          <div className="p-4 sm:p-6 text-center">
+            <svg className="w-8 h-8 mx-auto mb-2 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-sm text-gray-400 mb-2">Failed to load channels</p>
+            <button
+              onClick={fetchRooms}
+              className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        ) : rooms.length === 0 ? (
           <div className="p-4 sm:p-6 text-center text-gray-500">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-purple-500/10 flex items-center justify-center">
               <svg className="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
