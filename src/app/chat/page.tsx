@@ -5,12 +5,17 @@ import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import ChatRoom from "@/components/Chat/ChatRoom";
 import ChatSidebar from "@/components/Chat/ChatSidebar";
 import { useAuth } from "@/contexts/AuthContext";
+import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 export default function ChatPage() {
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [selectedRoomName, setSelectedRoomName] = useState<string>("");
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [hasAvatar, setHasAvatar] = useState<boolean | null>(null);
+  const [checkingAvatar, setCheckingAvatar] = useState(true);
   const { isLoggedIn, loading, supabaseClient } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     // Fetch current user data
@@ -44,17 +49,61 @@ export default function ChatPage() {
       if (response.ok) {
         const data = await response.json();
         setCurrentUser(data.user);
+        
+        // Check if user has an avatar
+        await checkUserAvatar(data.user.id);
       } else {
         // Fallback to old endpoint for backward compatibility
         const oldResponse = await fetch("/api/user");
         if (oldResponse.ok) {
           const data = await oldResponse.json();
           setCurrentUser(data.user);
+          
+          // Check if user has an avatar
+          await checkUserAvatar(data.user.id);
         }
       }
     } catch (error) {
       console.error("Error fetching user:", error);
+      setCheckingAvatar(false);
     }
+  };
+
+  const checkUserAvatar = async (userId: number) => {
+    try {
+      const headers: HeadersInit = {};
+      
+      // Add authorization header for Supabase users
+      if (supabaseClient) {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
+      }
+      
+      const response = await fetch(`/api/avatar/${userId}`, { headers });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Check if avatar exists and has base64Image
+        setHasAvatar(data.success && data.avatar && !!data.avatar.base64Image);
+      } else if (response.status === 404) {
+        setHasAvatar(false);
+      } else {
+        console.error("Error checking avatar status");
+        setHasAvatar(false);
+      }
+    } catch (error) {
+      console.error("Error checking avatar:", error);
+      setHasAvatar(false);
+    } finally {
+      setCheckingAvatar(false);
+    }
+  };
+
+  const handleSetupAvatar = () => {
+    // Redirect to Unity WebGL avatar creator
+    window.location.href = "/webgl/index.html";
   };
 
   const initializeChat = async () => {
@@ -138,11 +187,11 @@ export default function ChatPage() {
     }
   };
 
-  if (loading) {
+  if (loading || checkingAvatar) {
     return (
       <DefaultLayout>
         <div className="flex items-center justify-center h-[600px]">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
         </div>
       </DefaultLayout>
     );
@@ -167,6 +216,104 @@ export default function ChatPage() {
 
   return (
     <DefaultLayout>
+      {/* Avatar Setup Modal */}
+      <AnimatePresence>
+        {hasAvatar === false && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50"
+            />
+            
+            {/* Modal */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="fixed inset-0 flex items-center justify-center z-50 p-4"
+            >
+              <div className="bg-[#1b1324] border border-purple-700/50 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+                {/* Glow effect */}
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-transparent to-pink-500/10 pointer-events-none" />
+                
+                <div className="relative p-8">
+                  {/* Avatar Icon */}
+                  <div className="mb-6 flex justify-center">
+                    <div className="relative">
+                      <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-purple-500 to-pink-500 blur-xl opacity-50" />
+                      <div className="relative w-24 h-24 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
+                        <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Title */}
+                  <h2 className="text-2xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-4">
+                    Create Your Avatar
+                  </h2>
+                  
+                  {/* Description */}
+                  <p className="text-gray-300 text-center mb-2">
+                    To join the Sweetflips chat, you need to create your unique 3D avatar!
+                  </p>
+                  
+                  <p className="text-gray-400 text-sm text-center mb-8">
+                    Express yourself with a personalized Ready Player Me avatar that represents you in our community.
+                  </p>
+                  
+                  {/* Features */}
+                  <div className="space-y-3 mb-8">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                        <svg className="w-4 h-4 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <span className="text-sm text-gray-300">Customize your appearance</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                        <svg className="w-4 h-4 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <span className="text-sm text-gray-300">Show your style in chat</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                        <svg className="w-4 h-4 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <span className="text-sm text-gray-300">Quick and easy setup</span>
+                    </div>
+                  </div>
+                  
+                  {/* Button */}
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleSetupAvatar}
+                    className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-semibold transition-all shadow-lg shadow-purple-500/30"
+                  >
+                    Setup My Avatar
+                  </motion.button>
+                  
+                  <p className="text-xs text-gray-500 text-center mt-4">
+                    Takes only 2-3 minutes to create
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       <div className="mx-auto max-w-screen-2xl px-4">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
