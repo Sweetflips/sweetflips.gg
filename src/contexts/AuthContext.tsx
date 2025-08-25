@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { createClientForAuth } from "@/lib/supabase";
 import { AuthChangeEvent, Session } from "@supabase/supabase-js";
-import { storeAuthForUnity, clearAuthData } from "@/lib/cookies";
+import { storeAuthForUnity, clearAuthData } from "../lib/cookies";
 
 interface AuthContextType {
   isLoggedIn: boolean;

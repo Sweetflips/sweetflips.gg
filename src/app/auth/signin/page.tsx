@@ -10,7 +10,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import Cookies from "universal-cookie";
 import axios from "axios";
-import { storeAuthForUnity } from "@/lib/cookies";
+import { storeAuthForUnity } from "../../../lib/cookies";
 const SignInPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
