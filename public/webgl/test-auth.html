@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unity Auth Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #fff;
+        }
+        .container {
+            background: #16213e;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #9925FE;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #a0a0a0;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            background: #0f3460;
+            border: 1px solid #9925FE;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 14px;
+        }
+        button {
+            background: #9925FE;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #7a1ecc;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            background: #0f3460;
+            border-radius: 5px;
+            border-left: 4px solid #9925FE;
+        }
+        .success {
+            border-left-color: #4caf50;
+        }
+        .error {
+            border-left-color: #f44336;
+        }
+        pre {
+            background: #0a0a0a;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+        .current-values {
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Unity WebGL Authentication Test</h1>
+        
+        <div class="form-group">
+            <label for="authToken">Auth Token (Bearer Token):</label>
+            <input type="text" id="authToken" placeholder="Enter authentication token">
+        </div>
+        
+        <div class="form-group">
+            <label for="userId">User ID (numeric):</label>
+            <input type="number" id="userId" placeholder="Enter user ID (e.g., 1)">
+        </div>
+        
+        <div class="form-group">
+            <label for="authUserId">Auth User ID (UUID):</label>
+            <input type="text" id="authUserId" placeholder="Enter auth user ID (UUID)">
+        </div>
+        
+        <div>
+            <button onclick="setAuthData()">Set Auth Data</button>
+            <button onclick="clearAuthData()">Clear Auth Data</button>
+            <button onclick="checkAuthData()">Check Current Values</button>
+            <button onclick="openUnity()">Open Unity WebGL</button>
+        </div>
+        
+        <div id="status" class="status" style="display:none;"></div>
+        
+        <div class="current-values">
+            <h3>Current Authentication Values:</h3>
+            <pre id="currentValues">Click "Check Current Values" to see stored auth data</pre>
+        </div>
+    </div>
+
+    <script>
+        // Cookie helper functions
+        function setCookie(name, value, days = 7) {
+            const expires = new Date();
+            expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+            document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires.toUTCString()}; path=/; ${
+                window.location.protocol === 'https:' ? 'secure; ' : ''
+            }samesite=lax`;
+        }
+
+        function getCookie(name) {
+            const nameEQ = name + '=';
+            const ca = document.cookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) {
+                    return decodeURIComponent(c.substring(nameEQ.length, c.length));
+                }
+            }
+            return null;
+        }
+
+        function deleteCookie(name) {
+            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        }
+
+        // Set authentication data
+        function setAuthData() {
+            const token = document.getElementById('authToken').value;
+            const userId = document.getElementById('userId').value;
+            const authUserId = document.getElementById('authUserId').value;
+            
+            if (!token) {
+                showStatus('Please enter at least an auth token', 'error');
+                return;
+            }
+            
+            // Store in cookies
+            setCookie('authToken', token);
+            if (userId) setCookie('userId', userId);
+            if (authUserId) setCookie('authUserId', authUserId);
+            
+            // Store in localStorage
+            localStorage.setItem('authToken', token);
+            if (userId) localStorage.setItem('userId', userId);
+            if (authUserId) localStorage.setItem('authUserId', authUserId);
+            
+            // Store in sessionStorage
+            sessionStorage.setItem('authToken', token);
+            if (userId) sessionStorage.setItem('userId', userId);
+            if (authUserId) sessionStorage.setItem('authUserId', authUserId);
+            
+            // Store on window object
+            window.authToken = token;
+            if (userId) window.userId = parseInt(userId);
+            if (authUserId) window.authUserId = authUserId;
+            
+            showStatus('Authentication data set successfully!', 'success');
+            checkAuthData();
+        }
+        
+        // Clear all authentication data
+        function clearAuthData() {
+            // Clear cookies
+            deleteCookie('authToken');
+            deleteCookie('userId');
+            deleteCookie('authUserId');
+            
+            // Clear localStorage
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('authUserId');
+            
+            // Clear sessionStorage
+            sessionStorage.removeItem('authToken');
+            sessionStorage.removeItem('userId');
+            sessionStorage.removeItem('authUserId');
+            
+            // Clear window object
+            delete window.authToken;
+            delete window.userId;
+            delete window.authUserId;
+            
+            // Clear form
+            document.getElementById('authToken').value = '';
+            document.getElementById('userId').value = '';
+            document.getElementById('authUserId').value = '';
+            
+            showStatus('Authentication data cleared!', 'success');
+            checkAuthData();
+        }
+        
+        // Check current authentication values
+        function checkAuthData() {
+            const data = {
+                cookies: {
+                    authToken: getCookie('authToken'),
+                    userId: getCookie('userId'),
+                    authUserId: getCookie('authUserId')
+                },
+                localStorage: {
+                    authToken: localStorage.getItem('authToken'),
+                    userId: localStorage.getItem('userId'),
+                    authUserId: localStorage.getItem('authUserId')
+                },
+                sessionStorage: {
+                    authToken: sessionStorage.getItem('authToken'),
+                    userId: sessionStorage.getItem('userId'),
+                    authUserId: sessionStorage.getItem('authUserId')
+                },
+                window: {
+                    authToken: window.authToken,
+                    userId: window.userId,
+                    authUserId: window.authUserId
+                }
+            };
+            
+            document.getElementById('currentValues').textContent = JSON.stringify(data, null, 2);
+        }
+        
+        // Show status message
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = 'status ' + type;
+            statusEl.style.display = 'block';
+            
+            setTimeout(() => {
+                statusEl.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Open Unity WebGL in new tab
+        function openUnity() {
+            window.open('/webgl/index.html', '_blank');
+        }
+        
+        // Check on page load
+        window.onload = function() {
+            checkAuthData();
+        };
+    </script>
+</body>
+</html>

@@ -25,7 +25,8 @@
     </div>
     <script>
       // Authentication functions for Unity WebGL
-      window.GetAuthToken = function() {
+      // Also expose as global functions (not just on window)
+      function GetAuthToken() {
         // Try to get token from cookies first
         var cookies = document.cookie.split(';');
         for (var i = 0; i < cookies.length; i++) {
@@ -48,9 +49,10 @@
         
         console.log('GetAuthToken: No authentication token found');
         return '';
-      };
+      }
+      window.GetAuthToken = GetAuthToken; // Also expose on window
       
-      window.GetUserId = function() {
+      function GetUserId() {
         // Try to get user ID from cookies first
         var cookies = document.cookie.split(';');
         for (var i = 0; i < cookies.length; i++) {
@@ -74,9 +76,10 @@
         
         console.log('GetUserId: No user ID found');
         return 0;
-      };
+      }
+      window.GetUserId = GetUserId; // Also expose on window
       
-      window.GetAuthUserId = function() {
+      function GetAuthUserId() {
         // Try to get auth user ID from cookies first
         var cookies = document.cookie.split(';');
         for (var i = 0; i < cookies.length; i++) {
@@ -99,7 +102,8 @@
         
         console.log('GetAuthUserId: No auth user ID found');
         return '';
-      };
+      }
+      window.GetAuthUserId = GetAuthUserId; // Also expose on window
       
       // Function to request auth token (Unity can call this)
       window.requestAuthToken = function() {
