@@ -1,8 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { serialize } from "cookie";
-import { prisma } from "../../../../lib/prisma";
-import { getBaseUrl } from "../../../../lib/getBaseUrl";
-import { COOKIE_OPTIONS } from "../../../../lib/cookies";
+import { prisma } from "@/lib/prisma";
+import { getBaseUrl } from "@/lib/getBaseUrl";
+import { COOKIE_OPTIONS } from "@/lib/cookies";
 
 export default async function handler(
   req: NextApiRequest,
