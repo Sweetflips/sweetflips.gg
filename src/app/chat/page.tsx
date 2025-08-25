@@ -14,6 +14,7 @@ export default function ChatPage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [hasAvatar, setHasAvatar] = useState<boolean | null>(null);
   const [checkingAvatar, setCheckingAvatar] = useState(true);
+  const [retryCount, setRetryCount] = useState(0);
   const { isLoggedIn, loading, supabaseClient } = useAuth();
   const router = useRouter();
 
@@ -30,6 +31,23 @@ export default function ChatPage() {
       initializeChat();
     }
   }, [currentUser, selectedRoomId]);
+  
+  useEffect(() => {
+    // Check if user is coming back from avatar creation
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('avatar_created') === 'true') {
+      // Force re-check avatar after a short delay
+      setTimeout(() => {
+        if (currentUser?.id) {
+          setCheckingAvatar(true);
+          checkUserAvatar(currentUser.id);
+        }
+      }, 1000);
+      
+      // Clean up URL
+      window.history.replaceState({}, '', '/chat');
+    }
+  }, [currentUser]);
 
   const fetchCurrentUser = async () => {
     try {
@@ -71,6 +89,13 @@ export default function ChatPage() {
 
   const checkUserAvatar = async (userId: number) => {
     try {
+      if (!userId || userId <= 0) {
+        console.error("Invalid userId for avatar check:", userId);
+        setHasAvatar(false);
+        setCheckingAvatar(false);
+        return;
+      }
+      
       const headers: HeadersInit = {};
       
       // Add authorization header for Supabase users
@@ -85,12 +110,28 @@ export default function ChatPage() {
       
       if (response.ok) {
         const data = await response.json();
-        // Check if avatar exists and has base64Image
-        setHasAvatar(data.success && data.avatar && !!data.avatar.base64Image);
+        // Check if avatar exists and has Base64Image (handle both capital and lowercase)
+        // The API returns Base64Image (capital B) but we should check both to be safe
+        let hasValidAvatar = false;
+        
+        if (data.success && data.avatar) {
+          // Check for base64 image in various possible locations
+          hasValidAvatar = !!(
+            data.avatar.Base64Image || // Capital B from API
+            data.avatar.base64Image || // lowercase b
+            data.Base64Image ||         // Root level capital
+            data.base64Image            // Root level lowercase
+          );
+        }
+        
+        console.log("Avatar check - Full response:", data);
+        console.log("Avatar check - Has valid avatar:", hasValidAvatar);
+        setHasAvatar(hasValidAvatar);
       } else if (response.status === 404) {
+        console.log("No avatar found for user (404)");
         setHasAvatar(false);
       } else {
-        console.error("Error checking avatar status");
+        console.error("Error checking avatar status:", response.status);
         setHasAvatar(false);
       }
     } catch (error) {
@@ -294,15 +335,30 @@ export default function ChatPage() {
                     </div>
                   </div>
                   
-                  {/* Button */}
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handleSetupAvatar}
-                    className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-semibold transition-all shadow-lg shadow-purple-500/30"
-                  >
-                    Setup My Avatar
-                  </motion.button>
+                  {/* Buttons */}
+                  <div className="space-y-3">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={handleSetupAvatar}
+                      className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-semibold transition-all shadow-lg shadow-purple-500/30"
+                    >
+                      Setup My Avatar
+                    </motion.button>
+                    
+                    {/* Refresh button for users who just created avatar */}
+                    <button
+                      onClick={() => {
+                        setCheckingAvatar(true);
+                        if (currentUser?.id) {
+                          checkUserAvatar(currentUser.id);
+                        }
+                      }}
+                      className="w-full py-2 text-sm text-gray-400 hover:text-gray-300 transition-colors"
+                    >
+                      Already have an avatar? Click to refresh
+                    </button>
+                  </div>
                   
                   <p className="text-xs text-gray-500 text-center mt-4">
                     Takes only 2-3 minutes to create
