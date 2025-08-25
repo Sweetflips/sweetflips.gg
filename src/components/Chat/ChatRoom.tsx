@@ -40,6 +40,12 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const errorCountRef = useRef(0);
   const { getAuthHeaders, getAuthHeadersWithContentType } = useAuthHeaders();
+  const getAuthHeadersRef = useRef(getAuthHeaders);
+  
+  // Update ref when function changes
+  useEffect(() => {
+    getAuthHeadersRef.current = getAuthHeaders;
+  }, [getAuthHeaders]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -80,21 +86,29 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
     // Define fetchMessages inside the effect to avoid dependency issues
     const fetchMessages = async () => {
       // Prevent concurrent fetches
-      if (abortController.signal.aborted || !isMounted) return;
+      if (abortController.signal.aborted || !isMounted) {
+        console.log("Skipping fetch - aborted or unmounted");
+        return;
+      }
       
       try {
-        const headers = await getAuthHeaders();
+        console.log(`Fetching messages for room: ${roomId}`);
+        const headers = await getAuthHeadersRef.current();
         const response = await fetch(`/api/chat/rooms/${roomId}/messages`, { 
           headers,
           signal: abortController.signal 
         });
         
-        if (abortController.signal.aborted || !isMounted) return;
+        if (abortController.signal.aborted || !isMounted) {
+          console.log("Response received but component unmounted");
+          return;
+        }
         
         if (response.ok) {
           const data = await response.json();
+          console.log(`Received ${data.messages?.length || 0} messages`);
           if (isMounted) {
-            setMessages(data.messages);
+            setMessages(data.messages || []);
             setIsLoading(false);
             setHasError(false);
             localErrorCount = 0; // Reset error count on success
@@ -129,6 +143,7 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
     };
     
     // Reset state when room changes
+    console.log(`ChatRoom mounting/updating for room: ${roomId}`);
     setIsLoading(true);
     setMessages([]);
     setNewMessage("");
@@ -143,8 +158,13 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
       pollingIntervalRef.current = null;
     }
     
-    // Initial fetch
-    fetchMessages();
+    // Add a small delay to prevent rapid re-fetching
+    const initTimeout = setTimeout(() => {
+      if (isMounted) {
+        // Initial fetch
+        fetchMessages();
+      }
+    }, 100);
     
     // Set up polling for new messages with a longer interval
     localPollingInterval = setInterval(() => {
@@ -157,7 +177,9 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
     
     // Cleanup function
     return () => {
+      console.log(`ChatRoom cleanup for room: ${roomId}`);
       isMounted = false; // Mark as unmounted
+      clearTimeout(initTimeout); // Clear init timeout
       abortController.abort(); // Cancel any pending requests
       if (localPollingInterval) {
         clearInterval(localPollingInterval);
@@ -167,7 +189,7 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
         pollingIntervalRef.current = null;
       }
     };
-  }, [roomId, getAuthHeaders]); // Include getAuthHeaders as it's stable
+  }, [roomId]); // Only depend on roomId
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
