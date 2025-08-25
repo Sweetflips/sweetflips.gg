@@ -58,36 +58,76 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
     }
   }, [messages]);
 
-  const fetchMessages = useCallback(async () => {
-    try {
-      const headers = await getAuthHeaders();
-      const response = await fetch(`/api/chat/rooms/${roomId}/messages`, { headers });
-      if (response.ok) {
-        const data = await response.json();
-        setMessages(data.messages);
-        setIsLoading(false);
-        setHasError(false);
-        errorCountRef.current = 0; // Reset error count on success
-      } else {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-      setIsLoading(false);
-      setHasError(true);
-      errorCountRef.current++;
-      
-      // Stop polling after 5 consecutive errors
-      if (errorCountRef.current >= 5 && pollingIntervalRef.current) {
-        console.log("Too many errors, stopping message polling");
-        clearInterval(pollingIntervalRef.current);
-        pollingIntervalRef.current = null;
-      }
-    }
-  }, [roomId, getAuthHeaders]);
+  // Move fetchMessages inside useEffect to avoid dependency issues
+  const retryFetch = () => {
+    setHasError(false);
+    errorCountRef.current = 0;
+    // Trigger a re-fetch by updating a state variable
+    setIsLoading(true);
+  };
 
   // Load initial messages
   useEffect(() => {
+    // Prevent rapid re-initialization
+    if (!roomId) return;
+    
+    // Create abort controller for this effect
+    const abortController = new AbortController();
+    let localPollingInterval: NodeJS.Timeout | null = null;
+    let localErrorCount = 0;
+    let isMounted = true;
+    
+    // Define fetchMessages inside the effect to avoid dependency issues
+    const fetchMessages = async () => {
+      // Prevent concurrent fetches
+      if (abortController.signal.aborted || !isMounted) return;
+      
+      try {
+        const headers = await getAuthHeaders();
+        const response = await fetch(`/api/chat/rooms/${roomId}/messages`, { 
+          headers,
+          signal: abortController.signal 
+        });
+        
+        if (abortController.signal.aborted || !isMounted) return;
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (isMounted) {
+            setMessages(data.messages);
+            setIsLoading(false);
+            setHasError(false);
+            localErrorCount = 0; // Reset error count on success
+            errorCountRef.current = 0;
+          }
+        } else {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+      } catch (error: any) {
+        // Ignore abort errors
+        if (error?.name === 'AbortError' || !isMounted) return;
+        
+        console.error("Error fetching messages:", error);
+        if (isMounted) {
+          setIsLoading(false);
+          setHasError(true);
+          localErrorCount++;
+          errorCountRef.current = localErrorCount;
+        }
+        
+        // Stop polling after 5 consecutive errors
+        if (localErrorCount >= 5 && localPollingInterval) {
+          console.log("Too many errors, stopping message polling");
+          clearInterval(localPollingInterval);
+          localPollingInterval = null;
+          if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current);
+            pollingIntervalRef.current = null;
+          }
+        }
+      }
+    };
+    
     // Reset state when room changes
     setIsLoading(true);
     setMessages([]);
@@ -107,16 +147,27 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
     fetchMessages();
     
     // Set up polling for new messages with a longer interval
-    pollingIntervalRef.current = setInterval(fetchMessages, 5000); // Poll every 5 seconds instead of 2
+    localPollingInterval = setInterval(() => {
+      if (!abortController.signal.aborted) {
+        fetchMessages();
+      }
+    }, 5000); // Poll every 5 seconds
+    
+    pollingIntervalRef.current = localPollingInterval;
     
     // Cleanup function
     return () => {
+      isMounted = false; // Mark as unmounted
+      abortController.abort(); // Cancel any pending requests
+      if (localPollingInterval) {
+        clearInterval(localPollingInterval);
+      }
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
       }
     };
-  }, [roomId, fetchMessages]);
+  }, [roomId, getAuthHeaders]); // Include getAuthHeaders as it's stable
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,15 +207,12 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
     });
   };
 
-  const retryFetch = () => {
+  // This function is now outside useEffect and just triggers a refresh
+  const triggerRefresh = () => {
     setHasError(false);
     errorCountRef.current = 0;
-    fetchMessages();
-    
-    // Restart polling if it was stopped
-    if (!pollingIntervalRef.current) {
-      pollingIntervalRef.current = setInterval(fetchMessages, 5000);
-    }
+    setIsLoading(true);
+    setMessages(prev => [...prev]); // Force re-render to restart the effect
   };
 
   if (isLoading) {
@@ -184,7 +232,7 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
           </svg>
           <p className="text-gray-400 mb-4">Failed to load messages</p>
           <button
-            onClick={retryFetch}
+            onClick={triggerRefresh}
             className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
           >
             Try Again
@@ -227,7 +275,7 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
                 <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                 <span className="text-xs sm:text-sm text-red-400">Connection Error</span>
                 <button
-                  onClick={retryFetch}
+                  onClick={triggerRefresh}
                   className="ml-2 text-xs text-purple-400 hover:text-purple-300"
                 >
                   Retry
