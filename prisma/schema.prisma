@@ -125,22 +125,51 @@ model TokenTransaction {
 
 model Avatar {
   id            String   @id @default(uuid())
-  userId        Int      @unique
-  skin          String   @default("light")
-  hair          String   @default("short_brown")
-  hairColor     String   @default("#8B4513")
-  facialHair    String?
-  top           String   @default("tshirt_red")
-  jacket        String?
-  bottom        String   @default("jeans_blue")
-  shoes         String   @default("sneakers_white")
-  hat           String?
-  glasses       String?
-  accessories   String[] @default([])
+  
+  // User linking fields - supports both auth methods
+  auth_user_id  String?  @unique @map("auth_user_id") @db.Uuid // Links to auth.users (UUID type)
+  userId        Int?     @unique // Links to public.User
+  
+  // Core Ready Player Me properties
+  avatarId      String?  // Ready Player Me avatar ID
+  partner       String?  // Partner identifier
+  
+  // Avatar configuration
+  gender        String?  // OutfitGender: masculine, feminine, neutral
+  bodyType      String?  // BodyType: fullbody, halfbody, fullbody-xr
+  bodyShape     String?  // BodyShape: average, athletic, heavyset, plussize
+  
+  // Avatar assets - stores all customization options as JSON
+  // Keys are AssetType values (skinColor, hairStyle, outfit, etc.)
+  // Values are asset IDs or configuration objects
+  assets        Json?    @db.Json
+  
+  // Visual representations
+  base64Image   String?  @db.Text // Base64 encoded avatar preview image
+  avatarUrl     String?  // URL to the 3D avatar model (.glb file)
+  avatarLink    String?  // Ready Player Me shareable avatar link (e.g. https://readyplayer.me/avatar/[id])
+  thumbnailUrl  String?  // URL to avatar thumbnail image
+  
+  // Render settings
+  renderPose    String?  // RenderPose: relaxed, powerStance, standing, thumbsUp
+  expression    String?  // Expression: happy, lol, sad, scared, rage
+  
+  // Status
+  isDraft       Boolean  @default(false)
+  isPublic      Boolean  @default(true)
+  
+  // Metadata
+  metadata      Json?    // Additional metadata (e.g., version, platform settings)
+  
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   
-  user          User     @relation(fields: [userId], references: [id])
+  // Relations
+  user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([auth_user_id])
+  @@index([avatarId])
 }
 
 model ChatRoom {
