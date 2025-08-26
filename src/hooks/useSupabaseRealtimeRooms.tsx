@@ -98,7 +98,7 @@ export function useSupabaseRealtimeRooms() {
       const allRooms = new Map<string, Room>();
 
       // Add public rooms
-      publicRooms?.forEach(room => {
+      publicRooms?.forEach((room: any) => {
         const lastMessage = room.messages
           ?.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
 
@@ -121,7 +121,7 @@ export function useSupabaseRealtimeRooms() {
       });
 
       // Add member rooms
-      memberRooms?.forEach(({ chatRoom }) => {
+      memberRooms?.forEach(({ chatRoom }: any) => {
         if (chatRoom && !allRooms.has(chatRoom.id)) {
           const lastMessage = chatRoom.messages
             ?.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
@@ -296,7 +296,7 @@ export function useSupabaseRealtimeRooms() {
           schema: 'public',
           table: 'ChatRoom',
         },
-        (payload) => {
+        (payload: any) => {
           console.log('Room change:', payload);
           
           if (!mountedRef.current) return;
@@ -330,7 +330,7 @@ export function useSupabaseRealtimeRooms() {
           fetchRooms();
         }
       )
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         console.log('Rooms subscription status:', status);
       });
 

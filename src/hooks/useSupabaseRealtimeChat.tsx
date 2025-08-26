@@ -70,7 +70,7 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
 
       if (mountedRef.current) {
         // Transform the data to match our interface
-        const formattedMessages = messages?.map(msg => ({
+        const formattedMessages = messages?.map((msg: any) => ({
           ...msg,
           user: msg.user ? {
             id: msg.user.id,
@@ -143,7 +143,7 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
           table: 'ChatMessage',
           filter: `chatRoomId=eq.${roomId}`,
         },
-        async (payload) => {
+        async (payload: any) => {
           console.log('New message via realtime:', payload.new);
           
           if (!mountedRef.current) return;
@@ -196,7 +196,7 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
           table: 'ChatMessage',
           filter: `chatRoomId=eq.${roomId}`,
         },
-        (payload) => {
+        (payload: any) => {
           console.log('Message updated:', payload.new);
           
           if (!mountedRef.current) return;
@@ -218,7 +218,7 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
           table: 'ChatMessage',
           filter: `chatRoomId=eq.${roomId}`,
         },
-        (payload) => {
+        (payload: any) => {
           console.log('Message deleted:', payload.old);
           
           if (!mountedRef.current) return;
@@ -226,7 +226,7 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
           setMessages(prev => prev.filter(msg => msg.id !== payload.old.id));
         }
       )
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         console.log('Subscription status:', status);
         
         if (status === 'SUBSCRIBED') {
