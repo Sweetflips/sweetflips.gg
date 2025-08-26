@@ -30,6 +30,7 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('connecting');
+  const [currentUserInfo, setCurrentUserInfo] = useState<{ id: number; username: string; avatar: any } | null>(null);
   
   const channelRef = useRef<RealtimeChannel | null>(null);
   const mountedRef = useRef(true);
@@ -74,9 +75,47 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
     }
   }, [supabaseClient, roomId]);
 
-  // Send a message via API
+  // Fetch and cache current user info
+  const fetchCurrentUserInfo = useCallback(async (userId: number) => {
+    if (currentUserInfo && currentUserInfo.id === userId) return; // Already cached
+    
+    try {
+      const response = await fetch(`/api/chat/user-info?userId=${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setCurrentUserInfo({
+          id: data.user.id,
+          username: data.user.username,
+          avatar: data.user.avatar || null
+        });
+      }
+    } catch (error) {
+      console.log('Could not fetch current user info');
+    }
+  }, [currentUserInfo]);
+
+  // Send a message via API with optimistic update
   const sendMessage = useCallback(async (content: string, userId: number) => {
     if (!supabaseClient || !roomId || !content.trim()) return;
+
+    // Ensure we have current user info
+    if (!currentUserInfo || currentUserInfo.id !== userId) {
+      await fetchCurrentUserInfo(userId);
+    }
+
+    // Create optimistic message
+    const optimisticMessage: Message = {
+      id: `temp-${Date.now()}`, // Temporary ID
+      content: content.trim(),
+      userId,
+      chatRoomId: roomId,
+      createdAt: new Date().toISOString(),
+      editedAt: null,
+      user: currentUserInfo || undefined
+    };
+
+    // Add message optimistically
+    setMessages(prev => [...prev, optimisticMessage]);
 
     try {
       // Build headers - add Supabase auth if available
@@ -100,18 +139,31 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
       });
 
       if (!response.ok) {
+        // Remove optimistic message on error
+        setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
         throw new Error(`Failed to send message: ${response.statusText}`);
       }
 
       const data = await response.json();
 
-      // The realtime subscription will handle adding it to the UI
+      // Replace optimistic message with real one
+      setMessages(prev => {
+        const filtered = prev.filter(m => m.id !== optimisticMessage.id);
+        // Check if message already exists (from realtime)
+        if (!filtered.some(m => m.id === data.message.id)) {
+          return [...filtered, data.message];
+        }
+        return filtered;
+      });
+
       return data.message;
     } catch (err) {
       console.error('Error sending message:', err);
+      // Remove optimistic message on error
+      setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
       throw err;
     }
-  }, [supabaseClient, roomId]);
+  }, [supabaseClient, roomId, currentUserInfo, fetchCurrentUserInfo]);
 
   // Setup realtime subscription
   useEffect(() => {
@@ -171,11 +223,20 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
           };
 
           setMessages(prev => {
-            // Check for duplicates
-            if (prev.some(m => m.id === messageWithUser.id)) {
-              return prev;
-            }
-            return [...prev, messageWithUser];
+            // Remove any temporary messages with same content and user
+            const filtered = prev.filter(m => {
+              // Remove temp message if it matches this real message
+              if (m.id.startsWith('temp-') && 
+                  m.userId === messageWithUser.userId && 
+                  m.content === messageWithUser.content) {
+                return false;
+              }
+              // Keep all other messages
+              return m.id !== messageWithUser.id;
+            });
+            
+            // Add the new message
+            return [...filtered, messageWithUser];
           });
         }
       )
