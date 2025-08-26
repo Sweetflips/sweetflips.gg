@@ -52,7 +52,7 @@ export default function ChatPage() {
       }, 1000);
       
       // Clean up URL
-      window.history.replaceState({}, '', '/chat');
+      window.history.replaceState({}, '', '/account#chat');
     }
   }, [currentUser]);
 
