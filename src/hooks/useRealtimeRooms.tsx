@@ -94,7 +94,7 @@ export function useRealtimeRooms(): UseRealtimeRoomsReturn {
           schema: 'public',
           table: 'ChatRoom',
         },
-        (payload: any) => {
+        (payload: { eventType: string; new?: any; old?: any }) => {
           console.log('Room change detected:', payload);
           
           if (!mountedRef.current) return;
@@ -132,7 +132,7 @@ export function useRealtimeRooms(): UseRealtimeRoomsReturn {
           fetchRooms();
         }
       )
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         console.log('Rooms realtime subscription status:', status);
       });
 

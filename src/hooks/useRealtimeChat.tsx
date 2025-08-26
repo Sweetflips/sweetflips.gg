@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { RealtimeChannel, RealtimePostgresInsertPayload } from '@supabase/supabase-js';
+import { RealtimeChannel } from '@supabase/supabase-js';
 import { useAuth } from '@/contexts/AuthContext';
 import { ChatService, ChatMessage, ChatRoom } from '@/services/chat.service';
 
@@ -104,7 +104,7 @@ export function useRealtimeChat({
           table: 'ChatMessage',
           filter: `chatRoomId=eq.${roomId}`,
         },
-        async (payload: RealtimePostgresInsertPayload<any>) => {
+        async (payload: { new: any; old?: any; eventType: string }) => {
           console.log('New message received via realtime:', payload);
           
           if (!mountedRef.current) return;
@@ -172,7 +172,7 @@ export function useRealtimeChat({
           table: 'ChatMessage',
           filter: `chatRoomId=eq.${roomId}`,
         },
-        (payload: any) => {
+        (payload: { new: any; old?: any }) => {
           console.log('Message updated via realtime:', payload);
           
           if (!mountedRef.current) return;
@@ -194,7 +194,7 @@ export function useRealtimeChat({
           table: 'ChatMessage',
           filter: `chatRoomId=eq.${roomId}`,
         },
-        (payload: any) => {
+        (payload: { new: any; old?: any }) => {
           console.log('Message deleted via realtime:', payload);
           
           if (!mountedRef.current) return;
@@ -202,7 +202,7 @@ export function useRealtimeChat({
           setMessages(prev => prev.filter(msg => msg.id !== payload.old.id));
         }
       )
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         console.log('Realtime subscription status:', status);
         
         if (status === 'SUBSCRIBED') {
