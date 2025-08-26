@@ -7,16 +7,18 @@
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
     <style>
-      /* Override styles for iframe embedding */
-      body {
-        padding: 0;
+      /* Custom styles for iframe embedding */
+      html, body {
         margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
         overflow: hidden;
         background: #1b1324;
       }
       
       #unity-container {
-        position: absolute;
+        position: absolute !important;
         width: 100% !important;
         height: 100% !important;
         left: 0 !important;
@@ -46,7 +48,7 @@
         z-index: 101;
       }
       
-      /* Custom loading bar style */
+      /* Style the loading bar to match site theme */
       #unity-logo {
         filter: brightness(1.5) hue-rotate(270deg);
       }
@@ -146,7 +148,7 @@
 
 
       } else {
-        // Desktop style: Make it responsive for iframe
+        // Desktop style: Make canvas responsive for iframe
         canvas.style.width = "100%";
         canvas.style.height = "100%";
       }
@@ -161,7 +163,7 @@
               }).then((unityInstance) => {
                 loadingBar.style.display = "none";
                 
-                // Store Unity instance globally for communication
+                // Store Unity instance globally
                 window.unityInstance = unityInstance;
                 
                 if (fullscreenButton) {
@@ -170,12 +172,14 @@
                   };
                 }
                 
-                // Send ready message to parent window
+                // Notify parent window that Unity is ready
                 if (window.parent !== window) {
                   window.parent.postMessage({ type: 'unity-ready' }, '*');
                 }
               }).catch((message) => {
-                console.error('Unity Error:', message);
+                console.error('Unity initialization error:', message);
+                
+                // Notify parent window of error
                 if (window.parent !== window) {
                   window.parent.postMessage({ 
                     type: 'unity-error', 
@@ -186,8 +190,8 @@
             };
 
       document.body.appendChild(script);
-      
-      // Add function to handle avatar save from Unity
+
+      // Function to be called when avatar is saved (from Unity)
       window.onAvatarSaved = function(avatarData) {
         console.log('Avatar saved:', avatarData);
         // Send message to parent window
@@ -199,16 +203,18 @@
         }
       };
       
-      // Handle window resize
+      // Handle window resize for responsive canvas
       function handleResize() {
         if (canvas && container) {
           const rect = container.getBoundingClientRect();
-          canvas.style.width = rect.width + 'px';
-          canvas.style.height = rect.height + 'px';
+          canvas.width = rect.width;
+          canvas.height = rect.height;
         }
       }
       
       window.addEventListener('resize', handleResize);
+      
+      // Initial resize after a short delay
       setTimeout(handleResize, 100);
 
     </script>

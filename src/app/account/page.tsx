@@ -449,14 +449,14 @@ const ProfilePage = () => {
                       className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60]"
                     />
                     
-                    {/* Modal with iframe */}
+                    {/* Modal with iframe - 80% of screen */}
                     <motion.div
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.9 }}
-                      className="fixed inset-0 flex items-center justify-center z-[61] p-4"
+                      className="fixed inset-0 flex items-center justify-center z-[61] p-8"
                     >
-                      <div className="relative w-[90vw] h-[90vh] max-w-[1400px] max-h-[900px] bg-[#1b1324] border border-purple-700/50 rounded-2xl shadow-2xl overflow-hidden">
+                      <div className="relative w-[80vw] h-[80vh] bg-[#1b1324] border-2 border-purple-700/50 rounded-2xl shadow-2xl overflow-hidden">
                         <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-transparent to-pink-500/10 pointer-events-none" />
                         
                         {/* Header with close button */}
