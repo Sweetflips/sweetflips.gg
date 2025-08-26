@@ -22,6 +22,7 @@ const ProfilePage = () => {
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const [hasAvatar, setHasAvatar] = useState<boolean | null>(null);
   const [checkingAvatar, setCheckingAvatar] = useState(false);
+  const [showAvatarCreator, setShowAvatarCreator] = useState(false);
   const { logout, supabaseClient } = useAuth();
 
   const fetchUser = useCallback(async () => {
@@ -92,6 +93,26 @@ const ProfilePage = () => {
     fetchUser();
   }, [fetchUser]);
 
+  // Listen for messages from the avatar creator iframe
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      // Check if message is from our avatar creator
+      if (event.origin === window.location.origin) {
+        if (event.data?.type === 'avatar-created' || event.data?.type === 'avatar-saved') {
+          // Close the modal and refresh avatar status
+          setShowAvatarCreator(false);
+          setHasAvatar(null); // Reset to trigger re-check
+          if (user?.id) {
+            checkUserAvatar(user.id);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [user]);
+
   // Check avatar when chat tab is active (non-blocking)
   useEffect(() => {
     if (activeSection === "chat" && user?.id) {
@@ -150,8 +171,8 @@ const ProfilePage = () => {
 
 
   const handleSetupAvatar = () => {
-    // Redirect to Unity WebGL avatar creator
-    window.location.href = "/webgl/index.html";
+    // Open avatar creator in modal
+    setShowAvatarCreator(true);
   };
 
   // This function now reliably updates state AND the URL
@@ -400,6 +421,63 @@ const ProfilePage = () => {
                           <p className="text-xs text-gray-500 text-center mt-4">
                             Takes only 2-3 minutes to create
                           </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+
+              {/* WebGL Avatar Creator Modal */}
+              <AnimatePresence>
+                {showAvatarCreator && (
+                  <>
+                    {/* Backdrop */}
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      onClick={() => setShowAvatarCreator(false)}
+                      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60]"
+                    />
+                    
+                    {/* Modal with iframe */}
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      className="fixed inset-0 flex items-center justify-center z-[61] p-4"
+                    >
+                      <div className="relative w-[90vw] h-[90vh] max-w-[1400px] max-h-[900px] bg-[#1b1324] border border-purple-700/50 rounded-2xl shadow-2xl overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-transparent to-pink-500/10 pointer-events-none" />
+                        
+                        {/* Header with close button */}
+                        <div className="relative z-10 flex items-center justify-between p-4 bg-[#0d0816]/90 border-b border-purple-700/30">
+                          <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+                            Create Your Avatar
+                          </h2>
+                          <button
+                            onClick={() => setShowAvatarCreator(false)}
+                            className="p-2 bg-purple-600/20 hover:bg-purple-600/30 rounded-lg transition-colors"
+                          >
+                            <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                        
+                        {/* Iframe container */}
+                        <div className="relative w-full h-[calc(100%-73px)]">
+                          <iframe
+                            src="/webgl/index.html"
+                            className="w-full h-full"
+                            title="Avatar Creator"
+                            allow="camera; microphone"
+                            onLoad={() => {
+                              // After avatar is created, refresh the avatar check
+                              // This will be triggered when the iframe sends a message
+                            }}
+                          />
                         </div>
                       </div>
                     </motion.div>
