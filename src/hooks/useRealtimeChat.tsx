@@ -23,7 +23,7 @@ export function useRealtimeChat({
   onMessageReceived,
   onError,
 }: UseRealtimeChatOptions): UseRealtimeChatReturn {
-  const { supabaseClient, user } = useAuth();
+  const { supabaseClient, supabaseUser } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -82,7 +82,7 @@ export function useRealtimeChat({
 
   // Setup realtime subscription
   useEffect(() => {
-    if (!supabaseClient || !roomId || !user) {
+    if (!supabaseClient || !roomId) {
       setConnectionStatus('disconnected');
       return;
     }
@@ -244,7 +244,7 @@ export function useRealtimeChat({
         channelRef.current = null;
       }
     };
-  }, [supabaseClient, roomId, user, fetchInitialMessages, onMessageReceived]);
+  }, [supabaseClient, roomId, fetchInitialMessages, onMessageReceived]);
 
   // Retry connection
   const retry = useCallback(() => {

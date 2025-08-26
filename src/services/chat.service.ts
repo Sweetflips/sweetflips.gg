@@ -37,7 +37,7 @@ export class ChatService {
   /**
    * Fetch all available chat rooms
    */
-  async getRooms(userId: number): Promise<ChatRoom[]> {
+  async getRooms(): Promise<ChatRoom[]> {
     try {
       const response = await fetch('/api/chat/rooms', {
         headers: await this.getAuthHeaders(),

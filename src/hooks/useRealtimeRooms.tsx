@@ -12,7 +12,7 @@ interface UseRealtimeRoomsReturn {
 }
 
 export function useRealtimeRooms(): UseRealtimeRoomsReturn {
-  const { supabaseClient, user } = useAuth();
+  const { supabaseClient } = useAuth();
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -30,13 +30,13 @@ export function useRealtimeRooms(): UseRealtimeRoomsReturn {
 
   // Fetch rooms
   const fetchRooms = useCallback(async () => {
-    if (!chatServiceRef.current || !user) return;
+    if (!chatServiceRef.current) return;
     
     try {
       setIsLoading(true);
       setError(null);
       
-      const fetchedRooms = await chatServiceRef.current.getRooms(user.id);
+      const fetchedRooms = await chatServiceRef.current.getRooms();
       
       if (mountedRef.current) {
         setRooms(fetchedRooms);
@@ -49,7 +49,7 @@ export function useRealtimeRooms(): UseRealtimeRoomsReturn {
         setIsLoading(false);
       }
     }
-  }, [user]);
+  }, []);
 
   // Create a room
   const createRoom = useCallback(async (name: string, isPrivate = false): Promise<ChatRoom> => {
@@ -75,7 +75,7 @@ export function useRealtimeRooms(): UseRealtimeRoomsReturn {
 
   // Setup realtime subscription for room changes
   useEffect(() => {
-    if (!supabaseClient || !user) {
+    if (!supabaseClient) {
       return;
     }
 
@@ -147,7 +147,7 @@ export function useRealtimeRooms(): UseRealtimeRoomsReturn {
         channelRef.current = null;
       }
     };
-  }, [supabaseClient, user, fetchRooms]);
+  }, [supabaseClient, fetchRooms]);
 
   return {
     rooms,
