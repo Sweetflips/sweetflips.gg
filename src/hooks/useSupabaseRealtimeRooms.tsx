@@ -28,7 +28,7 @@ export function useSupabaseRealtimeRooms() {
   const channelRef = useRef<RealtimeChannel | null>(null);
   const mountedRef = useRef(true);
 
-  // Fetch rooms directly from Supabase
+  // Fetch rooms via API endpoint
   const fetchRooms = useCallback(async () => {
     if (!supabaseClient) return;
 
@@ -36,120 +36,25 @@ export function useSupabaseRealtimeRooms() {
       setIsLoading(true);
       setError(null);
 
-      // Get current user
-      const { data: { user } } = await supabaseClient.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+      // Build headers - add Supabase auth if available
+      const headers: HeadersInit = {};
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
 
-      // Get user ID from our database
-      const { data: dbUser } = await supabaseClient
-        .from('User')
-        .select('id')
-        .eq('authId', user.id)
-        .single();
+      // Fetch rooms from API endpoint
+      const response = await fetch('/api/chat/rooms', { headers });
 
-      if (!dbUser) throw new Error('User not found in database');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch rooms: ${response.statusText}`);
+      }
 
-      // Fetch all public rooms and rooms where user is a member
-      const { data: publicRooms, error: publicError } = await supabaseClient
-        .from('ChatRoom')
-        .select(`
-          id,
-          name,
-          isPrivate,
-          createdAt,
-          updatedAt,
-          messages:ChatMessage(
-            content,
-            createdAt
-          ),
-          members:ChatRoomMember(
-            userId
-          )
-        `)
-        .eq('isPrivate', false)
-        .order('createdAt', { ascending: false });
-
-      if (publicError) throw publicError;
-
-      // Fetch private rooms where user is a member
-      const { data: memberRooms, error: memberError } = await supabaseClient
-        .from('ChatRoomMember')
-        .select(`
-          chatRoom:ChatRoom(
-            id,
-            name,
-            isPrivate,
-            createdAt,
-            updatedAt,
-            messages:ChatMessage(
-              content,
-              createdAt
-            ),
-            members:ChatRoomMember(
-              userId
-            )
-          )
-        `)
-        .eq('userId', dbUser.id);
-
-      if (memberError) throw memberError;
-
-      // Combine and deduplicate rooms
-      const allRooms = new Map<string, Room>();
-
-      // Add public rooms
-      publicRooms?.forEach((room: any) => {
-        const lastMessage = room.messages
-          ?.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
-
-        allRooms.set(room.id, {
-          id: room.id,
-          name: room.name,
-          isPrivate: room.isPrivate,
-          createdAt: room.createdAt,
-          updatedAt: room.updatedAt,
-          memberCount: room.members?.length || 0,
-          lastMessage: lastMessage ? {
-            content: lastMessage.content,
-            createdAt: lastMessage.createdAt
-          } : null,
-          _count: {
-            members: room.members?.length || 0,
-            messages: room.messages?.length || 0
-          }
-        });
-      });
-
-      // Add member rooms
-      memberRooms?.forEach(({ chatRoom }: any) => {
-        if (chatRoom && !allRooms.has(chatRoom.id)) {
-          const lastMessage = chatRoom.messages
-            ?.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
-
-          allRooms.set(chatRoom.id, {
-            id: chatRoom.id,
-            name: chatRoom.name,
-            isPrivate: chatRoom.isPrivate,
-            createdAt: chatRoom.createdAt,
-            updatedAt: chatRoom.updatedAt,
-            memberCount: chatRoom.members?.length || 0,
-            lastMessage: lastMessage ? {
-              content: lastMessage.content,
-              createdAt: lastMessage.createdAt
-            } : null,
-            _count: {
-              members: chatRoom.members?.length || 0,
-              messages: chatRoom.messages?.length || 0
-            }
-          });
-        }
-      });
-
-      const roomsList = Array.from(allRooms.values())
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      const data = await response.json();
 
       if (mountedRef.current) {
-        setRooms(roomsList);
+        setRooms(data.rooms || []);
         setIsLoading(false);
       }
     } catch (err) {
@@ -161,121 +66,50 @@ export function useSupabaseRealtimeRooms() {
     }
   }, [supabaseClient]);
 
-  // Create a room directly in Supabase
+  // Create a room via API
   const createRoom = useCallback(async (name: string, isPrivate = false) => {
     if (!supabaseClient) throw new Error('Not authenticated');
 
     try {
-      // Get current user
-      const { data: { user } } = await supabaseClient.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
-      // Get user ID from our database
-      const { data: dbUser } = await supabaseClient
-        .from('User')
-        .select('id')
-        .eq('authId', user.id)
-        .single();
-
-      if (!dbUser) throw new Error('User not found in database');
-
-      // Create the room
-      const { data: room, error: roomError } = await supabaseClient
-        .from('ChatRoom')
-        .insert({
-          name: name.trim(),
-          isPrivate,
-        })
-        .select()
-        .single();
-
-      if (roomError) throw roomError;
-
-      // Add creator as member
-      const { error: memberError } = await supabaseClient
-        .from('ChatRoomMember')
-        .insert({
-          userId: dbUser.id,
-          chatRoomId: room.id,
-        });
-
-      if (memberError) throw memberError;
-
-      // Add to local state
-      const newRoom: Room = {
-        id: room.id,
-        name: room.name,
-        isPrivate: room.isPrivate,
-        createdAt: room.createdAt,
-        updatedAt: room.updatedAt,
-        memberCount: 1,
-        lastMessage: null,
-        _count: {
-          members: 1,
-          messages: 0
-        }
+      // Build headers - add Supabase auth if available
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json'
       };
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
 
-      setRooms(prev => [newRoom, ...prev]);
+      // Create room via API
+      const response = await fetch('/api/chat/rooms', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ name: name.trim(), isPrivate })
+      });
 
-      return newRoom;
+      if (!response.ok) {
+        throw new Error(`Failed to create room: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // Refetch rooms to update the list
+      await fetchRooms();
+
+      return data.room;
     } catch (err) {
       console.error('Error creating room:', err);
       throw err;
     }
-  }, [supabaseClient]);
+  }, [supabaseClient, fetchRooms]);
 
-  // Join a room
+  // Join a room (simplified - rooms are auto-joined when selected)
   const joinRoom = useCallback(async (roomId: string) => {
-    if (!supabaseClient) return;
-
-    try {
-      // Get current user
-      const { data: { user } } = await supabaseClient.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
-      // Get user ID from our database
-      const { data: dbUser } = await supabaseClient
-        .from('User')
-        .select('id')
-        .eq('authId', user.id)
-        .single();
-
-      if (!dbUser) throw new Error('User not found in database');
-
-      // Check if already a member
-      const { data: existing } = await supabaseClient
-        .from('ChatRoomMember')
-        .select('id')
-        .eq('userId', dbUser.id)
-        .eq('chatRoomId', roomId)
-        .single();
-
-      if (existing) return; // Already a member
-
-      // Join the room
-      const { error } = await supabaseClient
-        .from('ChatRoomMember')
-        .insert({
-          userId: dbUser.id,
-          chatRoomId: roomId,
-        });
-
-      if (error) throw error;
-
-      // Update local state
-      setRooms(prev =>
-        prev.map(room =>
-          room.id === roomId
-            ? { ...room, memberCount: (room.memberCount || 0) + 1 }
-            : room
-        )
-      );
-    } catch (err) {
-      console.error('Error joining room:', err);
-      throw err;
-    }
-  }, [supabaseClient]);
+    // This is now handled automatically by the backend when selecting a room
+    // Keeping the function for backwards compatibility
+    return;
+  }, []);
 
   // Setup realtime subscription for room changes
   useEffect(() => {
