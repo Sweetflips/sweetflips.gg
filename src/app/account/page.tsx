@@ -23,6 +23,7 @@ const ProfilePage = () => {
   const [hasAvatar, setHasAvatar] = useState<boolean | null>(null);
   const [checkingAvatar, setCheckingAvatar] = useState(false);
   const [showAvatarCreator, setShowAvatarCreator] = useState(false);
+  const [avatarCreatorLoading, setAvatarCreatorLoading] = useState(true);
   const { logout, supabaseClient } = useAuth();
 
   const fetchUser = useCallback(async () => {
@@ -105,6 +106,12 @@ const ProfilePage = () => {
           if (user?.id) {
             checkUserAvatar(user.id);
           }
+        } else if (event.data?.type === 'unity-ready') {
+          console.log('Unity avatar creator loaded successfully');
+          setAvatarCreatorLoading(false);
+        } else if (event.data?.type === 'unity-error') {
+          console.error('Unity avatar creator error:', event.data.error);
+          setAvatarCreatorLoading(false);
         }
       }
     };
@@ -173,6 +180,7 @@ const ProfilePage = () => {
   const handleSetupAvatar = () => {
     // Open avatar creator in modal
     setShowAvatarCreator(true);
+    setAvatarCreatorLoading(true); // Reset loading state
   };
 
   // This function now reliably updates state AND the URL
@@ -473,11 +481,19 @@ const ProfilePage = () => {
                             className="w-full h-full"
                             title="Avatar Creator"
                             allow="camera; microphone"
-                            onLoad={() => {
-                              // After avatar is created, refresh the avatar check
-                              // This will be triggered when the iframe sends a message
-                            }}
+                            style={{ display: avatarCreatorLoading ? 'none' : 'block' }}
                           />
+                          
+                          {/* Loading overlay */}
+                          {avatarCreatorLoading && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-[#1b1324]">
+                              <div className="text-center">
+                                <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-purple-500 mx-auto mb-4"></div>
+                                <p className="text-lg text-gray-300 font-medium">Loading Avatar Creator...</p>
+                                <p className="text-sm text-gray-500 mt-2">This may take a few seconds</p>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </motion.div>

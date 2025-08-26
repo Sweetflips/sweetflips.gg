@@ -3,9 +3,54 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity WebGL Player | Sweetflips</title>
+    <title>Unity WebGL Player | Sweetflips Avatar Creator</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
+    <style>
+      /* Override styles for iframe embedding */
+      body {
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+        background: #1b1324;
+      }
+      
+      #unity-container {
+        position: absolute;
+        width: 100% !important;
+        height: 100% !important;
+        left: 0 !important;
+        top: 0 !important;
+        transform: none !important;
+      }
+      
+      #unity-canvas {
+        width: 100% !important;
+        height: 100% !important;
+        background: #1b1324;
+      }
+      
+      #unity-footer {
+        display: none !important;
+      }
+      
+      #unity-loading-bar {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 100;
+      }
+      
+      #unity-warning {
+        z-index: 101;
+      }
+      
+      /* Custom loading bar style */
+      #unity-logo {
+        filter: brightness(1.5) hue-rotate(270deg);
+      }
+    </style>
   </head>
   <body>
     <div id="unity-container" class="unity-desktop">
@@ -101,10 +146,9 @@
 
 
       } else {
-        // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
-
-        canvas.style.width = "960px";
-        canvas.style.height = "600px";
+        // Desktop style: Make it responsive for iframe
+        canvas.style.width = "100%";
+        canvas.style.height = "100%";
       }
 
       loadingBar.style.display = "block";
@@ -116,15 +160,56 @@
           progressBarFull.style.width = 100 * progress + "%";
               }).then((unityInstance) => {
                 loadingBar.style.display = "none";
-                fullscreenButton.onclick = () => {
-                  unityInstance.SetFullscreen(1);
-                };
+                
+                // Store Unity instance globally for communication
+                window.unityInstance = unityInstance;
+                
+                if (fullscreenButton) {
+                  fullscreenButton.onclick = () => {
+                    unityInstance.SetFullscreen(1);
+                  };
+                }
+                
+                // Send ready message to parent window
+                if (window.parent !== window) {
+                  window.parent.postMessage({ type: 'unity-ready' }, '*');
+                }
               }).catch((message) => {
-                alert(message);
+                console.error('Unity Error:', message);
+                if (window.parent !== window) {
+                  window.parent.postMessage({ 
+                    type: 'unity-error', 
+                    error: message 
+                  }, '*');
+                }
               });
             };
 
       document.body.appendChild(script);
+      
+      // Add function to handle avatar save from Unity
+      window.onAvatarSaved = function(avatarData) {
+        console.log('Avatar saved:', avatarData);
+        // Send message to parent window
+        if (window.parent !== window) {
+          window.parent.postMessage({ 
+            type: 'avatar-saved',
+            data: avatarData 
+          }, '*');
+        }
+      };
+      
+      // Handle window resize
+      function handleResize() {
+        if (canvas && container) {
+          const rect = container.getBoundingClientRect();
+          canvas.style.width = rect.width + 'px';
+          canvas.style.height = rect.height + 'px';
+        }
+      }
+      
+      window.addEventListener('resize', handleResize);
+      setTimeout(handleResize, 100);
 
     </script>
   </body>
