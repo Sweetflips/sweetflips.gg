@@ -27,15 +27,55 @@ const ProfilePage = () => {
   const fetchUser = useCallback(async () => {
     setLoading(true);
     try {
+      // First try Kick OAuth authentication
       const res = await fetch("/api/user");
-      if (!res.ok) {
-        setUser(null);
-        setUserData(null);
+      
+      if (res.ok) {
+        // Kick user authenticated successfully
+        const data = await res.json();
+        setUser(data.user);
+        setUserData(data.userData);
         return;
       }
-      const data = await res.json();
-      setUser(data.user);
-      setUserData(data.userData);
+      
+      // If Kick auth failed (401), try Supabase auth
+      if (res.status === 401) {
+        // Get the current Supabase user
+        const { data: { user: authUser } } = await supabaseClient.auth.getUser();
+        if (!authUser) {
+          setUser(null);
+          setUserData(null);
+          return;
+        }
+
+        // Fetch user data from Supabase database
+        const { data: dbUser, error: userError } = await supabaseClient
+          .from('User')
+          .select('*')
+          .eq('authId', authUser.id)
+          .single();
+
+        if (userError || !dbUser) {
+          console.error("Failed to fetch user from database:", userError);
+          setUser(null);
+          setUserData(null);
+          return;
+        }
+
+        // Fetch user data if exists
+        const { data: userData } = await supabaseClient
+          .from('UserData')
+          .select('*')
+          .eq('userId', dbUser.id)
+          .single();
+
+        setUser(dbUser);
+        setUserData(userData || null);
+      } else {
+        // Some other error occurred
+        setUser(null);
+        setUserData(null);
+      }
     } catch (error) {
       console.error("Failed to fetch user data:", error);
       setUser(null);
@@ -43,7 +83,7 @@ const ProfilePage = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [supabaseClient]);
 
   useEffect(() => {
     // Handles browser back/forward and direct URL loads
@@ -155,10 +195,30 @@ const ProfilePage = () => {
     setSyncing(true);
     setSyncMessage(null);
     try {
-      const res = await fetch("/api/user/sync-botrix", { method: "POST" });
+      // First try without additional auth (for Kick users)
+      let res = await fetch("/api/user/sync-botrix", { method: "POST" });
+      
+      // If unauthorized, try with Supabase auth
+      if (res.status === 401) {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session?.access_token) {
+          setSyncMessage("❌ Not authenticated");
+          setSyncing(false);
+          setTimeout(() => setSyncMessage(null), 3000);
+          return;
+        }
+
+        res = await fetch("/api/user/sync-botrix", { 
+          method: "POST",
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`
+          }
+        });
+      }
+
       const data = await res.json();
       if (res.ok) {
-        setSyncMessage("");
+        setSyncMessage("✅ Synced successfully");
         fetchUser(); // refresh token balance and points
       } else {
         setSyncMessage(`❌ ${data.error || "Failed to sync"}`);
