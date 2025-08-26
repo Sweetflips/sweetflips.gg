@@ -7,8 +7,8 @@ import TokenExchange from "@/components/TokenExchange/TokenExchange";
 import UserOrders from "@/components/UserOrders/UserOrders";
 import { withAuth } from "@/components/withAuth";
 import { useAuth } from "@/contexts/AuthContext";
-import ChatRoomRealtime from "@/components/Chat/ChatRoomRealtime";
-import ChatSidebarRealtime from "@/components/Chat/ChatSidebarRealtime";
+import PureChatRoom from "@/components/Chat/PureChatRoom";
+import PureChatSidebar from "@/components/Chat/PureChatSidebar";
 import { motion, AnimatePresence } from "framer-motion";
 
 const ProfilePage = () => {
@@ -327,7 +327,7 @@ const ProfilePage = () => {
                                 transition={{ type: "tween", duration: 0.3 }}
                                 className="md:hidden fixed left-0 top-0 h-full z-50"
                               >
-                                <ChatSidebarRealtime
+                                <PureChatSidebar
                                   selectedRoomId={selectedRoomId || undefined}
                                   onRoomSelect={handleRoomSelect}
                                   isMobile={true}
@@ -339,7 +339,7 @@ const ProfilePage = () => {
                         
                         {/* Desktop sidebar */}
                         <div className="hidden md:block">
-                          <ChatSidebarRealtime
+                          <PureChatSidebar
                             selectedRoomId={selectedRoomId || undefined}
                             onRoomSelect={handleRoomSelect}
                           />
@@ -347,7 +347,7 @@ const ProfilePage = () => {
                         
                         {selectedRoomId ? (
                           <div className="flex-1 relative">
-                            <ChatRoomRealtime
+                            <PureChatRoom
                               roomId={selectedRoomId}
                               roomName={selectedRoomName}
                               currentUserId={user.id}
