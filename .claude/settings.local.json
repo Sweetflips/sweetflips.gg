@@ -33,7 +33,8 @@
       "Read(/D:\\Sweetflips\\Sweetflips\\Assets/**)",
       "Read(/D:\\Sweetflips\\Sweetflips\\Assets\\Plugins\\WebGL/**)",
       "Read(/D:\\Sweetflips\\Sweetflips\\Assets/**)",
-      "Read(/D:\\Sweetflips\\Sweetflips\\Assets\\Scripts/**)"
+      "Read(/D:\\Sweetflips\\Sweetflips\\Assets\\Scripts/**)",
+      "Bash(npx tsc:*)"
     ],
     "deny": []
   }
