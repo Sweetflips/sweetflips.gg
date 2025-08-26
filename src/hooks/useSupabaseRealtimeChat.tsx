@@ -156,6 +156,16 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
         return filtered;
       });
 
+      // Broadcast the message to other clients using existing channel
+      if (channelRef.current) {
+        await channelRef.current.send({
+          type: 'broadcast',
+          event: 'new-message',
+          payload: data.message
+        });
+        console.log('Message broadcasted:', data.message.id);
+      }
+
       return data.message;
     } catch (err) {
       console.error('Error sending message:', err);
@@ -178,9 +188,50 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
     // Initial fetch
     fetchMessages();
 
-    // Create realtime channel for this specific room
+    // Create realtime channel for this specific room using broadcast
     const channel = supabaseClient
-      .channel(`room-${roomId}`)
+      .channel(`chat-room-${roomId}`, {
+        config: {
+          broadcast: { self: false }, // Don't receive own messages via broadcast
+        },
+      })
+      .on(
+        'broadcast',
+        {
+          event: 'new-message'
+        },
+        (payload: any) => {
+          console.log('New message via broadcast:', payload);
+          
+          if (!mountedRef.current) return;
+
+          const messageData = payload.payload;
+          if (!messageData) return;
+
+          // Add the broadcasted message
+          setMessages(prev => {
+            // Remove any temporary messages with same content and user
+            const filtered = prev.filter(m => {
+              // Remove temp message if it matches this real message
+              if (m.id.startsWith('temp-') && 
+                  m.userId === messageData.userId && 
+                  m.content === messageData.content) {
+                return false;
+              }
+              // Keep all other messages
+              return m.id !== messageData.id;
+            });
+            
+            // Check if message already exists
+            if (filtered.some(m => m.id === messageData.id)) {
+              return filtered;
+            }
+            
+            // Add the new message
+            return [...filtered, messageData];
+          });
+        }
+      )
       .on(
         'postgres_changes',
         {
@@ -190,53 +241,49 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
           filter: `chatRoomId=eq.${roomId}`,
         },
         async (payload: any) => {
-          console.log('New message via realtime:', payload.new);
+          console.log('New message via postgres changes (fallback):', payload.new);
           
           if (!mountedRef.current) return;
 
           const newMessage = payload.new as any;
 
-          // Fetch user details via API
-          let userData = null;
-          try {
-            const response = await fetch(`/api/chat/user-info?userId=${newMessage.userId}`);
-            if (response.ok) {
-              const data = await response.json();
-              userData = data.user;
-            }
-          } catch (error) {
-            console.error('Error fetching user info:', error);
-          }
-
-          // Add the new message with user data
-          const messageWithUser: Message = {
-            ...newMessage,
-            user: userData ? {
-              id: userData.id,
-              username: userData.username,
-              avatar: userData.avatar || null
-            } : {
-              id: newMessage.userId,
-              username: `User ${newMessage.userId}`,
-              avatar: null
-            }
-          };
-
+          // Only use this as fallback if message doesn't already exist
           setMessages(prev => {
-            // Remove any temporary messages with same content and user
-            const filtered = prev.filter(m => {
-              // Remove temp message if it matches this real message
-              if (m.id.startsWith('temp-') && 
-                  m.userId === messageWithUser.userId && 
-                  m.content === messageWithUser.content) {
-                return false;
+            if (prev.some(m => m.id === newMessage.id)) {
+              return prev;
+            }
+
+            // Fetch user details via API
+            fetch(`/api/chat/user-info?userId=${newMessage.userId}`)
+              .then(response => response.json())
+              .then(data => {
+                if (data.user) {
+                  setMessages(current => 
+                    current.map(m => 
+                      m.id === newMessage.id 
+                        ? { ...m, user: {
+                            id: data.user.id,
+                            username: data.user.username,
+                            avatar: data.user.avatar || null
+                          }} 
+                        : m
+                    )
+                  );
+                }
+              })
+              .catch(error => {
+                console.error('Error fetching user info:', error);
+              });
+
+            // Add message without user info initially
+            return [...prev, {
+              ...newMessage,
+              user: {
+                id: newMessage.userId,
+                username: `User ${newMessage.userId}`,
+                avatar: null
               }
-              // Keep all other messages
-              return m.id !== messageWithUser.id;
-            });
-            
-            // Add the new message
-            return [...filtered, messageWithUser];
+            }];
           });
         }
       )
@@ -284,11 +331,15 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
         if (status === 'SUBSCRIBED') {
           setConnectionStatus('connected');
           setError(null);
+          console.log(`Successfully subscribed to chat room: ${roomId}`);
         } else if (status === 'CHANNEL_ERROR') {
           setConnectionStatus('error');
           setError(new Error('Realtime connection error'));
         } else if (status === 'CLOSED') {
           setConnectionStatus('disconnected');
+        } else if (status === 'TIMED_OUT') {
+          setConnectionStatus('error');
+          setError(new Error('Connection timed out'));
         }
       });
 
