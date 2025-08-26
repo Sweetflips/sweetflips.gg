@@ -7,8 +7,8 @@ import TokenExchange from "@/components/TokenExchange/TokenExchange";
 import UserOrders from "@/components/UserOrders/UserOrders";
 import { withAuth } from "@/components/withAuth";
 import { useAuth } from "@/contexts/AuthContext";
-import ChatRoom from "@/components/Chat/ChatRoom";
-import ChatSidebar from "@/components/Chat/ChatSidebar";
+import ChatRoomRealtime from "@/components/Chat/ChatRoomRealtime";
+import ChatSidebarRealtime from "@/components/Chat/ChatSidebarRealtime";
 import { motion, AnimatePresence } from "framer-motion";
 
 const ProfilePage = () => {
@@ -26,7 +26,6 @@ const ProfilePage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [hasAvatar, setHasAvatar] = useState<boolean | null>(null);
   const [checkingAvatar, setCheckingAvatar] = useState(false);
-  const [chatInitialized, setChatInitialized] = useState(false);
   const { logout, supabaseClient } = useAuth();
 
   const fetchUser = useCallback(async () => {
@@ -86,16 +85,10 @@ const ProfilePage = () => {
     fetchUser();
   }, [fetchUser]);
 
-  // Initialize chat when chat tab is active
+  // Check avatar when chat tab is active
   useEffect(() => {
-    if (activeSection === "chat" && user) {
-      console.log("Initializing chat for user:", user.id);
-      if (!selectedRoomId) {
-        initializeChat();
-      }
-      if (user?.id) {
-        checkUserAvatar(user.id);
-      }
+    if (activeSection === "chat" && user?.id) {
+      checkUserAvatar(user.id);
     }
   }, [activeSection, user]);
 
@@ -147,108 +140,14 @@ const ProfilePage = () => {
     }
   };
 
-  const initializeChat = async () => {
-    try {
-      console.log("Starting chat initialization...");
-      setChatInitialized(false);
-      const headers: HeadersInit = {};
-      
-      // Add authorization header for Supabase users
-      if (supabaseClient) {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        console.log("Session exists:", !!session);
-        if (session?.access_token) {
-          headers['Authorization'] = `Bearer ${session.access_token}`;
-        }
-      }
-      
-      console.log("Fetching chat rooms...");
-      const response = await fetch("/api/chat/rooms", { headers });
-      console.log("Rooms response status:", response.status);
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log("Rooms data:", data);
-        
-        if (data.rooms.length > 0) {
-          console.log("Setting room:", data.rooms[0]);
-          setSelectedRoomId(data.rooms[0].id);
-          setSelectedRoomName(data.rooms[0].name);
-        } else {
-          console.log("No rooms found, creating General room...");
-          // Create general room if none exists
-          const createHeaders: HeadersInit = {
-            "Content-Type": "application/json",
-          };
-          
-          // Add authorization header for Supabase users
-          if (supabaseClient) {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session?.access_token) {
-              createHeaders['Authorization'] = `Bearer ${session.access_token}`;
-            }
-          }
-          
-          const createResponse = await fetch("/api/chat/rooms", {
-            method: "POST",
-            headers: createHeaders,
-            body: JSON.stringify({
-              name: "General",
-              isPrivate: false,
-            }),
-          });
-          
-          console.log("Create room response status:", createResponse.status);
-          
-          if (createResponse.ok) {
-            const newRoom = await createResponse.json();
-            console.log("Created room:", newRoom);
-            setSelectedRoomId(newRoom.room.id);
-            setSelectedRoomName(newRoom.room.name);
-          } else {
-            const errorData = await createResponse.text();
-            console.error("Failed to create room:", errorData);
-          }
-        }
-        setChatInitialized(true);
-      } else {
-        const errorText = await response.text();
-        console.error("Failed to fetch rooms:", response.status, errorText);
-        setChatInitialized(true); // Set to true even on error to show UI
-      }
-    } catch (error) {
-      console.error("Error initializing chat:", error);
-      setChatInitialized(true); // Set to true even on error to show UI
-    }
-  };
+  // Simplified room selection handler
 
-  const handleRoomSelect = async (roomId: string) => {
+  const handleRoomSelect = (roomId: string, roomName?: string) => {
     setSelectedRoomId(roomId);
-    setIsSidebarOpen(false); // Close sidebar on mobile after room selection
-    
-    // Fetch room details to get the name
-    try {
-      const headers: HeadersInit = {};
-      
-      // Add authorization header for Supabase users
-      if (supabaseClient) {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (session?.access_token) {
-          headers['Authorization'] = `Bearer ${session.access_token}`;
-        }
-      }
-      
-      const response = await fetch("/api/chat/rooms", { headers });
-      if (response.ok) {
-        const data = await response.json();
-        const room = data.rooms.find((r: any) => r.id === roomId);
-        if (room) {
-          setSelectedRoomName(room.name);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching room details:", error);
+    if (roomName) {
+      setSelectedRoomName(roomName);
     }
+    setIsSidebarOpen(false); // Close sidebar on mobile after room selection
   };
 
   const handleSetupAvatar = () => {
@@ -428,7 +327,7 @@ const ProfilePage = () => {
                                 transition={{ type: "tween", duration: 0.3 }}
                                 className="md:hidden fixed left-0 top-0 h-full z-50"
                               >
-                                <ChatSidebar
+                                <ChatSidebarRealtime
                                   selectedRoomId={selectedRoomId || undefined}
                                   onRoomSelect={handleRoomSelect}
                                   isMobile={true}
@@ -440,7 +339,7 @@ const ProfilePage = () => {
                         
                         {/* Desktop sidebar */}
                         <div className="hidden md:block">
-                          <ChatSidebar
+                          <ChatSidebarRealtime
                             selectedRoomId={selectedRoomId || undefined}
                             onRoomSelect={handleRoomSelect}
                           />
@@ -448,7 +347,7 @@ const ProfilePage = () => {
                         
                         {selectedRoomId ? (
                           <div className="flex-1 relative">
-                            <ChatRoom
+                            <ChatRoomRealtime
                               roomId={selectedRoomId}
                               roomName={selectedRoomName}
                               currentUserId={user.id}
@@ -465,7 +364,7 @@ const ProfilePage = () => {
                                 </svg>
                               </div>
                               <p className="text-base sm:text-lg text-gray-400 font-medium">
-                                {!chatInitialized ? "Initializing chat..." : "Select a chat room to start messaging"}
+                                Select a chat room to start messaging
                               </p>
                               <p className="text-xs sm:text-sm text-gray-500 mt-2">Join the conversation with other Sweetflips members</p>
                               
