@@ -34,7 +34,7 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
   const channelRef = useRef<RealtimeChannel | null>(null);
   const mountedRef = useRef(true);
 
-  // Fetch initial messages directly from Supabase
+  // Fetch initial messages via API
   const fetchMessages = useCallback(async () => {
     if (!supabaseClient || !roomId) return;
 
@@ -42,44 +42,25 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
       setIsLoading(true);
       setError(null);
 
-      // Direct Supabase query - no API endpoint needed
-      const { data: messages, error } = await supabaseClient
-        .from('ChatMessage')
-        .select(`
-          id,
-          content,
-          userId,
-          chatRoomId,
-          createdAt,
-          editedAt,
-          user:User!userId (
-            id,
-            username,
-            avatar:Avatar (
-              base64Image,
-              avatarId,
-              gender
-            )
-          )
-        `)
-        .eq('chatRoomId', roomId)
-        .order('createdAt', { ascending: true })
-        .limit(100);
+      // Build headers - add Supabase auth if available
+      const headers: HeadersInit = {};
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
 
-      if (error) throw error;
+      // Fetch messages from API endpoint
+      const response = await fetch(`/api/chat/messages?roomId=${roomId}`, { headers });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch messages: ${response.statusText}`);
+      }
+
+      const data = await response.json();
 
       if (mountedRef.current) {
-        // Transform the data to match our interface
-        const formattedMessages = messages?.map((msg: any) => ({
-          ...msg,
-          user: msg.user ? {
-            id: msg.user.id,
-            username: msg.user.username,
-            avatar: msg.user.avatar?.[0] || null
-          } : undefined
-        })) || [];
-
-        setMessages(formattedMessages);
+        setMessages(data.messages || []);
         setIsLoading(false);
         setConnectionStatus('connected');
       }
@@ -93,26 +74,39 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
     }
   }, [supabaseClient, roomId]);
 
-  // Send a message directly through Supabase
+  // Send a message via API
   const sendMessage = useCallback(async (content: string, userId: number) => {
     if (!supabaseClient || !roomId || !content.trim()) return;
 
     try {
-      // Insert directly into Supabase
-      const { data, error } = await supabaseClient
-        .from('ChatMessage')
-        .insert({
-          content: content.trim(),
-          userId,
-          chatRoomId: roomId,
-        })
-        .select()
-        .single();
+      // Build headers - add Supabase auth if available
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json'
+      };
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
 
-      if (error) throw error;
+      // Send message via API
+      const response = await fetch('/api/chat/messages', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ 
+          roomId,
+          content: content.trim()
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to send message: ${response.statusText}`);
+      }
+
+      const data = await response.json();
 
       // The realtime subscription will handle adding it to the UI
-      return data;
+      return data.message;
     } catch (err) {
       console.error('Error sending message:', err);
       throw err;
@@ -150,20 +144,17 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
 
           const newMessage = payload.new as any;
 
-          // Fetch user details for the new message
-          const { data: userData } = await supabaseClient
-            .from('User')
-            .select(`
-              id,
-              username,
-              avatar:Avatar (
-                base64Image,
-                avatarId,
-                gender
-              )
-            `)
-            .eq('id', newMessage.userId)
-            .single();
+          // Fetch user details via API
+          let userData = null;
+          try {
+            const response = await fetch(`/api/chat/user-info?userId=${newMessage.userId}`);
+            if (response.ok) {
+              const data = await response.json();
+              userData = data.user;
+            }
+          } catch (error) {
+            console.error('Error fetching user info:', error);
+          }
 
           // Add the new message with user data
           const messageWithUser: Message = {
@@ -171,7 +162,7 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
             user: userData ? {
               id: userData.id,
               username: userData.username,
-              avatar: userData.avatar?.[0] || null
+              avatar: userData.avatar || null
             } : {
               id: newMessage.userId,
               username: `User ${newMessage.userId}`,
