@@ -1,22 +1,81 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ChatBubbleLeftRightIcon, XMarkIcon } from "@heroicons/react/24/solid";
+import { useAuth } from "@/contexts/AuthContext";
+import ChatBubbleContainer from "./ChatBubbleContainer";
 
 export default function SimpleChatBubble() {
   const [isOpen, setIsOpen] = useState(false);
+  const [userId, setUserId] = useState<number | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const { isLoggedIn, supabaseUser } = useAuth();
+
+  useEffect(() => {
+    const fetchUserId = async () => {
+      if (!isLoggedIn) {
+        setUserId(null);
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/user");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.user?.id) {
+            setUserId(data.user.id);
+            return;
+          }
+        }
+
+        if (supabaseUser) {
+          const sessionRes = await fetch("/api/auth/session");
+          if (sessionRes.ok) {
+            const sessionData = await sessionRes.json();
+            if (sessionData.user?.id) {
+              setUserId(sessionData.user.id);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user ID for chat:", error);
+      }
+    };
+
+    fetchUserId();
+  }, [isLoggedIn, supabaseUser]);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const handleToggle = () => {
-    console.log("SimpleChatBubble: Toggle clicked, current state:", isOpen);
     setIsOpen(!isOpen);
   };
+
+  // For testing: temporarily set a default user ID if not logged in
+  const displayUserId = userId || 1; // Use ID 1 as fallback for testing
 
   return (
     <>
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed z-[9999] bottom-24 right-6 w-[420px] h-[650px] max-h-[85vh]">
-          <div className="h-full rounded-2xl shadow-2xl border border-purple-700/50 bg-[#0f0514]/95 backdrop-blur-sm overflow-hidden flex flex-col">
+        <div className={`fixed z-[9999] ${
+          isMobile 
+            ? "inset-0" 
+            : "bottom-24 right-6 w-[420px] h-[650px] max-h-[85vh]"
+        }`}>
+          <div className={`h-full ${
+            isMobile 
+              ? "" 
+              : "rounded-2xl shadow-2xl border border-purple-700/50"
+          } bg-[#0f0514]/95 backdrop-blur-sm overflow-hidden flex flex-col`}>
             {/* Header */}
             <div className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 p-4 flex items-center justify-between border-b border-purple-700/30">
               <div className="flex items-center gap-3">
@@ -32,11 +91,8 @@ export default function SimpleChatBubble() {
             </div>
             
             {/* Chat Content */}
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center text-white">
-                <p className="text-lg mb-2">Simple Chat Test</p>
-                <p className="text-sm text-gray-400">Click works! State: {isOpen ? "Open" : "Closed"}</p>
-              </div>
+            <div className="flex-1 overflow-hidden">
+              <ChatBubbleContainer userId={displayUserId} />
             </div>
           </div>
         </div>
