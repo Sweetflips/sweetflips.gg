@@ -159,7 +159,6 @@ export default function PureChatRoom({
         ) : (
           <AnimatePresence initial={false}>
             {messages.map((message, index) => {
-              console.log(`Message from user ${message.userId} (${message.user?.username}), currentUserId: ${currentUserId}, isMatch: ${message.userId === currentUserId}`);
               const isCurrentUser = message.userId === currentUserId;
               const showAvatar = index === 0 || messages[index - 1].userId !== message.userId;
 

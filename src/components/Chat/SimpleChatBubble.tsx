@@ -9,66 +9,41 @@ export default function SimpleChatBubble() {
   const [isOpen, setIsOpen] = useState(false);
   const [userId, setUserId] = useState<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);
-  const { isLoggedIn, supabaseUser } = useAuth();
+  const { isLoggedIn, supabaseUser, supabaseClient } = useAuth();
 
   useEffect(() => {
-    // First try to get userId from cookies
-    const getCookieValue = (name: string) => {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) return parts.pop()?.split(';').shift();
-      return null;
-    };
-
-    const cookieUserId = getCookieValue('userId');
-    console.log("SimpleChatBubble: Cookie userId:", cookieUserId);
-    
-    if (cookieUserId) {
-      const parsedUserId = parseInt(cookieUserId, 10);
-      if (!isNaN(parsedUserId)) {
-        setUserId(parsedUserId);
-        console.log("SimpleChatBubble: Set userId from cookie:", parsedUserId);
-        return;
-      }
-    }
-
-    // Fallback to API if no cookie
     const fetchUserId = async () => {
-      if (!isLoggedIn) {
-        setUserId(null);
-        return;
-      }
-
       try {
-        const res = await fetch("/api/user");
+        // Build headers - add Supabase auth if available
+        const headers: HeadersInit = {};
+        
+        if (supabaseClient) {
+          const { data: { session } } = await supabaseClient.auth.getSession();
+          if (session?.access_token) {
+            headers['Authorization'] = `Bearer ${session.access_token}`;
+          }
+        }
+        
+        // Call unified endpoint that handles both Kick and Supabase auth
+        const res = await fetch("/api/user/profile", { headers });
+        
         if (res.ok) {
           const data = await res.json();
-          console.log("SimpleChatBubble: Fetched user data:", data);
+          console.log("SimpleChatBubble: Fetched user profile:", data);
           if (data.user?.id) {
             setUserId(data.user.id);
             console.log("SimpleChatBubble: Set userId to:", data.user.id);
-            return;
           }
-        }
-
-        if (supabaseUser) {
-          const sessionRes = await fetch("/api/auth/session");
-          if (sessionRes.ok) {
-            const sessionData = await sessionRes.json();
-            if (sessionData.user?.id) {
-              setUserId(sessionData.user.id);
-            }
-          }
+        } else {
+          console.error("Failed to fetch user profile:", res.status);
         }
       } catch (error) {
         console.error("Error fetching user ID for chat:", error);
       }
     };
 
-    if (!cookieUserId) {
-      fetchUserId();
-    }
-  }, [isLoggedIn, supabaseUser]);
+    fetchUserId();
+  }, [supabaseClient]);
 
   useEffect(() => {
     const checkMobile = () => {
