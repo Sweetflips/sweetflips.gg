@@ -93,7 +93,7 @@ namespace ReadyPlayerMe.Samples.AvatarCreatorWizard
             byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonData);
 
             // Create the request
-            string apiUrl = "https://sweetflips-gg-env-develop-sweetflips-projects.vercel.app/api/avatar/upload";
+            string apiUrl = "https://sweetflips.gg/api/avatar/upload";
             using (UnityWebRequest request = new UnityWebRequest(apiUrl, "POST"))
             {
                 request.uploadHandler = new UploadHandlerRaw(bodyRaw);
