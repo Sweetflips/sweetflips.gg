@@ -12,6 +12,27 @@ export default function SimpleChatBubble() {
   const { isLoggedIn, supabaseUser } = useAuth();
 
   useEffect(() => {
+    // First try to get userId from cookies
+    const getCookieValue = (name: string) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop()?.split(';').shift();
+      return null;
+    };
+
+    const cookieUserId = getCookieValue('userId');
+    console.log("SimpleChatBubble: Cookie userId:", cookieUserId);
+    
+    if (cookieUserId) {
+      const parsedUserId = parseInt(cookieUserId, 10);
+      if (!isNaN(parsedUserId)) {
+        setUserId(parsedUserId);
+        console.log("SimpleChatBubble: Set userId from cookie:", parsedUserId);
+        return;
+      }
+    }
+
+    // Fallback to API if no cookie
     const fetchUserId = async () => {
       if (!isLoggedIn) {
         setUserId(null);
@@ -44,7 +65,9 @@ export default function SimpleChatBubble() {
       }
     };
 
-    fetchUserId();
+    if (!cookieUserId) {
+      fetchUserId();
+    }
   }, [isLoggedIn, supabaseUser]);
 
   useEffect(() => {
