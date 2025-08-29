@@ -8,6 +8,7 @@ import Loader from "@/components/common/Loader";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { TokenProvider } from "@/contexts/TokenContext"; // ✅ Import your new TokenProvider
 import { LinkAccountProvider } from "@/components/LinkAccountProvider/LinkAccountProvider";
+import ChatBubbleWrapper from "@/components/Chat/ChatBubbleWrapper";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
@@ -30,7 +31,12 @@ export default function RootLayout({
         <TokenProvider>
           <LinkAccountProvider>
             {/* Removed intermediate div */}
-            {loading ? <Loader /> : children}
+            {loading ? <Loader /> : (
+              <>
+                {children}
+                <ChatBubbleWrapper />
+              </>
+            )}
           </LinkAccountProvider>
         </TokenProvider>
       </AuthProvider>
