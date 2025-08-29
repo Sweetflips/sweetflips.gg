@@ -15,30 +15,7 @@ export default function PureChatSidebar({
   onRoomSelect, 
   isMobile = false 
 }: PureChatSidebarProps) {
-  const [isCreating, setIsCreating] = useState(false);
-  const [newRoomName, setNewRoomName] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const { rooms, isLoading, error, createRoom, joinRoom, refetch } = useSupabaseRealtimeRooms();
-
-  const handleCreateRoom = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!newRoomName.trim() || isSubmitting) return;
-
-    setIsSubmitting(true);
-    
-    try {
-      const newRoom = await createRoom(newRoomName.trim());
-      setNewRoomName("");
-      setIsCreating(false);
-      onRoomSelect(newRoom.id, newRoom.name);
-    } catch (error) {
-      console.error("Error creating room:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const { rooms, isLoading, error, joinRoom, refetch } = useSupabaseRealtimeRooms();
 
   const handleRoomClick = async (roomId: string, roomName: string) => {
     try {
@@ -55,57 +32,9 @@ export default function PureChatSidebar({
     <div className={`${isMobile ? 'w-80' : 'w-64 lg:w-80'} bg-[#0d0816] border-r border-purple-700/30 flex flex-col h-full`}>
       {/* Header */}
       <div className="p-4 sm:p-6 border-b border-purple-700/30">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-            Channels
-          </h3>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setIsCreating(true)}
-            disabled={isCreating}
-            className="p-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl transition-all shadow-lg shadow-purple-500/20 disabled:opacity-50"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-          </motion.button>
-        </div>
-
-        {/* Create room form */}
-        {isCreating && (
-          <form onSubmit={handleCreateRoom} className="mb-4">
-            <input
-              type="text"
-              value={newRoomName}
-              onChange={(e) => setNewRoomName(e.target.value)}
-              placeholder="Channel name..."
-              className="w-full px-4 py-2.5 bg-[#2a1b3d] border border-purple-700/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              autoFocus
-              disabled={isSubmitting}
-            />
-            <div className="flex gap-2 mt-3">
-              <button
-                type="submit"
-                disabled={isSubmitting || !newRoomName.trim()}
-                className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-600 disabled:to-gray-700 text-white rounded-lg text-sm font-medium transition-all"
-              >
-                {isSubmitting ? 'Creating...' : 'Create'}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsCreating(false);
-                  setNewRoomName("");
-                }}
-                disabled={isSubmitting}
-                className="flex-1 px-4 py-2 bg-[#2a1b3d] hover:bg-[#3a2b4d] text-gray-300 rounded-lg text-sm font-medium transition-all border border-purple-700/30"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        )}
+        <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+          Channels
+        </h3>
       </div>
 
       {/* Room list */}
