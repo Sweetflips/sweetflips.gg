@@ -1,15 +1,19 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChatBubbleLeftRightIcon, XMarkIcon } from "@heroicons/react/24/solid";
 
 export default function ChatBubbleTest() {
   const [isOpen, setIsOpen] = useState(false);
 
-  const toggleChat = () => {
-    setIsOpen(!isOpen);
-  };
+  const toggleChat = useCallback(() => {
+    console.log("Toggle clicked");
+    setIsOpen(prev => {
+      console.log("Setting isOpen from", prev, "to", !prev);
+      return !prev;
+    });
+  }, []);
 
   console.log("ChatBubbleTest rendering, isOpen:", isOpen);
 
@@ -58,7 +62,12 @@ export default function ChatBubbleTest() {
         animate={{ scale: 1 }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        onClick={toggleChat}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log("Button clicked directly");
+          toggleChat();
+        }}
         className={`fixed bottom-6 right-6 z-[9999] ${
           isOpen ? "hidden" : "flex"
         } items-center justify-center w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-lg hover:shadow-xl hover:shadow-purple-500/25 transition-all duration-200 group`}

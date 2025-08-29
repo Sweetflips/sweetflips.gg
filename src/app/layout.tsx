@@ -10,6 +10,7 @@ import { TokenProvider } from "@/contexts/TokenContext"; // ✅ Import your new 
 import { LinkAccountProvider } from "@/components/LinkAccountProvider/LinkAccountProvider";
 import ChatBubbleWrapper from "@/components/Chat/ChatBubbleWrapper";
 import ChatBubbleTest from "@/components/Chat/ChatBubbleTest";
+import SimpleChatBubble from "@/components/Chat/SimpleChatBubble";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
@@ -35,11 +36,8 @@ export default function RootLayout({
             {loading ? <Loader /> : (
               <>
                 {children}
-                {/* Simple test bubble */}
-                <div className="fixed bottom-6 right-6 z-[99999] w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-lg flex items-center justify-center cursor-pointer">
-                  <span className="text-white text-2xl">💬</span>
-                </div>
-                <ChatBubbleTest />
+                <SimpleChatBubble />
+                {/* <ChatBubbleTest /> */}
                 {/* <ChatBubbleWrapper /> */}
               </>
             )}
