@@ -7,9 +7,12 @@ import { useAuth } from "@/contexts/AuthContext";
 export default function ChatBubbleWrapper() {
   const { isLoggedIn, supabaseUser } = useAuth();
   const [userId, setUserId] = useState<number | null>(null);
+  
+  console.log("ChatBubbleWrapper - isLoggedIn:", isLoggedIn, "supabaseUser:", supabaseUser);
 
   useEffect(() => {
     const fetchUserId = async () => {
+      console.log("fetchUserId - isLoggedIn:", isLoggedIn);
       if (!isLoggedIn) {
         setUserId(null);
         return;
@@ -18,10 +21,13 @@ export default function ChatBubbleWrapper() {
       try {
         // Try to get user from API first
         const res = await fetch("/api/user");
+        console.log("API /api/user response status:", res.status);
         if (res.ok) {
           const data = await res.json();
+          console.log("API user data:", data);
           if (data.user?.id) {
             setUserId(data.user.id);
+            console.log("Set userId to:", data.user.id);
             return;
           }
         }
