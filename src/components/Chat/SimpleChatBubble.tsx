@@ -15,6 +15,12 @@ export default function SimpleChatBubble() {
 
   useEffect(() => {
     const fetchUserId = async () => {
+      // Only fetch user profile if logged in
+      if (!isLoggedIn) {
+        setUserId(null);
+        return;
+      }
+
       try {
         // Build headers - add Supabase auth if available
         const headers: HeadersInit = {};
@@ -45,7 +51,7 @@ export default function SimpleChatBubble() {
     };
 
     fetchUserId();
-  }, [supabaseClient]);
+  }, [isLoggedIn, supabaseClient]);
 
   useEffect(() => {
     const checkMobile = () => {

@@ -5,10 +5,6 @@ import { getUserFromRequest } from '@/lib/getUserFromRequest';
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const user = await getUserFromRequest(req, res);
   
-  if (!user) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
   if (req.method === 'GET') {
     try {
       const { roomId } = req.query;
@@ -17,23 +13,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ error: 'Room ID is required' });
       }
 
-      // Check if user has access to this room
+      // Check if room exists and determine access
       const room = await prisma.chatRoom.findUnique({
         where: { id: roomId },
-        include: {
+        include: user ? {
           members: {
             where: { userId: user.id }
           }
-        }
+        } : undefined
       });
 
       if (!room) {
         return res.status(404).json({ error: 'Room not found' });
       }
 
-      // If room is private, check if user is a member
-      if (room.isPrivate && room.members.length === 0) {
-        return res.status(403).json({ error: 'Access denied' });
+      // If room is private, check if user is authenticated and is a member
+      if (room.isPrivate) {
+        if (!user) {
+          return res.status(401).json({ error: 'Authentication required for private rooms' });
+        }
+        // Check if user is a member of the private room
+        const isMember = await prisma.chatRoomMember.findFirst({
+          where: {
+            chatRoomId: roomId,
+            userId: user.id
+          }
+        });
+        if (!isMember) {
+          return res.status(403).json({ error: 'Access denied' });
+        }
       }
 
       // Fetch messages with user details
@@ -81,6 +89,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === 'POST') {
+    // POST requests require authentication
+    if (!user) {
+      return res.status(401).json({ error: 'Authentication required to send messages' });
+    }
+    
     try {
       const { roomId, content } = req.body;
 

@@ -37,7 +37,7 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
 
   // Fetch initial messages via API
   const fetchMessages = useCallback(async () => {
-    if (!supabaseClient || !roomId) return;
+    if (!roomId) return;
 
     try {
       setIsLoading(true);
@@ -45,13 +45,15 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
 
       // Build headers - add Supabase auth if available
       const headers: HeadersInit = {};
-      const { data: { session } } = await supabaseClient.auth.getSession();
       
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
+      if (supabaseClient) {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
       }
 
-      // Fetch messages from API endpoint
+      // Fetch messages from API endpoint (works for both authenticated and unauthenticated users)
       const response = await fetch(`/api/chat/messages?roomId=${roomId}`, { headers });
 
       if (!response.ok) {
@@ -177,16 +179,23 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
 
   // Setup realtime subscription
   useEffect(() => {
-    if (!supabaseClient || !roomId) {
+    if (!roomId) {
       setConnectionStatus('disconnected');
       return;
     }
 
     mountedRef.current = true;
-    setConnectionStatus('connecting');
-
-    // Initial fetch
+    
+    // Initial fetch (works for both authenticated and unauthenticated)
     fetchMessages();
+
+    // Only setup realtime for authenticated users
+    if (!supabaseClient) {
+      setConnectionStatus('connected'); // Set as connected for read-only mode
+      return;
+    }
+
+    setConnectionStatus('connecting');
 
     // Create realtime channel for this specific room using broadcast
     const channel = supabaseClient

@@ -5,25 +5,27 @@ import { getUserFromRequest } from "@/lib/getUserFromRequest";
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const user = await getUserFromRequest(req, res);
   
-  if (!user) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
+  // Allow GET requests without authentication (read-only access to public rooms)
   if (req.method === "GET") {
     try {
-      const rooms = await prisma.chatRoom.findMany({
-        where: {
-          OR: [
-            { isPrivate: false },
-            {
-              members: {
-                some: {
-                  userId: user.id,
+      // Build query based on authentication status
+      const whereClause = user 
+        ? {
+            OR: [
+              { isPrivate: false },
+              {
+                members: {
+                  some: {
+                    userId: user.id,
+                  },
                 },
               },
-            },
-          ],
-        },
+            ],
+          }
+        : { isPrivate: false }; // Unauthenticated users can only see public rooms
+
+      const rooms = await prisma.chatRoom.findMany({
+        where: whereClause,
         include: {
           _count: {
             select: { members: true },
@@ -56,6 +58,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === "POST") {
+    // POST requests require authentication
+    if (!user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    
     try {
       const { name, isPrivate = false } = req.body;
 

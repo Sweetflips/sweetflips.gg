@@ -30,21 +30,21 @@ export function useSupabaseRealtimeRooms() {
 
   // Fetch rooms via API endpoint
   const fetchRooms = useCallback(async () => {
-    if (!supabaseClient) return;
-
     try {
       setIsLoading(true);
       setError(null);
 
       // Build headers - add Supabase auth if available
       const headers: HeadersInit = {};
-      const { data: { session } } = await supabaseClient.auth.getSession();
       
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
+      if (supabaseClient) {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
       }
 
-      // Fetch rooms from API endpoint
+      // Fetch rooms from API endpoint (works for both authenticated and unauthenticated users)
       const response = await fetch('/api/chat/rooms', { headers });
 
       if (!response.ok) {
