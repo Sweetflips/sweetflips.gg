@@ -27,9 +27,10 @@ export default function PureChatRoom({
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [tooltipUser, setTooltipUser] = useState<{ id: number; username: string; avatar?: any } | null>(null);
-  const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number; adjustX?: string; adjustY?: string } | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [showAvatarPrompt, setShowAvatarPrompt] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const tooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -59,14 +60,6 @@ export default function PureChatRoom({
     setMounted(true);
   }, []);
 
-  // Debug tooltip state
-  useEffect(() => {
-    console.log('Tooltip State:', {
-      user: tooltipUser?.username,
-      position: tooltipPosition,
-      mounted: mounted
-    });
-  }, [tooltipUser, tooltipPosition, mounted]);
 
   // Detect mobile
   useEffect(() => {
@@ -95,6 +88,19 @@ export default function PureChatRoom({
     }
   }, [tooltipUser, isMobile]);
 
+  const checkUserAvatar = async () => {
+    try {
+      const response = await fetch(`/api/chat/user-info?userId=${currentUserId}`);
+      if (response.ok) {
+        const data = await response.json();
+        return !!(data.user?.avatar?.base64Image || data.user?.avatar?.avatarId);
+      }
+    } catch (error) {
+      console.error('Failed to check avatar:', error);
+    }
+    return false;
+  };
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -107,6 +113,13 @@ export default function PureChatRoom({
     }
     
     if (!newMessage.trim() || isSending) return;
+
+    // Check if user has avatar
+    const hasAvatar = await checkUserAvatar();
+    if (!hasAvatar) {
+      setShowAvatarPrompt(true);
+      return;
+    }
 
     const messageContent = newMessage;
     setNewMessage("");
@@ -132,19 +145,46 @@ export default function PureChatRoom({
     });
   };
 
+  const calculateTooltipPosition = (rect: DOMRect) => {
+    const scrollY = window.scrollY || window.pageYOffset;
+    const scrollX = window.scrollX || window.pageXOffset;
+    const tooltipWidth = 250; // Approximate tooltip width
+    const tooltipHeight = 100; // Approximate tooltip height
+    const padding = 10; // Padding from screen edges
+    
+    let x = rect.left + rect.width / 2 + scrollX;
+    let y = rect.top - 10 + scrollY;
+    let adjustX = 'translate(-50%, 0)';
+    let adjustY = 'translate(0, -100%)';
+    
+    // Check horizontal boundaries
+    if (x - tooltipWidth / 2 < padding) {
+      // Too far left, align to left edge
+      x = rect.left + scrollX;
+      adjustX = 'translate(0, 0)';
+    } else if (x + tooltipWidth / 2 > window.innerWidth - padding) {
+      // Too far right, align to right edge
+      x = rect.right + scrollX;
+      adjustX = 'translate(-100%, 0)';
+    }
+    
+    // Check vertical boundaries
+    if (y - tooltipHeight < padding + scrollY) {
+      // Too high, show below avatar instead
+      y = rect.bottom + 10 + scrollY;
+      adjustY = 'translate(0, 0)';
+    }
+    
+    return { x, y, adjustX, adjustY };
+  };
+
   const handleAvatarHover = (user: any, event: React.MouseEvent) => {
     if (isMobile) return; // On mobile, use click instead
     
     const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-    const scrollY = window.scrollY || window.pageYOffset;
-    const scrollX = window.scrollX || window.pageXOffset;
+    const position = calculateTooltipPosition(rect);
     
-    console.log('Hover - User:', user?.username, 'Rect:', rect, 'Scroll:', { scrollX, scrollY });
-    
-    setTooltipPosition({
-      x: rect.left + rect.width / 2 + scrollX,
-      y: rect.top - 10 + scrollY
-    });
+    setTooltipPosition(position);
     setTooltipUser(user);
 
     // Clear any existing timeout
@@ -170,20 +210,14 @@ export default function PureChatRoom({
     if (!isMobile) return; // On desktop, use hover instead
     
     const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-    const scrollY = window.scrollY || window.pageYOffset;
-    const scrollX = window.scrollX || window.pageXOffset;
-    
-    console.log('Click - User:', user?.username, 'Rect:', rect, 'Scroll:', { scrollX, scrollY });
+    const position = calculateTooltipPosition(rect);
     
     // Toggle tooltip
     if (tooltipUser?.id === user.id) {
       setTooltipUser(null);
       setTooltipPosition(null);
     } else {
-      setTooltipPosition({
-        x: rect.left + rect.width / 2 + scrollX,
-        y: rect.top - 10 + scrollY
-      });
+      setTooltipPosition(position);
       setTooltipUser(user);
     }
   };
@@ -292,18 +326,9 @@ export default function PureChatRoom({
                   {showAvatar ? (
                     <div 
                       className="flex-shrink-0 avatar-container cursor-pointer"
-                      onMouseEnter={(e) => {
-                        console.log('Mouse enter on avatar:', message.user?.username);
-                        handleAvatarHover(message.user, e);
-                      }}
-                      onMouseLeave={() => {
-                        console.log('Mouse leave from avatar');
-                        handleAvatarLeave();
-                      }}
-                      onClick={(e) => {
-                        console.log('Click on avatar:', message.user?.username);
-                        handleAvatarClick(message.user, e);
-                      }}
+                      onMouseEnter={(e) => handleAvatarHover(message.user, e)}
+                      onMouseLeave={handleAvatarLeave}
+                      onClick={(e) => handleAvatarClick(message.user, e)}
                     >
                       {message.user?.avatar?.base64Image ? (
                         <img
@@ -403,7 +428,7 @@ export default function PureChatRoom({
               style={{
                 left: `${tooltipPosition.x}px`,
                 top: `${tooltipPosition.y}px`,
-                transform: 'translate(-50%, -100%)',
+                transform: `${tooltipPosition.adjustX || 'translate(-50%, 0)'} ${tooltipPosition.adjustY || 'translate(0, -100%)'}`,
                 zIndex: 99999,
               }}
             >
@@ -435,14 +460,74 @@ export default function PureChatRoom({
                 </div>
               </div>
               
-              {/* Arrow pointing down */}
-              <div className="absolute left-1/2 -bottom-2 transform -translate-x-1/2">
-                <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[8px] border-t-[#0d0816]"></div>
-              </div>
+              {/* Arrow pointing down or up based on position */}
+              {tooltipPosition.adjustY === 'translate(0, 0)' ? (
+                // Arrow pointing up (tooltip is below avatar)
+                <div className="absolute left-1/2 -top-2 transform -translate-x-1/2">
+                  <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px] border-b-[#0d0816]"></div>
+                </div>
+              ) : (
+                // Arrow pointing down (tooltip is above avatar)
+                <div className="absolute left-1/2 -bottom-2 transform -translate-x-1/2">
+                  <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[8px] border-t-[#0d0816]"></div>
+                </div>
+              )}
             </div>
           </motion.div>
           )}
         </AnimatePresence>,
+        document.body
+      )}
+
+      {/* Avatar Setup Prompt - Rendered with Portal */}
+      {mounted && showAvatarPrompt && createPortal(
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 z-[10000] flex items-center justify-center p-4"
+          onClick={() => setShowAvatarPrompt(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+            exit={{ scale: 0.9 }}
+            className="bg-[#0d0816] border border-purple-500/50 rounded-xl p-6 max-w-md w-full shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center">
+              {/* Avatar Icon */}
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center">
+                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              
+              <h3 className="text-xl font-bold text-white mb-2">Set Up Your Avatar</h3>
+              <p className="text-gray-400 mb-6">
+                You need an avatar to send messages in the chat. Create your unique avatar to start chatting!
+              </p>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    window.location.href = '/account#avatar';
+                    setShowAvatarPrompt(false);
+                  }}
+                  className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-medium transition-all"
+                >
+                  Create Avatar
+                </button>
+                <button
+                  onClick={() => setShowAvatarPrompt(false)}
+                  className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-all"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>,
         document.body
       )}
     </div>
