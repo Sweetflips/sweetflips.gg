@@ -10,6 +10,8 @@ interface PureChatRoomProps {
   currentUserId: number;
   onOpenSidebar?: () => void;
   hideRoomHeader?: boolean;
+  isAuthenticated?: boolean;
+  onAuthRequired?: () => void;
 }
 
 export default function PureChatRoom({ 
@@ -17,7 +19,9 @@ export default function PureChatRoom({
   roomName, 
   currentUserId, 
   onOpenSidebar,
-  hideRoomHeader = false
+  hideRoomHeader = false,
+  isAuthenticated = true,
+  onAuthRequired
 }: PureChatRoomProps) {
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -46,6 +50,14 @@ export default function PureChatRoom({
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // If not authenticated, redirect to signin
+    if (!isAuthenticated) {
+      if (onAuthRequired) {
+        onAuthRequired();
+      }
+      return;
+    }
     
     if (!newMessage.trim() || isSending) return;
 
@@ -233,15 +245,20 @@ export default function PureChatRoom({
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type a message..."
-            disabled={connectionStatus !== 'connected' || isSending}
-            className="flex-1 px-5 py-3 bg-[#2a1b3d] border border-purple-700/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50"
+            onClick={() => {
+              if (!isAuthenticated && onAuthRequired) {
+                onAuthRequired();
+              }
+            }}
+            placeholder={isAuthenticated ? "Type a message..." : "Sign in to send messages..."}
+            disabled={connectionStatus !== 'connected' || isSending || !isAuthenticated}
+            className="flex-1 px-5 py-3 bg-[#2a1b3d] border border-purple-700/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 cursor-pointer disabled:cursor-pointer"
           />
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             type="submit"
-            disabled={!newMessage.trim() || connectionStatus !== 'connected' || isSending}
+            disabled={(isAuthenticated && !newMessage.trim()) || (isAuthenticated && connectionStatus !== 'connected') || isSending}
             className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-600 disabled:to-gray-700 text-white rounded-xl font-medium transition-all disabled:cursor-not-allowed"
           >
             {isSending ? (

@@ -8,9 +8,11 @@ import { useSupabaseRealtimeRooms } from "@/hooks/useSupabaseRealtimeRooms";
 
 interface ChatBubbleContainerProps {
   userId: number;
+  isAuthenticated?: boolean;
+  onAuthRequired?: () => void;
 }
 
-export default function ChatBubbleContainer({ userId }: ChatBubbleContainerProps) {
+export default function ChatBubbleContainer({ userId, isAuthenticated = true, onAuthRequired }: ChatBubbleContainerProps) {
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [selectedRoomName, setSelectedRoomName] = useState<string>("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -81,6 +83,8 @@ export default function ChatBubbleContainer({ userId }: ChatBubbleContainerProps
                 currentUserId={userId}
                 onOpenSidebar={() => setIsSidebarOpen(true)}
                 hideRoomHeader={true}
+                isAuthenticated={isAuthenticated}
+                onAuthRequired={onAuthRequired}
               />
             </div>
           ) : (

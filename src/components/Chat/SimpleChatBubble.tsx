@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { ChatBubbleLeftRightIcon, XMarkIcon } from "@heroicons/react/24/solid";
 import { useAuth } from "@/contexts/AuthContext";
 import ChatBubbleContainer from "./ChatBubbleContainer";
 
 export default function SimpleChatBubble() {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [userId, setUserId] = useState<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -59,8 +61,12 @@ export default function SimpleChatBubble() {
     setIsOpen(!isOpen);
   };
 
-  // Use the actual userId, don't fallback to 1
-  const displayUserId = userId;
+  const handleAuthRedirect = () => {
+    router.push('/auth/signin');
+  };
+
+  // Use 0 to indicate unauthenticated user (for viewing only)
+  const displayUserId = userId || 0;
 
   return (
     <>
@@ -92,16 +98,11 @@ export default function SimpleChatBubble() {
             
             {/* Chat Content */}
             <div className="flex-1 overflow-hidden">
-              {displayUserId ? (
-                <ChatBubbleContainer userId={displayUserId} />
-              ) : (
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="text-center text-white">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-2"></div>
-                    <p className="text-sm text-gray-400">Loading user data...</p>
-                  </div>
-                </div>
-              )}
+              <ChatBubbleContainer 
+                userId={displayUserId} 
+                isAuthenticated={isLoggedIn && userId !== null}
+                onAuthRequired={handleAuthRedirect}
+              />
             </div>
           </div>
         </div>
