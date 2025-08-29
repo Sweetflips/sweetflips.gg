@@ -22,8 +22,10 @@ export default function SimpleChatBubble() {
         const res = await fetch("/api/user");
         if (res.ok) {
           const data = await res.json();
+          console.log("SimpleChatBubble: Fetched user data:", data);
           if (data.user?.id) {
             setUserId(data.user.id);
+            console.log("SimpleChatBubble: Set userId to:", data.user.id);
             return;
           }
         }
@@ -59,8 +61,8 @@ export default function SimpleChatBubble() {
     setIsOpen(!isOpen);
   };
 
-  // For testing: temporarily set a default user ID if not logged in
-  const displayUserId = userId || 1; // Use ID 1 as fallback for testing
+  // Use the actual userId, don't fallback to 1
+  const displayUserId = userId;
 
   return (
     <>
@@ -92,7 +94,16 @@ export default function SimpleChatBubble() {
             
             {/* Chat Content */}
             <div className="flex-1 overflow-hidden">
-              <ChatBubbleContainer userId={displayUserId} />
+              {displayUserId ? (
+                <ChatBubbleContainer userId={displayUserId} />
+              ) : (
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="text-center text-white">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-2"></div>
+                    <p className="text-sm text-gray-400">Loading user data...</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
