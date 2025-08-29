@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSupabaseRealtimeChat } from "@/hooks/useSupabaseRealtimeChat";
 
@@ -28,6 +29,7 @@ export default function PureChatRoom({
   const [tooltipUser, setTooltipUser] = useState<{ id: number; username: string; avatar?: any } | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const tooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -51,6 +53,20 @@ export default function PureChatRoom({
       scrollToBottom();
     }
   }, [messages.length, scrollToBottom]);
+
+  // Set mounted to true when component mounts (client-side only)
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Debug tooltip state
+  useEffect(() => {
+    console.log('Tooltip State:', {
+      user: tooltipUser?.username,
+      position: tooltipPosition,
+      mounted: mounted
+    });
+  }, [tooltipUser, tooltipPosition, mounted]);
 
   // Detect mobile
   useEffect(() => {
@@ -120,9 +136,14 @@ export default function PureChatRoom({
     if (isMobile) return; // On mobile, use click instead
     
     const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    const scrollY = window.scrollY || window.pageYOffset;
+    const scrollX = window.scrollX || window.pageXOffset;
+    
+    console.log('Hover - User:', user?.username, 'Rect:', rect, 'Scroll:', { scrollX, scrollY });
+    
     setTooltipPosition({
-      x: rect.left + rect.width / 2,
-      y: rect.top - 10
+      x: rect.left + rect.width / 2 + scrollX,
+      y: rect.top - 10 + scrollY
     });
     setTooltipUser(user);
 
@@ -149,6 +170,10 @@ export default function PureChatRoom({
     if (!isMobile) return; // On desktop, use hover instead
     
     const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    const scrollY = window.scrollY || window.pageYOffset;
+    const scrollX = window.scrollX || window.pageXOffset;
+    
+    console.log('Click - User:', user?.username, 'Rect:', rect, 'Scroll:', { scrollX, scrollY });
     
     // Toggle tooltip
     if (tooltipUser?.id === user.id) {
@@ -156,8 +181,8 @@ export default function PureChatRoom({
       setTooltipPosition(null);
     } else {
       setTooltipPosition({
-        x: rect.left + rect.width / 2,
-        y: rect.top - 10
+        x: rect.left + rect.width / 2 + scrollX,
+        y: rect.top - 10 + scrollY
       });
       setTooltipUser(user);
     }
@@ -267,9 +292,18 @@ export default function PureChatRoom({
                   {showAvatar ? (
                     <div 
                       className="flex-shrink-0 avatar-container cursor-pointer"
-                      onMouseEnter={(e) => handleAvatarHover(message.user, e)}
-                      onMouseLeave={handleAvatarLeave}
-                      onClick={(e) => handleAvatarClick(message.user, e)}
+                      onMouseEnter={(e) => {
+                        console.log('Mouse enter on avatar:', message.user?.username);
+                        handleAvatarHover(message.user, e);
+                      }}
+                      onMouseLeave={() => {
+                        console.log('Mouse leave from avatar');
+                        handleAvatarLeave();
+                      }}
+                      onClick={(e) => {
+                        console.log('Click on avatar:', message.user?.username);
+                        handleAvatarClick(message.user, e);
+                      }}
                     >
                       {message.user?.avatar?.base64Image ? (
                         <img
@@ -355,53 +389,61 @@ export default function PureChatRoom({
         </div>
       </form>
 
-      {/* Avatar Tooltip */}
-      {tooltipUser && tooltipPosition && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          className="avatar-tooltip fixed z-[10000] pointer-events-none"
-          style={{
-            left: tooltipPosition.x,
-            top: tooltipPosition.y,
-            transform: 'translate(-50%, -100%)',
-          }}
-        >
-          <div className="bg-[#0d0816] border border-purple-500/50 rounded-xl p-3 shadow-2xl mb-2">
-            <div className="flex items-center gap-3">
-              {/* Avatar */}
-              <div className="flex-shrink-0">
-                {tooltipUser.avatar?.base64Image ? (
-                  <img
-                    src={tooltipUser.avatar.base64Image}
-                    alt={tooltipUser.username}
-                    className="w-16 h-16 rounded-full object-cover border-2 border-purple-500/50"
-                  />
-                ) : (
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white text-xl font-bold">
-                    {tooltipUser.username?.[0]?.toUpperCase() || '?'}
-                  </div>
-                )}
+      {/* Avatar Tooltip - Rendered with Portal */}
+      {mounted && createPortal(
+        <AnimatePresence mode="wait">
+          {tooltipUser && tooltipPosition && (
+            <motion.div
+              key="avatar-tooltip"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.15 }}
+              className="avatar-tooltip fixed pointer-events-none"
+              style={{
+                left: `${tooltipPosition.x}px`,
+                top: `${tooltipPosition.y}px`,
+                transform: 'translate(-50%, -100%)',
+                zIndex: 99999,
+              }}
+            >
+            <div className="bg-[#0d0816] border border-purple-500/50 rounded-xl p-3 shadow-2xl mb-2">
+              <div className="flex items-center gap-3">
+                {/* Avatar */}
+                <div className="flex-shrink-0">
+                  {tooltipUser.avatar?.base64Image ? (
+                    <img
+                      src={tooltipUser.avatar.base64Image}
+                      alt={tooltipUser.username}
+                      className="w-16 h-16 rounded-full object-cover border-2 border-purple-500/50"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white text-xl font-bold">
+                      {tooltipUser.username?.[0]?.toUpperCase() || '?'}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Username */}
+                <div className="pr-2">
+                  <p className="text-white font-semibold text-base">
+                    {tooltipUser.username || `User ${tooltipUser.id}`}
+                  </p>
+                  <p className="text-purple-400 text-xs">
+                    ID: {tooltipUser.id}
+                  </p>
+                </div>
               </div>
               
-              {/* Username */}
-              <div className="pr-2">
-                <p className="text-white font-semibold text-base">
-                  {tooltipUser.username || `User ${tooltipUser.id}`}
-                </p>
-                <p className="text-purple-400 text-xs">
-                  ID: {tooltipUser.id}
-                </p>
+              {/* Arrow pointing down */}
+              <div className="absolute left-1/2 -bottom-2 transform -translate-x-1/2">
+                <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[8px] border-t-[#0d0816]"></div>
               </div>
             </div>
-            
-            {/* Arrow pointing down */}
-            <div className="absolute left-1/2 -bottom-2 transform -translate-x-1/2">
-              <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[8px] border-t-[#0d0816]"></div>
-            </div>
-          </div>
-        </motion.div>
+          </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
       )}
     </div>
   );
