@@ -80,7 +80,7 @@ export default function SimpleChatBubble() {
             <div className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 p-4 flex items-center justify-between border-b border-purple-700/30">
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                <h3 className="text-white font-semibold">Community Chat</h3>
+                <h3 className="text-white font-semibold">Sweetflips Chat</h3>
               </div>
               <button
                 onClick={handleToggle}

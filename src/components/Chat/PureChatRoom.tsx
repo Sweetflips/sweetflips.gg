@@ -9,13 +9,15 @@ interface PureChatRoomProps {
   roomName: string;
   currentUserId: number;
   onOpenSidebar?: () => void;
+  hideRoomHeader?: boolean;
 }
 
 export default function PureChatRoom({ 
   roomId, 
   roomName, 
   currentUserId, 
-  onOpenSidebar 
+  onOpenSidebar,
+  hideRoomHeader = false
 }: PureChatRoomProps) {
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -105,44 +107,46 @@ export default function PureChatRoom({
   return (
     <div className="flex flex-col h-full bg-transparent">
       {/* Header */}
-      <div className="px-3 sm:px-6 py-3 sm:py-5 border-b border-purple-700/30 bg-[#0d0816]/50 backdrop-blur-sm">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            {onOpenSidebar && (
-              <button
-                onClick={onOpenSidebar}
-                className="md:hidden mr-3 p-1.5 bg-purple-600/20 border border-purple-500/30 rounded-lg"
-              >
-                <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-            )}
-            <div>
-              <h2 className="text-lg sm:text-2xl font-bold text-white flex items-center">
-                <span className="text-purple-400 mr-1 sm:mr-2">#</span>
-                {roomName}
-              </h2>
-              <p className="text-xs sm:text-sm text-gray-400 mt-0.5 sm:mt-1">
-                {messages.length} messages
-              </p>
+      {!hideRoomHeader && (
+        <div className="px-3 sm:px-6 py-3 sm:py-5 border-b border-purple-700/30 bg-[#0d0816]/50 backdrop-blur-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              {onOpenSidebar && (
+                <button
+                  onClick={onOpenSidebar}
+                  className="md:hidden mr-3 p-1.5 bg-purple-600/20 border border-purple-500/30 rounded-lg"
+                >
+                  <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
+              )}
+              <div>
+                <h2 className="text-lg sm:text-2xl font-bold text-white flex items-center">
+                  <span className="text-purple-400 mr-1 sm:mr-2">#</span>
+                  {roomName}
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-400 mt-0.5 sm:mt-1">
+                  {messages.length} messages
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <div className={`w-2 h-2 ${
+                connectionStatus === 'connected' ? 'bg-[#53FC18] animate-pulse' :
+                connectionStatus === 'connecting' ? 'bg-yellow-500' :
+                'bg-red-500'
+              } rounded-full`}></div>
+              <span className="text-xs sm:text-sm text-gray-400">
+                {connectionStatus === 'connected' ? 'Live' :
+                 connectionStatus === 'connecting' ? 'Connecting...' :
+                 'Disconnected'}
+              </span>
             </div>
           </div>
-          
-          <div className="flex items-center space-x-2">
-            <div className={`w-2 h-2 ${
-              connectionStatus === 'connected' ? 'bg-[#53FC18] animate-pulse' :
-              connectionStatus === 'connecting' ? 'bg-yellow-500' :
-              'bg-red-500'
-            } rounded-full`}></div>
-            <span className="text-xs sm:text-sm text-gray-400">
-              {connectionStatus === 'connected' ? 'Live' :
-               connectionStatus === 'connecting' ? 'Connecting...' :
-               'Disconnected'}
-            </span>
-          </div>
         </div>
-      </div>
+      )}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4">

@@ -80,6 +80,7 @@ export default function ChatBubbleContainer({ userId }: ChatBubbleContainerProps
                 roomName={selectedRoomName}
                 currentUserId={userId}
                 onOpenSidebar={() => setIsSidebarOpen(true)}
+                hideRoomHeader={true}
               />
             </div>
           ) : (
