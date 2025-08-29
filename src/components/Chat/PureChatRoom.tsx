@@ -25,8 +25,12 @@ export default function PureChatRoom({
 }: PureChatRoomProps) {
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [tooltipUser, setTooltipUser] = useState<{ id: number; username: string; avatar?: any } | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const tooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const {
     messages,
@@ -47,6 +51,33 @@ export default function PureChatRoom({
       scrollToBottom();
     }
   }, [messages.length, scrollToBottom]);
+
+  // Detect mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // Close tooltip when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.avatar-container') && !target.closest('.avatar-tooltip')) {
+        setTooltipUser(null);
+        setTooltipPosition(null);
+      }
+    };
+
+    if (tooltipUser && isMobile) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [tooltipUser, isMobile]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,6 +114,53 @@ export default function PureChatRoom({
       minute: "2-digit",
       hour12: true,
     });
+  };
+
+  const handleAvatarHover = (user: any, event: React.MouseEvent) => {
+    if (isMobile) return; // On mobile, use click instead
+    
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    setTooltipPosition({
+      x: rect.left + rect.width / 2,
+      y: rect.top - 10
+    });
+    setTooltipUser(user);
+
+    // Clear any existing timeout
+    if (tooltipTimeoutRef.current) {
+      clearTimeout(tooltipTimeoutRef.current);
+      tooltipTimeoutRef.current = null;
+    }
+  };
+
+  const handleAvatarLeave = () => {
+    if (isMobile) return;
+    
+    // Add a small delay before hiding to prevent flicker
+    tooltipTimeoutRef.current = setTimeout(() => {
+      setTooltipUser(null);
+      setTooltipPosition(null);
+    }, 100);
+  };
+
+  const handleAvatarClick = (user: any, event: React.MouseEvent) => {
+    event.stopPropagation();
+    
+    if (!isMobile) return; // On desktop, use hover instead
+    
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    
+    // Toggle tooltip
+    if (tooltipUser?.id === user.id) {
+      setTooltipUser(null);
+      setTooltipPosition(null);
+    } else {
+      setTooltipPosition({
+        x: rect.left + rect.width / 2,
+        y: rect.top - 10
+      });
+      setTooltipUser(user);
+    }
   };
 
   if (isLoading) {
@@ -187,15 +265,20 @@ export default function PureChatRoom({
                   className={`flex items-start gap-3 ${isCurrentUser ? "flex-row-reverse" : ""}`}
                 >
                   {showAvatar ? (
-                    <div className="flex-shrink-0">
+                    <div 
+                      className="flex-shrink-0 avatar-container cursor-pointer"
+                      onMouseEnter={(e) => handleAvatarHover(message.user, e)}
+                      onMouseLeave={handleAvatarLeave}
+                      onClick={(e) => handleAvatarClick(message.user, e)}
+                    >
                       {message.user?.avatar?.base64Image ? (
                         <img
                           src={message.user.avatar.base64Image}
                           alt={message.user.username}
-                          className="w-10 h-10 rounded-full object-cover border-2 border-purple-500/30"
+                          className="w-10 h-10 rounded-full object-cover border-2 border-purple-500/30 hover:border-purple-400 transition-colors"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-semibold">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-semibold hover:from-purple-500 hover:to-pink-600 transition-all">
                           {message.user?.username?.[0]?.toUpperCase() || '?'}
                         </div>
                       )}
@@ -271,6 +354,55 @@ export default function PureChatRoom({
           </motion.button>
         </div>
       </form>
+
+      {/* Avatar Tooltip */}
+      {tooltipUser && tooltipPosition && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          className="avatar-tooltip fixed z-[10000] pointer-events-none"
+          style={{
+            left: tooltipPosition.x,
+            top: tooltipPosition.y,
+            transform: 'translate(-50%, -100%)',
+          }}
+        >
+          <div className="bg-[#0d0816] border border-purple-500/50 rounded-xl p-3 shadow-2xl mb-2">
+            <div className="flex items-center gap-3">
+              {/* Avatar */}
+              <div className="flex-shrink-0">
+                {tooltipUser.avatar?.base64Image ? (
+                  <img
+                    src={tooltipUser.avatar.base64Image}
+                    alt={tooltipUser.username}
+                    className="w-16 h-16 rounded-full object-cover border-2 border-purple-500/50"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white text-xl font-bold">
+                    {tooltipUser.username?.[0]?.toUpperCase() || '?'}
+                  </div>
+                )}
+              </div>
+              
+              {/* Username */}
+              <div className="pr-2">
+                <p className="text-white font-semibold text-base">
+                  {tooltipUser.username || `User ${tooltipUser.id}`}
+                </p>
+                <p className="text-purple-400 text-xs">
+                  ID: {tooltipUser.id}
+                </p>
+              </div>
+            </div>
+            
+            {/* Arrow pointing down */}
+            <div className="absolute left-1/2 -bottom-2 transform -translate-x-1/2">
+              <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[8px] border-t-[#0d0816]"></div>
+            </div>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }
