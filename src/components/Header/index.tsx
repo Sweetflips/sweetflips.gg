@@ -177,12 +177,12 @@ const Header = () => {
 
           {/* User-specific items - hidden on small screens, shown on large */}
           <div className="hidden lg:flex items-center gap-3 2xsm:gap-7 flex-wrap">
-            {isLoggedIn && (
+            {isLoggedIn ? (
               <>
                 <div className="hidden sm:block"> {/* Desktop ShopTokenBar */}
                   <ShopTokenBar />
                 </div>
-                {/* Create Avatar Button */}
+                {/* Create Avatar Button for logged in users */}
                 <Link
                   href="/webgl/index.html"
                   className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium text-sm transition bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 hover:shadow-lg hover:shadow-purple-500/30"
@@ -191,6 +191,15 @@ const Header = () => {
                   <span>Create Avatar</span>
                 </Link>
               </>
+            ) : (
+              /* Create Avatar Button for non-logged in users - redirects to signin */
+              <Link
+                href="/auth/signin"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium text-sm transition bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 hover:shadow-lg hover:shadow-purple-500/30"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>Create Avatar</span>
+              </Link>
             )}
             <nav className="flex items-center gap-4">
               {isLoggedIn ? (
@@ -283,12 +292,12 @@ const Header = () => {
               </React.Fragment>
             ))}
             {/* Mobile Auth Links and ShopTokenBar - styled more like HeaderNavItem */}
-            {isLoggedIn && (
+            {isLoggedIn ? (
               <>
                 <div className="px-3 pt-3 pb-2"> {/* Added padding for ShopTokenBar container */}
                   <ShopTokenBar />
                 </div>
-                {/* Mobile Create Avatar Button */}
+                {/* Mobile Create Avatar Button for logged in users */}
                 <Link 
                   href="/webgl/index.html" 
                   className="flex items-center mx-3 mt-2 px-4 py-2 rounded-lg text-white font-medium text-sm transition bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
@@ -297,6 +306,15 @@ const Header = () => {
                   Create Your Avatar
                 </Link>
               </>
+            ) : (
+              /* Mobile Create Avatar Button for non-logged in users - redirects to signin */
+              <Link 
+                href="/auth/signin" 
+                className="flex items-center mx-3 mt-2 px-4 py-2 rounded-lg text-white font-medium text-sm transition bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Create Your Avatar
+              </Link>
             )}
             <div className="border-t border-gray-700 my-2"></div> {/* Divider */}
             {isLoggedIn ? (
