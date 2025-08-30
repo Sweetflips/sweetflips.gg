@@ -3,6 +3,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import AvatarDisplay from "../Avatar/AvatarDisplay";
+import { useRouter } from "next/navigation";
 
 interface AccountDetailsProps {
   user: any;
@@ -11,6 +12,8 @@ interface AccountDetailsProps {
 }
 
 export default function AccountDetails({ user, userData, onOpenAvatarCreator }: AccountDetailsProps) {
+  const router = useRouter();
+  
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -21,6 +24,11 @@ export default function AccountDetails({ user, userData, onOpenAvatarCreator }: 
 
   const formatNumber = (num: number) => {
     return num.toLocaleString();
+  };
+  
+  const handleAvatarClick = () => {
+    // Navigate to the webgl avatar creator
+    window.location.href = '/webgl/index.html';
   };
 
   return (
@@ -36,7 +44,7 @@ export default function AccountDetails({ user, userData, onOpenAvatarCreator }: 
           <AvatarDisplay
             userId={user.id}
             username={user.username}
-            onEditAvatar={onOpenAvatarCreator}
+            onEditAvatar={handleAvatarClick}
           />
           
           {/* Quick Stats */}
