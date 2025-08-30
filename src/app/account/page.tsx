@@ -8,6 +8,7 @@ import UserOrders from "@/components/UserOrders/UserOrders";
 import { withAuth } from "@/components/withAuth";
 import { useAuth } from "@/contexts/AuthContext";
 import ChatContainer from "@/components/Chat/ChatContainer";
+import AccountDetails from "@/components/Account/AccountDetails";
 import { motion, AnimatePresence } from "framer-motion";
 
 const ProfilePage = () => {
@@ -294,15 +295,11 @@ const ProfilePage = () => {
 
         <section>
           {activeSection === "details" && user && (
-            <div>
-              <h2 className="mb-4 text-xl font-bold">Account Details</h2>
-              <p>
-                <strong>Username:</strong> {user.username}
-              </p>
-              <p>
-                <strong>Email:</strong> {user.email}
-              </p>
-            </div>
+            <AccountDetails 
+              user={user} 
+              userData={userData}
+              onOpenAvatarCreator={() => setShowAvatarCreator(true)}
+            />
           )}
 
           {activeSection === "orders" && (

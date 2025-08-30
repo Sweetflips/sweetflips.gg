@@ -35,7 +35,9 @@
       "Read(/D:\\Sweetflips\\Sweetflips\\Assets/**)",
       "Read(/D:\\Sweetflips\\Sweetflips\\Assets\\Scripts/**)",
       "Bash(npx tsc:*)",
-      "WebFetch(domain:supabase.com)"
+      "WebFetch(domain:supabase.com)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run lint)"
     ],
     "deny": []
   }
