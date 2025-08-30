@@ -53,28 +53,6 @@ export default function AccountDetails({ user, userData, onOpenAvatarCreator }: 
               <span className="text-gray-400 text-sm">Tokens</span>
               <span className="text-purple-300 font-bold">{formatNumber(parseFloat(user.tokens))}</span>
             </div>
-            
-            {userData && (
-              <>
-                <div className="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-purple-500/20">
-                  <span className="text-gray-400 text-sm">Points</span>
-                  <span className="text-pink-300 font-bold">{formatNumber(userData.points)}</span>
-                </div>
-                
-                <div className="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-purple-500/20">
-                  <span className="text-gray-400 text-sm">Level</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-yellow-300 font-bold">{userData.level}</span>
-                    <div className="w-12 h-1 bg-gray-700 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full"
-                        style={{ width: `${(userData.xp % 1000) / 10}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
           </div>
         </div>
       </motion.div>
