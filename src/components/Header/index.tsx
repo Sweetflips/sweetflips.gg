@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState, useEffect } from 'react'; // useEffect might still be needed for other things if any
 import Cookies from 'js-cookie';
 import { usePathname } from 'next/navigation';
-import { User, Shield, Menu as MenuIcon } from "lucide-react"; // Renamed Menu to MenuIcon to avoid conflict
+import { User, Shield, Menu as MenuIcon, Sparkles } from "lucide-react"; // Renamed Menu to MenuIcon to avoid conflict
 import ShopTokenBar from '@/components/ShopTokenBar/ShopTokenBar';
 import React from "react";
 import { HeaderLiveStatus } from "../HeaderLiveStatus/HeaderLiveStatus";
@@ -178,9 +178,19 @@ const Header = () => {
           {/* User-specific items - hidden on small screens, shown on large */}
           <div className="hidden lg:flex items-center gap-3 2xsm:gap-7 flex-wrap">
             {isLoggedIn && (
-              <div className="hidden sm:block"> {/* Desktop ShopTokenBar */}
-                <ShopTokenBar />
-              </div>
+              <>
+                <div className="hidden sm:block"> {/* Desktop ShopTokenBar */}
+                  <ShopTokenBar />
+                </div>
+                {/* Create Avatar Button */}
+                <Link
+                  href="/avatar-creator"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium text-sm transition bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 hover:shadow-lg hover:shadow-purple-500/30"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Create Avatar</span>
+                </Link>
+              </>
             )}
             <nav className="flex items-center gap-4">
               {isLoggedIn ? (
@@ -274,9 +284,19 @@ const Header = () => {
             ))}
             {/* Mobile Auth Links and ShopTokenBar - styled more like HeaderNavItem */}
             {isLoggedIn && (
-              <div className="px-3 pt-3 pb-2"> {/* Added padding for ShopTokenBar container */}
-                <ShopTokenBar />
-              </div>
+              <>
+                <div className="px-3 pt-3 pb-2"> {/* Added padding for ShopTokenBar container */}
+                  <ShopTokenBar />
+                </div>
+                {/* Mobile Create Avatar Button */}
+                <Link 
+                  href="/avatar-creator" 
+                  className="flex items-center mx-3 mt-2 px-4 py-2 rounded-lg text-white font-medium text-sm transition bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Create Your Avatar
+                </Link>
+              </>
             )}
             <div className="border-t border-gray-700 my-2"></div> {/* Divider */}
             {isLoggedIn ? (
