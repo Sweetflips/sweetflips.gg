@@ -371,11 +371,7 @@ const ProfilePage = () => {
                           <p className="text-gray-300 text-center mb-2">
                             To join the Sweetflips chat, you need to create your unique 3D avatar!
                           </p>
-                          
-                          <p className="text-gray-400 text-sm text-center mb-8">
-                            Express yourself with a personalized Ready Player Me avatar that represents you in our community.
-                          </p>
-                          
+                        
                           <div className="space-y-3 mb-8">
                             <div className="flex items-center gap-3">
                               <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
