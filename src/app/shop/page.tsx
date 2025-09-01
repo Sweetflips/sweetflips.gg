@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 const ClientShopPage = dynamic(() => import("@/components/Shop/SweetflipsShop"), { ssr: false });
 
 export const metadata: Metadata = createMetadata({
-  title: "Sweetflips Shop",
+  title: "Sweetflips Shop(testing)",
   description: "Browse and buy using your tokens",
   path: "/shop",
 });
