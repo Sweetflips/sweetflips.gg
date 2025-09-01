@@ -256,18 +256,8 @@ const LuxdropLeaderboard: React.FC = () => {
 
     let targetDate;
     
-    // Special transition period: July 28, 2025 - August 31, 2025
-    if ((now.year === 2025 && now.month === 7 && now.day >= 28) || (now.year === 2025 && now.month === 8)) {
-      // During transition period: countdown to August 31, 2025 23:59:59 UTC
-      targetDate = DateTime.utc(2025, 8, 31, 23, 59, 59, 999);
-    } else if (now.year === 2025 && now.month === 7 && now.day < 28) {
-      // Before transition period: countdown to July 28, 2025 00:00:00 UTC
-      targetDate = DateTime.utc(2025, 7, 28, 0, 0, 0, 0);
-    } else {
-      // From September 2025 onwards: 1st to last day of current month
-      const endOfMonth = now.endOf('month').set({ hour: 23, minute: 59, second: 59, millisecond: 999 });
-      targetDate = endOfMonth;
-    }
+    // Fixed September 2025 leaderboard period: countdown to September 30, 2025 23:59:59 UTC
+    targetDate = DateTime.utc(2025, 9, 30, 23, 59, 59, 999);
 
     return targetDate.toISO(); // ➜ will be interpreted correctly as UTC
   })();

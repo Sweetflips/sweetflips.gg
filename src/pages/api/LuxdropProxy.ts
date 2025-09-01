@@ -53,36 +53,35 @@ export default async function handler(
     }
   }
 
-  // --- Date Logic for Monthly Resetting Period ---
+  // --- Date Logic for Fixed September 2025 Period ---
   const currentTime = DateTime.utc();
   let startDate: DateTime;
   let endDate: DateTime;
 
-  // Monthly Period: Always use current month (resets every month)
-  // Start: First day of current month at 00:00:00
-  // End: Last day of current month at 23:59:59
-  startDate = currentTime.startOf('month');
-  endDate = currentTime.endOf('month');
+  // Fixed September 2025 Period: September 1-30, 2025
+  // Start: September 1, 2025 at 00:00:00
+  // End: September 30, 2025 at 23:59:59
+  startDate = DateTime.utc(2025, 9, 1, 0, 0, 0, 0);
+  endDate = DateTime.utc(2025, 9, 30, 23, 59, 59, 999);
 
-  const startDateISO = startDate.toISODate(); // e.g., "2025-09-01"
-  const endDateISO = endDate.toISODate();     // e.g., "2025-09-30"
+  const startDateISO = startDate.toISODate(); // "2025-09-01"
+  const endDateISO = endDate.toISODate();     // "2025-09-30"
 
-  console.log("=== DATE DEBUG (MONTHLY PERIOD) ===");
+  console.log("=== DATE DEBUG (FIXED SEPTEMBER 2025 PERIOD) ===");
   console.log("Current time:", currentTime.toISO());
   console.log("Current year:", currentTime.year);
   console.log("Current month:", currentTime.month);
   console.log("Current day:", currentTime.day);
-  console.log("Monthly period:", startDateISO, "to", endDateISO);
+  console.log("Fixed September 2025 period:", startDateISO, "to", endDateISO);
   console.log("Start date object:", startDate.toISO());
   console.log("End date object:", endDate.toISO());
-  console.log("Month name:", currentTime.monthLong);
 
   // --- Construct the API Request ---
   // Using exact parameters that work in Python script: codes, startDate, endDate
   const params = {
     codes: "sweetflips", // Use exact working affiliate code
-    startDate: startDateISO, // e.g., "2025-09-01"
-    endDate: endDateISO,     // e.g., "2025-09-30"
+    startDate: startDateISO, // "2025-09-01"
+    endDate: endDateISO,     // "2025-09-30"
   };
 
   console.log("=== API PARAMETERS ===");
@@ -136,7 +135,7 @@ export default async function handler(
       throw new Error("API response is not an array");
     }
 
-    console.log("✅ Using monthly period API data for:", currentTime.monthLong, currentTime.year);
+    console.log("✅ Using fixed September 2025 period API data");
     console.log("Period:", startDateISO, "to", endDateISO);
 
     // Validate we have reasonable contest period data
@@ -157,19 +156,19 @@ export default async function handler(
       .sort((a, b) => b.wagered - a.wagered)
       .slice(0, 100); // Top 100 for performance
 
-    console.log(`${currentTime.monthLong} ${currentTime.year} leaderboard generated:`);
+    console.log(`September 2025 leaderboard generated:`);
     console.log("- Total active wagerers:", leaderboard.length);
     if (leaderboard.length > 0) {
       console.log("- Top wagerer:", leaderboard[0].username, "$" + leaderboard[0].wagered);
     }
-    console.log("- Total monthly wagered: $" + totalWagered.toFixed(2));
+    console.log("- Total September wagered: $" + totalWagered.toFixed(2));
 
-    // Include metadata about the current period
+    // Include metadata about the September 2025 period
     const responseData = {
       data: leaderboard,
       period: {
-        month: currentTime.monthLong,
-        year: currentTime.year,
+        month: "September",
+        year: 2025,
         startDate: startDateISO,
         endDate: endDateISO,
       }
