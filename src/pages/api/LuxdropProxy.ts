@@ -55,38 +55,38 @@ export default async function handler(
 
   // --- Date Logic for Monthly Resetting Period ---
   const currentTime = DateTime.utc();
+  
+  // Since it's September 1st, 2025, and we want September data only
+  // We need to be careful about the date range
   let startDate: DateTime;
   let endDate: DateTime;
 
-  // Monthly Period: Always use current month (resets every month)
-  // Start: First day of current month at 00:00:00
-  // End: Last day of current month at 23:59:59
-  startDate = currentTime.startOf('month');
-  endDate = currentTime.endOf('month');
+  // For the current month (September 2025)
+  startDate = DateTime.utc(2025, 9, 1).startOf('day'); // September 1, 2025 00:00:00
+  endDate = DateTime.utc(2025, 9, 30).endOf('day');    // September 30, 2025 23:59:59
 
-  const startDateISO = startDate.toISODate(); // e.g., "2025-09-01"
-  const endDateISO = endDate.toISODate();     // e.g., "2025-09-30"
+  const startDateISO = startDate.toISODate(); // "2025-09-01"
+  const endDateISO = endDate.toISODate();     // "2025-09-30"
 
-  console.log("=== DATE DEBUG (MONTHLY PERIOD) ===");
-  console.log("Current time:", currentTime.toISO());
-  console.log("Current year:", currentTime.year);
-  console.log("Current month:", currentTime.month);
-  console.log("Current day:", currentTime.day);
-  console.log("Monthly period:", startDateISO, "to", endDateISO);
-  console.log("Start date object:", startDate.toISO());
-  console.log("End date object:", endDate.toISO());
-  console.log("Month name:", currentTime.monthLong);
+  console.log("=== DATE DEBUG (SEPTEMBER 2025) ===");
+  console.log("Current UTC time:", currentTime.toISO());
+  console.log("Current date:", currentTime.toISODate());
+  console.log("Current time:", currentTime.toFormat('HH:mm:ss'));
+  console.log("Month: September 2025");
+  console.log("Period: September 1-30, 2025");
+  console.log("Start date:", startDateISO);
+  console.log("End date:", endDateISO);
 
   // --- Construct the API Request ---
-  // Using exact parameters that work in Python script: codes, startDate, endDate
   const params = {
-    codes: "sweetflips", // Use exact working affiliate code
-    startDate: startDateISO, // e.g., "2025-09-01"
-    endDate: endDateISO,     // e.g., "2025-09-30"
+    codes: "sweetflips",
+    startDate: startDateISO, // "2025-09-01"
+    endDate: endDateISO,     // "2025-09-30"
   };
 
   console.log("=== API PARAMETERS ===");
   console.log("Request params:", JSON.stringify(params, null, 2));
+  console.log("This should return data ONLY for September 2025");
 
   // Create proxy agent if configured
   let proxyAgent: any = null;
@@ -98,10 +98,9 @@ export default async function handler(
     console.log("No proxy configured");
   }
 
-  // Exact API configuration matching working Python script
   const config: AxiosRequestConfig = {
     method: "get",
-    url: "https://api.luxdrop.com/external/affiliates", // Use exact URL from Python script
+    url: "https://api.luxdrop.com/external/affiliates",
     params: params,
     timeout: 30000,
     headers: {
@@ -117,37 +116,45 @@ export default async function handler(
   }
 
   try {
-    console.log("=== API REQUEST DEBUG ===");
-    console.log("Making API request to:", config.url);
-    console.log("Request params:", JSON.stringify(params, null, 2));
-    console.log("Codes parameter:", params.codes);
-    console.log("Start date parameter:", params.startDate);
-    console.log("End date parameter:", params.endDate);
+    console.log("=== MAKING API REQUEST ===");
+    console.log("URL:", config.url);
+    console.log("Parameters:", params);
 
     const response = await axios(config);
     const affiliateData: AffiliateEntry[] = response.data;
 
-    console.log("✅ Successfully received data from Luxdrop API!");
-    console.log("Data type:", typeof affiliateData);
-    console.log("Is array:", Array.isArray(affiliateData));
-    console.log("Entries:", Array.isArray(affiliateData) ? affiliateData.length : 'N/A');
+    console.log("✅ API Response received");
+    console.log("Total entries:", Array.isArray(affiliateData) ? affiliateData.length : 'N/A');
 
     if (!Array.isArray(affiliateData)) {
       throw new Error("API response is not an array");
     }
 
-    console.log("✅ Using monthly period API data for:", currentTime.monthLong, currentTime.year);
-    console.log("Period:", startDateISO, "to", endDateISO);
+    // Log first few entries to debug
+    if (affiliateData.length > 0) {
+      console.log("Sample entries (first 3):");
+      affiliateData.slice(0, 3).forEach((entry, idx) => {
+        console.log(`  ${idx + 1}. ${entry.username}: $${entry.wagered}`);
+      });
+    }
 
-    // Validate we have reasonable contest period data
-    const totalWagered = affiliateData.reduce((sum: number, entry: AffiliateEntry) => sum + (Number(entry.wagered) || 0), 0);
-    console.log("Total wagered from API:", totalWagered);
+    // Since it's early in September (Sept 1st), there might be limited data
+    // Filter only users with wagers > 0
+    const activeWagerers = affiliateData.filter((entry: AffiliateEntry) => {
+      const wagered = Number(entry.wagered) || 0;
+      return wagered > 0;
+    });
 
-    // Filter only users with wagers > 0 (like Python script does)
-    const activeWagerers = affiliateData.filter((entry: AffiliateEntry) => Number(entry.wagered) > 0);
-    console.log("Active wagerers:", activeWagerers.length, "of", affiliateData.length);
+    console.log("Active wagerers for September 2025:", activeWagerers.length);
 
-    // Process the real API data - sort by wagered amount descending
+    // Calculate total wagered
+    const totalWagered = activeWagerers.reduce((sum: number, entry: AffiliateEntry) => {
+      return sum + (Number(entry.wagered) || 0);
+    }, 0);
+
+    console.log("Total wagered in September 2025 so far: $" + totalWagered.toFixed(2));
+
+    // Create leaderboard
     const leaderboard: LeaderboardEntry[] = activeWagerers
       .map((entry: AffiliateEntry) => ({
         username: entry.username || `User${entry.id}`,
@@ -155,37 +162,57 @@ export default async function handler(
         reward: 0,
       }))
       .sort((a, b) => b.wagered - a.wagered)
-      .slice(0, 100); // Top 100 for performance
+      .slice(0, 100); // Top 100
 
-    console.log(`${currentTime.monthLong} ${currentTime.year} leaderboard generated:`);
-    console.log("- Total active wagerers:", leaderboard.length);
+    console.log("=== SEPTEMBER 2025 LEADERBOARD ===");
+    console.log("Period: September 1-30, 2025");
+    console.log("Current date/time:", currentTime.toISO());
+    console.log("Active players:", leaderboard.length);
     if (leaderboard.length > 0) {
-      console.log("- Top wagerer:", leaderboard[0].username, "$" + leaderboard[0].wagered);
+      console.log("Top 3 players:");
+      leaderboard.slice(0, 3).forEach((player, idx) => {
+        console.log(`  ${idx + 1}. ${player.username}: $${player.wagered}`);
+      });
     }
-    console.log("- Total monthly wagered: $" + totalWagered.toFixed(2));
+    console.log("Total wagered: $" + totalWagered.toFixed(2));
 
-    // Include metadata about the current period
+    // Note: Since it's September 1st evening, there might not be much data yet
+    if (leaderboard.length === 0) {
+      console.log("⚠️ No wagering data yet for September 2025 (it's only day 1)");
+    }
+
     const responseData = {
       data: leaderboard,
       period: {
-        month: currentTime.monthLong,
-        year: currentTime.year,
+        month: "September",
+        year: 2025,
         startDate: startDateISO,
         endDate: endDateISO,
+        currentDate: currentTime.toISODate(),
+        currentTime: currentTime.toISO(),
+        note: "September 2025 monthly leaderboard (resets monthly)",
+      },
+      stats: {
+        totalWagered: totalWagered,
+        activeUsers: leaderboard.length,
       }
     };
 
-    res.setHeader("Cache-Control", "public, s-maxage=600, stale-while-revalidate=300");
+    res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=150");
     res.status(200).json(responseData);
 
   } catch (error: any) {
-    console.error("❌ Real API failed:", error.message);
+    console.error("❌ API request failed:", error.message);
     console.error("Status:", error.response?.status);
+    
+    if (error.response?.data) {
+      console.error("API Error Response:", JSON.stringify(error.response.data, null, 2));
+    }
 
-    // Return error when API fails - no fallback data needed
     res.status(500).json({
       error: "Failed to fetch leaderboard data",
-      message: error.message
+      message: error.message,
+      details: error.response?.data || null
     });
   }
 }
