@@ -55,23 +55,38 @@ export default async function handler(
 
   // --- Date Logic for Monthly Resetting Period ---
   const currentTime = DateTime.utc();
-  
-  // Get the current month's start and end dates
-  // Start: First day of current month (e.g., "2025-09-01")
-  // End: Last day of current month (e.g., "2025-09-30")
-  const startOfMonth = currentTime.startOf('month');
-  const endOfMonth = currentTime.endOf('month');
-  
-  // Format dates as YYYY-MM-DD (required by API)
-  const startDateISO = startOfMonth.toISODate(); // "2025-09-01"
-  const endDateISO = endOfMonth.toISODate();     // "2025-09-30"
-  
+  let startDate: DateTime;
+  let endDate: DateTime;
+
+  // Monthly Period: Always use current month (resets every month)
+  // Start: First day of current month at 00:00:00
+  // End: Last day of current month at 23:59:59
+  startDate = currentTime.startOf('month');
+  endDate = currentTime.endOf('month');
+
+  const startDateISO = startDate.toISODate(); // e.g., "2025-09-01"
+  const endDateISO = endDate.toISODate();     // e.g., "2025-09-30"
+
   console.log("=== DATE DEBUG (MONTHLY PERIOD) ===");
-  console.log("Current UTC time:", currentTime.toISO());
-  console.log("Current month:", currentTime.monthLong, currentTime.year);
-  console.log("Month start date:", startDateISO);
-  console.log("Month end date:", endDateISO);
-  console.log("Fetching data for period:", startDateISO, "to", endDateISO);
+  console.log("Current time:", currentTime.toISO());
+  console.log("Current year:", currentTime.year);
+  console.log("Current month:", currentTime.month);
+  console.log("Current day:", currentTime.day);
+  console.log("Monthly period:", startDateISO, "to", endDateISO);
+  console.log("Start date object:", startDate.toISO());
+  console.log("End date object:", endDate.toISO());
+  console.log("Month name:", currentTime.monthLong);
+
+  // --- Construct the API Request ---
+  // Using exact parameters that work in Python script: codes, startDate, endDate
+  const params = {
+    codes: "sweetflips", // Use exact working affiliate code
+    startDate: startDateISO, // e.g., "2025-09-01"
+    endDate: endDateISO,     // e.g., "2025-09-30"
+  };
+
+  console.log("=== API PARAMETERS ===");
+  console.log("Request params:", JSON.stringify(params, null, 2));
 
   // Create proxy agent if configured
   let proxyAgent: any = null;
@@ -83,96 +98,71 @@ export default async function handler(
     console.log("No proxy configured");
   }
 
+  // Exact API configuration matching working Python script
+  const config: AxiosRequestConfig = {
+    method: "get",
+    url: "https://api.luxdrop.com/external/affiliates", // Use exact URL from Python script
+    params: params,
+    timeout: 30000,
+    headers: {
+      "x-api-key": API_KEY,
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      "Accept": "application/json",
+    },
+  };
+
+  if (proxyAgent) {
+    config.httpsAgent = proxyAgent;
+    config.httpAgent = proxyAgent;
+  }
+
   try {
-    // According to the API documentation:
-    // When BOTH startDate and endDate are provided, 
-    // the API returns data for that SPECIFIC period only
-    const params = {
-      codes: "sweetflips",
-      startDate: startDateISO,  // e.g., "2025-09-01" 
-      endDate: endDateISO,      // e.g., "2025-09-30"
-    };
-
-    console.log("=== API PARAMETERS ===");
-    console.log("Request params:", JSON.stringify(params, null, 2));
-    console.log("This should return data ONLY for:", currentTime.monthLong, currentTime.year);
-
-    const config: AxiosRequestConfig = {
-      method: "get",
-      url: "https://api.luxdrop.com/external/affiliates",
-      params: params,
-      timeout: 30000,
-      headers: {
-        "x-api-key": API_KEY,
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        "Accept": "application/json",
-      },
-    };
-
-    if (proxyAgent) {
-      config.httpsAgent = proxyAgent;
-      config.httpAgent = proxyAgent;
-    }
-
+    console.log("=== API REQUEST DEBUG ===");
     console.log("Making API request to:", config.url);
-    console.log("With query parameters:", params);
-    
+    console.log("Request params:", JSON.stringify(params, null, 2));
+    console.log("Codes parameter:", params.codes);
+    console.log("Start date parameter:", params.startDate);
+    console.log("End date parameter:", params.endDate);
+
     const response = await axios(config);
     const affiliateData: AffiliateEntry[] = response.data;
 
     console.log("✅ Successfully received data from Luxdrop API!");
-    console.log("Response data type:", typeof affiliateData);
+    console.log("Data type:", typeof affiliateData);
     console.log("Is array:", Array.isArray(affiliateData));
-    console.log("Total entries received:", Array.isArray(affiliateData) ? affiliateData.length : 'N/A');
+    console.log("Entries:", Array.isArray(affiliateData) ? affiliateData.length : 'N/A');
 
     if (!Array.isArray(affiliateData)) {
       throw new Error("API response is not an array");
     }
 
-    // Log sample data to verify it's for the correct period
-    if (affiliateData.length > 0) {
-      console.log("Sample entry:", JSON.stringify(affiliateData[0], null, 2));
-    }
+    console.log("✅ Using monthly period API data for:", currentTime.monthLong, currentTime.year);
+    console.log("Period:", startDateISO, "to", endDateISO);
 
-    // Filter only users with wagers > 0 for this specific month
-    const activeWagerers = affiliateData.filter((entry: AffiliateEntry) => {
-      const wagered = Number(entry.wagered) || 0;
-      return wagered > 0;
-    });
+    // Validate we have reasonable contest period data
+    const totalWagered = affiliateData.reduce((sum: number, entry: AffiliateEntry) => sum + (Number(entry.wagered) || 0), 0);
+    console.log("Total wagered from API:", totalWagered);
 
-    console.log("Active wagerers for", currentTime.monthLong + ":", activeWagerers.length, "of", affiliateData.length);
-    
-    // Calculate total wagered for this month
-    const totalMonthlyWagered = activeWagerers.reduce((sum: number, entry: AffiliateEntry) => {
-      return sum + (Number(entry.wagered) || 0);
-    }, 0);
-    
-    console.log("Total wagered in", currentTime.monthLong + ":", "$" + totalMonthlyWagered.toFixed(2));
+    // Filter only users with wagers > 0 (like Python script does)
+    const activeWagerers = affiliateData.filter((entry: AffiliateEntry) => Number(entry.wagered) > 0);
+    console.log("Active wagerers:", activeWagerers.length, "of", affiliateData.length);
 
-    // Create leaderboard sorted by wagered amount (descending)
+    // Process the real API data - sort by wagered amount descending
     const leaderboard: LeaderboardEntry[] = activeWagerers
       .map((entry: AffiliateEntry) => ({
         username: entry.username || `User${entry.id}`,
         wagered: Math.round((Number(entry.wagered) || 0) * 100) / 100,
-        reward: 0, // Calculate rewards based on your reward structure
+        reward: 0,
       }))
       .sort((a, b) => b.wagered - a.wagered)
       .slice(0, 100); // Top 100 for performance
 
-    console.log("=== LEADERBOARD SUMMARY ===");
-    console.log(`${currentTime.monthLong} ${currentTime.year} Monthly Leaderboard:`);
-    console.log("- Period:", startDateISO, "to", endDateISO);
+    console.log(`${currentTime.monthLong} ${currentTime.year} leaderboard generated:`);
     console.log("- Total active wagerers:", leaderboard.length);
     if (leaderboard.length > 0) {
-      console.log("- #1 Player:", leaderboard[0].username, "- $" + leaderboard[0].wagered);
-      if (leaderboard.length > 1) {
-        console.log("- #2 Player:", leaderboard[1].username, "- $" + leaderboard[1].wagered);
-      }
-      if (leaderboard.length > 2) {
-        console.log("- #3 Player:", leaderboard[2].username, "- $" + leaderboard[2].wagered);
-      }
+      console.log("- Top wagerer:", leaderboard[0].username, "$" + leaderboard[0].wagered);
     }
-    console.log("- Total monthly wagered: $" + totalMonthlyWagered.toFixed(2));
+    console.log("- Total monthly wagered: $" + totalWagered.toFixed(2));
 
     // Include metadata about the current period
     const responseData = {
@@ -182,28 +172,20 @@ export default async function handler(
         year: currentTime.year,
         startDate: startDateISO,
         endDate: endDateISO,
-        totalWagered: totalMonthlyWagered,
-        activeUsers: leaderboard.length,
       }
     };
 
-    // Cache for 10 minutes with stale-while-revalidate
     res.setHeader("Cache-Control", "public, s-maxage=600, stale-while-revalidate=300");
     res.status(200).json(responseData);
 
   } catch (error: any) {
-    console.error("❌ API request failed:", error.message);
+    console.error("❌ Real API failed:", error.message);
     console.error("Status:", error.response?.status);
-    
-    if (error.response?.data) {
-      console.error("API Error Response:", JSON.stringify(error.response.data, null, 2));
-    }
 
-    // Return error when API fails
+    // Return error when API fails - no fallback data needed
     res.status(500).json({
       error: "Failed to fetch leaderboard data",
-      message: error.message,
-      details: error.response?.data || null
+      message: error.message
     });
   }
 }
