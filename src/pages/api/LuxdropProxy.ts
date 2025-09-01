@@ -4,8 +4,27 @@ import { HttpsProxyAgent } from "https-proxy-agent";
 import { DateTime } from "luxon";
 import type { NextApiRequest, NextApiResponse } from "next";
 
+// Type definitions
+interface AffiliateEntry {
+  id?: string;
+  username: string;
+  wagered: number | string;
+}
+
+interface MonthlyEntry {
+  username: string;
+  wagered: number;
+  cumulativeTotal: number;
+}
+
+interface LeaderboardEntry {
+  username: string;
+  wagered: number;
+  reward: number;
+}
+
 // Cache to store previous month's data
-let previousMonthCache: { data: any; month: string } | null = null;
+let previousMonthCache: { data: AffiliateEntry[]; month: string } | null = null;
 
 export default async function handler(
   req: NextApiRequest,
@@ -75,7 +94,7 @@ export default async function handler(
 
   try {
     // Helper function to fetch data up to a specific date
-    const fetchDataUpToDate = async (endDate: string) => {
+    const fetchDataUpToDate = async (endDate: string): Promise<AffiliateEntry[]> => {
       const params = {
         codes: "sweetflips",
         endDate: endDate, // Only specify endDate to get cumulative data up to this date
@@ -100,11 +119,11 @@ export default async function handler(
 
       console.log(`Fetching data up to ${endDate}...`);
       const response = await axios(config);
-      return response.data;
+      return response.data as AffiliateEntry[];
     };
 
     // Fetch cumulative data up to end of previous month
-    let previousMonthData: any[] = [];
+    let previousMonthData: AffiliateEntry[] = [];
     const cacheKey = `${endOfPreviousMonth.year}-${endOfPreviousMonth.month}`;
     
     // Check cache for previous month data
@@ -129,12 +148,12 @@ export default async function handler(
 
     // Create a map of previous month wagered amounts by username
     const previousWageredMap = new Map<string, number>();
-    previousMonthData.forEach((entry: any) => {
+    previousMonthData.forEach((entry: AffiliateEntry) => {
       previousWageredMap.set(entry.username, Number(entry.wagered) || 0);
     });
 
     // Calculate the difference to get this month's wagered amounts
-    const monthlyData = currentMonthCumulativeData.map((entry: any) => {
+    const monthlyData: MonthlyEntry[] = currentMonthCumulativeData.map((entry: AffiliateEntry) => {
       const username = entry.username;
       const cumulativeWagered = Number(entry.wagered) || 0;
       const previousWagered = previousWageredMap.get(username) || 0;
@@ -149,17 +168,17 @@ export default async function handler(
     });
 
     // Filter only users with monthly wagers > 0
-    const activeMonthlyWagerers = monthlyData.filter(entry => entry.wagered > 0);
+    const activeMonthlyWagerers = monthlyData.filter((entry: MonthlyEntry) => entry.wagered > 0);
     
     console.log("✅ Successfully calculated monthly data!");
     console.log("Active wagerers this month:", activeMonthlyWagerers.length);
     
-    const totalMonthlyWagered = activeMonthlyWagerers.reduce((sum, entry) => sum + entry.wagered, 0);
+    const totalMonthlyWagered = activeMonthlyWagerers.reduce((sum: number, entry: MonthlyEntry) => sum + entry.wagered, 0);
     console.log("Total wagered this month:", "$" + totalMonthlyWagered.toFixed(2));
 
     // Process the monthly data - sort by wagered amount descending
-    const leaderboard = activeMonthlyWagerers
-      .map(entry => ({
+    const leaderboard: LeaderboardEntry[] = activeMonthlyWagerers
+      .map((entry: MonthlyEntry) => ({
         username: entry.username,
         wagered: Math.round(entry.wagered * 100) / 100,
         reward: 0, // Calculate rewards based on your reward structure
@@ -169,7 +188,9 @@ export default async function handler(
 
     console.log(`${currentTime.monthLong} ${currentTime.year} leaderboard generated:`);
     console.log("- Total active wagerers:", leaderboard.length);
-    console.log("- Top wagerer:", leaderboard[0]?.username, "$" + leaderboard[0]?.wagered);
+    if (leaderboard.length > 0) {
+      console.log("- Top wagerer:", leaderboard[0].username, "$" + leaderboard[0].wagered);
+    }
 
     // Include metadata about the current period
     const responseData = {
