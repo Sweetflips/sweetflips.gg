@@ -7,7 +7,7 @@ const ClientPlinkoPage = dynamic(() => import("@/components/Plinko/Plinko"), { s
 
 export const metadata: Metadata = createMetadata({
   title: "Sweetflips Plinko",
-  description: "Play our token-based Plinko game and win rewards!",
+  description: "Play our token-based Plinko game and win rewards! Keep in mind that all bets are no real bets and testing only.",
   path: "/plinko",
   image: "https://sweetflips.gg/images/cover/Sweetflips_Plinko.png",
 });
