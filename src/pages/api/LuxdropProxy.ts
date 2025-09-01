@@ -11,20 +11,11 @@ interface AffiliateEntry {
   wagered: number | string;
 }
 
-interface MonthlyEntry {
-  username: string;
-  wagered: number;
-  cumulativeTotal: number;
-}
-
 interface LeaderboardEntry {
   username: string;
   wagered: number;
   reward: number;
 }
-
-// Cache to store previous month's data
-let previousMonthCache: { data: AffiliateEntry[]; month: string } | null = null;
 
 export default async function handler(
   req: NextApiRequest,
@@ -65,22 +56,18 @@ export default async function handler(
   // --- Date Logic for Monthly Resetting Period ---
   const currentTime = DateTime.utc();
   
-  // For monthly data, we need to fetch TWO datasets:
-  // 1. Data up to the end of the previous month (cumulative up to last month)
-  // 2. Data up to the current date (cumulative including this month so far)
-  // Then subtract to get this month's data only
-  
+  // Get current month's start and end dates
   const startOfCurrentMonth = currentTime.startOf('month');
-  const endOfPreviousMonth = startOfCurrentMonth.minus({ days: 1 }).endOf('day');
+  const endOfCurrentMonth = currentTime.endOf('month');
   
-  // Use current date/time for the second call to get real-time data
-  const currentDateISO = currentTime.toISODate();  // "2025-09-01" (today)
-  const previousMonthEndISO = endOfPreviousMonth.toISODate(); // "2025-08-31"
+  // Format dates as YYYY-MM-DD
+  const startDateISO = startOfCurrentMonth.toISODate(); // "2025-09-01"
+  const endDateISO = endOfCurrentMonth.toISODate();     // "2025-09-30"
   
   console.log("=== DATE DEBUG (MONTHLY PERIOD) ===");
   console.log("Current time:", currentTime.toISO());
   console.log("Current month:", currentTime.monthLong, currentTime.year);
-  console.log("Fetching cumulative data up to:", previousMonthEndISO, "and", currentDateISO);
+  console.log("Fetching data for period:", startDateISO, "to", endDateISO);
 
   // Create proxy agent if configured
   let proxyAgent: any = null;
@@ -93,95 +80,67 @@ export default async function handler(
   }
 
   try {
-    // Helper function to fetch data up to a specific date
-    const fetchDataUpToDate = async (endDate: string): Promise<AffiliateEntry[]> => {
-      const params = {
-        codes: "sweetflips",
-        endDate: endDate, // Only specify endDate to get cumulative data up to this date
-      };
-
-      const config: AxiosRequestConfig = {
-        method: "get",
-        url: "https://api.luxdrop.com/external/affiliates",
-        params: params,
-        timeout: 30000,
-        headers: {
-          "x-api-key": API_KEY,
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-          "Accept": "application/json",
-        },
-      };
-
-      if (proxyAgent) {
-        config.httpsAgent = proxyAgent;
-        config.httpAgent = proxyAgent;
-      }
-
-      console.log(`Fetching data up to ${endDate}...`);
-      const response = await axios(config);
-      return response.data as AffiliateEntry[];
+    // Use BOTH startDate and endDate to get period-specific data
+    const params = {
+      codes: "sweetflips",
+      startDate: startDateISO, // "2025-09-01"
+      endDate: endDateISO,     // "2025-09-30"
     };
 
-    // Fetch cumulative data up to end of previous month (August 31, 2025)
-    let previousMonthData: AffiliateEntry[] = [];
-    const cacheKey = `${endOfPreviousMonth.year}-${endOfPreviousMonth.month}`;
-    
-    // Check cache for previous month data
-    if (previousMonthCache && previousMonthCache.month === cacheKey) {
-      console.log("Using cached previous month data");
-      previousMonthData = previousMonthCache.data;
-    } else {
-      // Only fetch previous month data if we're past the first day of September
-      // Since it's September 1st, we need August 31st data
-      previousMonthData = await fetchDataUpToDate(previousMonthEndISO);
-      // Cache the previous month data
-      previousMonthCache = { data: previousMonthData, month: cacheKey };
+    const config: AxiosRequestConfig = {
+      method: "get",
+      url: "https://api.luxdrop.com/external/affiliates",
+      params: params,
+      timeout: 30000,
+      headers: {
+        "x-api-key": API_KEY,
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Accept": "application/json",
+      },
+    };
+
+    if (proxyAgent) {
+      config.httpsAgent = proxyAgent;
+      config.httpAgent = proxyAgent;
     }
 
-    // Fetch cumulative data up to current date (September 1, 2025)
-    const currentCumulativeData = await fetchDataUpToDate(currentDateISO);
-
-    console.log("Previous month (Aug 31) cumulative entries:", previousMonthData.length);
-    console.log("Current (Sep 1) cumulative entries:", currentCumulativeData.length);
-
-    // Create a map of previous month wagered amounts by username
-    const previousWageredMap = new Map<string, number>();
-    previousMonthData.forEach((entry: AffiliateEntry) => {
-      previousWageredMap.set(entry.username, Number(entry.wagered) || 0);
-    });
-
-    // Calculate the difference to get this month's wagered amounts
-    const monthlyData: MonthlyEntry[] = currentCumulativeData.map((entry: AffiliateEntry) => {
-      const username = entry.username;
-      const cumulativeWagered = Number(entry.wagered) || 0;
-      const previousWagered = previousWageredMap.get(username) || 0;
-      const monthlyWagered = cumulativeWagered - previousWagered;
-
-      return {
-        username: username || `User${entry.id}`,
-        wagered: monthlyWagered,
-        cumulativeTotal: cumulativeWagered,
-      };
-    });
-
-    // Filter only users with monthly wagers > 0
-    const activeMonthlyWagerers = monthlyData.filter((entry: MonthlyEntry) => entry.wagered > 0);
+    console.log("=== API REQUEST ===");
+    console.log("URL:", config.url);
+    console.log("Params:", JSON.stringify(params, null, 2));
     
-    console.log("✅ Successfully calculated September data!");
-    console.log("Active wagerers in September so far:", activeMonthlyWagerers.length);
+    const response = await axios(config);
+    const monthlyData: AffiliateEntry[] = response.data;
+
+    console.log("✅ Successfully received data from Luxdrop API!");
+    console.log("Entries for September:", Array.isArray(monthlyData) ? monthlyData.length : 'N/A');
+
+    if (!Array.isArray(monthlyData)) {
+      throw new Error("API response is not an array");
+    }
+
+    // Filter only users with wagers > 0 for this month
+    const activeWagerers = monthlyData.filter((entry: AffiliateEntry) => {
+      const wagered = Number(entry.wagered) || 0;
+      return wagered > 0;
+    });
     
-    const totalMonthlyWagered = activeMonthlyWagerers.reduce((sum: number, entry: MonthlyEntry) => sum + entry.wagered, 0);
-    console.log("Total wagered in September (as of Sep 1):", "$" + totalMonthlyWagered.toFixed(2));
+    console.log("Active wagerers in September:", activeWagerers.length);
+    
+    const totalWagered = activeWagerers.reduce((sum: number, entry: AffiliateEntry) => {
+      return sum + (Number(entry.wagered) || 0);
+    }, 0);
+    
+    console.log("Total wagered in September:", "$" + totalWagered.toFixed(2));
 
     // Process the monthly data - sort by wagered amount descending
-    const leaderboard: LeaderboardEntry[] = activeMonthlyWagerers
-      .map((entry: MonthlyEntry) => ({
-        username: entry.username,
-        wagered: Math.round(entry.wagered * 100) / 100,
-        reward: 0, // Calculate rewards based on your reward structure
+    const leaderboard: LeaderboardEntry[] = activeWagerers
+      .map((entry: AffiliateEntry) => ({
+        username: entry.username || `User${entry.id}`,
+        wagered: Math.round((Number(entry.wagered) || 0) * 100) / 100,
+        reward: 0,
       }))
       .sort((a, b) => b.wagered - a.wagered)
-      .slice(0, 100); // Top 100 for performance
+      .slice(0, 100); // Top 100
 
     console.log(`${currentTime.monthLong} ${currentTime.year} leaderboard generated:`);
     console.log("- Total active wagerers:", leaderboard.length);
@@ -195,9 +154,8 @@ export default async function handler(
       period: {
         month: currentTime.monthLong,
         year: currentTime.year,
-        startDate: startOfCurrentMonth.toISODate(),
-        currentDate: currentDateISO,
-        isMonthlyData: true, // Indicate this is monthly-specific data
+        startDate: startDateISO,
+        endDate: endDateISO,
       }
     };
 
@@ -212,10 +170,11 @@ export default async function handler(
       console.error("API Error Response:", JSON.stringify(error.response.data, null, 2));
     }
 
-    // Return error when API fails
+    // DO NOT return fallback data - return the actual error
     res.status(500).json({
       error: "Failed to fetch leaderboard data",
-      message: error.message
+      message: error.message,
+      details: error.response?.data || null
     });
   }
 }
