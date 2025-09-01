@@ -161,4 +161,43 @@ export default async function handler(
     const leaderboard = activeMonthlyWagerers
       .map(entry => ({
         username: entry.username,
-        wagered: Math.round(
+        wagered: Math.round(entry.wagered * 100) / 100,
+        reward: 0, // Calculate rewards based on your reward structure
+      }))
+      .sort((a, b) => b.wagered - a.wagered)
+      .slice(0, 100); // Top 100 for performance
+
+    console.log(`${currentTime.monthLong} ${currentTime.year} leaderboard generated:`);
+    console.log("- Total active wagerers:", leaderboard.length);
+    console.log("- Top wagerer:", leaderboard[0]?.username, "$" + leaderboard[0]?.wagered);
+
+    // Include metadata about the current period
+    const responseData = {
+      data: leaderboard,
+      period: {
+        month: currentTime.monthLong,
+        year: currentTime.year,
+        startDate: startOfCurrentMonth.toISODate(),
+        endDate: endOfCurrentMonth.toISODate(),
+        isMonthlyData: true, // Indicate this is monthly-specific data
+      }
+    };
+
+    res.setHeader("Cache-Control", "public, s-maxage=600, stale-while-revalidate=300");
+    res.status(200).json(responseData);
+
+  } catch (error: any) {
+    console.error("❌ API request failed:", error.message);
+    console.error("Status:", error.response?.status);
+    
+    if (error.response?.data) {
+      console.error("API Error Response:", JSON.stringify(error.response.data, null, 2));
+    }
+
+    // Return error when API fails
+    res.status(500).json({
+      error: "Failed to fetch leaderboard data",
+      message: error.message
+    });
+  }
+}
