@@ -39,7 +39,7 @@ const mockLeaderboardData: LeaderboardEntry[] = [
 // Define the reward mapping based on rank
 const rewardMapping: { [key: number]: number } = {
   1: 8100,
-  2: 4000,
+  2: 4001,
   3: 2000,
   4: 1300,
   5: 1000,
