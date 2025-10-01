@@ -16,26 +16,26 @@ interface User {
 }
 
 const rewardMapping: { [key: number]: number } = {
-  1: 4500,
-  2: 2250,
-  3: 1100,
-  4: 750,
-  5: 650,
-  6: 525,
-  7: 425,
-  8: 350,
-  9: 300,
-  10: 275,
-  11: 250,
-  12: 225,
-  13: 200,
-  14: 175,
-  15: 150,
-  16: 125,
-  17: 100,
-  18: 75,
-  19: 50,
-  20: 25,
+  1: 4250,
+  2: 2100,
+  3: 1050,
+  4: 700,
+  5: 500,
+  6: 350,
+  7: 300,
+  8: 275,
+  9: 250,
+  10: 225,
+  11: 200,
+  12: 180,
+  13: 160,
+  14: 130,
+  15: 110,
+  16: 80,
+  17: 50,
+  18: 40,
+  19: 30,
+  20: 20,
 };
 
 const LuxDropLeaderboard: React.FC = () => {
@@ -197,7 +197,7 @@ const LuxDropLeaderboard: React.FC = () => {
 
         <div className="absolute left-0 right-0 mx-auto mt-6 max-w-screen-lg px-4 text-center md:mt-10">
           <b className="text-4xl text-white sm:text-2xl md:text-3xl lg:text-4xl xl:text-4xl">
-            $12,500
+            $11,000
           </b>
           <div className="mt-4 flex flex-col items-center justify-center sm:flex-row sm:space-x-4">
             <div className="mb-3 transition-all duration-300 sm:mb-0 sm:w-[150px] md:w-[200px] lg:w-[300px] xl:w-[250px]">
@@ -209,7 +209,7 @@ const LuxDropLeaderboard: React.FC = () => {
           </div>
           <p className="m-4 mx-auto text-center text-white sm:m-6 sm:text-xl md:text-2xl lg:m-8 lg:text-3xl xl:text-xl">
             Bi-Weekly leaderboard - All wager between October 1st 00:00 UTC - October 15th 23:59:59 UTC<br></br>
-            (Same thing between 16th-31st Oct after that) - $12,500 distributed across 20 users.
+            (Same thing between 16th-31st Oct after that) - $11,000 distributed across 20 users.
           </p>
         </div>
       </div>
