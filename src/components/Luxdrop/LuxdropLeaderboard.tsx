@@ -1,10 +1,10 @@
 // src/components/Luxdrop/LuxdropLeaderboard.tsx
 "use client";
-import React, { useEffect, useState, useRef } from "react";
-import Loader from "@/components/common/Loader";
 import { Timer } from "@/app/ui/timer/Timer";
+import Loader from "@/components/common/Loader";
 import { DateTime } from "luxon";
 import Image from "next/image";
+import React, { useEffect, useState } from "react";
 
 const API_PROXY_URL = "/api/LuxdropProxy";
 
@@ -38,7 +38,7 @@ const mockLeaderboardData: LeaderboardEntry[] = [
 ];
 // Define the reward mapping based on rank
 const rewardMapping: { [key: number]: number } = {
-  1: 8000,
+  1: 8100,
   2: 4000,
   3: 2000,
   4: 1300,
@@ -94,7 +94,7 @@ const LuxdropLeaderboard: React.FC = () => {
       const cacheBuster = `?t=${Date.now()}`;
       const apiUrl = `${API_PROXY_URL}${cacheBuster}`;
 
-      // Development mode: prioritize mock data or attempt API fetch  
+      // Development mode: prioritize mock data or attempt API fetch
       if (process.env.NODE_ENV === "development") {
         console.log("Running in development mode");
         try {
@@ -122,7 +122,7 @@ const LuxdropLeaderboard: React.FC = () => {
           // Fallback to realistic-looking data in development
           const currentDate = new Date();
           const dayOfMonth = currentDate.getDate();
-          
+
           const realisticFallbackData = [
             { username: "CryptoWolf", wagered: 189.45 + (dayOfMonth * 3.2), reward: 0 },
             { username: "LuxGamer", wagered: 167.80 + (dayOfMonth * 2.8), reward: 0 },
@@ -140,7 +140,7 @@ const LuxdropLeaderboard: React.FC = () => {
             { username: "SpinMaster", wagered: 29.80 + (dayOfMonth * 0.25), reward: 0 },
             { username: "LuxPlayer", wagered: 24.95 + (dayOfMonth * 0.2), reward: 0 },
           ];
-          
+
           // Use the static reward mapping
           const processedFallbackData = realisticFallbackData
             .map((user, index) => ({
@@ -185,7 +185,7 @@ const LuxdropLeaderboard: React.FC = () => {
         // Fallback to realistic-looking leaderboard data
         const currentDate = new Date();
         const dayOfMonth = currentDate.getDate();
-        
+
         // Generate more realistic fallback data based on current date
         const fallbackData = [
           { username: "CryptoKing", wagered: 156.75 + (dayOfMonth * 2.3), reward: 0 },
@@ -204,7 +204,7 @@ const LuxdropLeaderboard: React.FC = () => {
           { username: "Spinner", wagered: 24.65 + (dayOfMonth * 0.15), reward: 0 },
           { username: "Lucky7", wagered: 21.30 + (dayOfMonth * 0.1), reward: 0 },
         ];
-        
+
         // Use the static reward mapping
         const processedFallbackData = fallbackData
           .map((user, index) => ({
@@ -212,7 +212,7 @@ const LuxdropLeaderboard: React.FC = () => {
             wagered: user.wagered,
             reward: rewardMapping[index + 1] || 0,
           }));
-        
+
         setData(processedFallbackData);
         setError(null); // Clear error since we have fallback data
       } finally {
@@ -255,7 +255,7 @@ const LuxdropLeaderboard: React.FC = () => {
     const now = DateTime.utc();
 
     let targetDate;
-    
+
     // Special transition period: July 28, 2025 - August 31, 2025
     if ((now.year === 2025 && now.month === 7 && now.day >= 28) || (now.year === 2025 && now.month === 8)) {
       // During transition period: countdown to August 31, 2025 23:59:59 UTC
