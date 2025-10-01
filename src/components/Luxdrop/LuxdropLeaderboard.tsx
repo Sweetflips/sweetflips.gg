@@ -1,19 +1,18 @@
+// src/components/Luxdrop/LuxdropLeaderboard.tsx
 "use client";
 import { Timer } from "@/app/ui/timer/Timer";
-import Footer from "@/components/Footer/Footer";
 import Loader from "@/components/common/Loader";
-import confetti from "canvas-confetti";
 import { DateTime } from "luxon";
 import Image from "next/image";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 
-const API_PROXY_URL = "/api/LuxDropProxy";
+const API_PROXY_URL = "/api/LuxdropProxy";
 
-interface User {
+type LeaderboardEntry = {
   username: string;
-  wagerAmount: number;
-  rewardAmount?: number;
-}
+  wagered: number;
+  reward: number;
+};
 
 const rewardMapping: { [key: number]: number } = {
   1: 4250,
@@ -38,19 +37,23 @@ const rewardMapping: { [key: number]: number } = {
   20: 20,
 };
 
-const LuxDropLeaderboard: React.FC = () => {
-  const [data, setData] = useState<User[]>([]);
+const LuxdropLeaderboard: React.FC = () => {
+  const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [countdownDate, setCountdownDate] = useState<string>("");
 
-  const fireworksLaunched = useRef(false);
-
+  // Function to mask usernames (copied from RazedLeaderboard)
   const maskUsername = (username: string) => {
+    console.log("~~>> username is: ", username);
+    if (!username) {
+      console.log("returning early, username was null or undefined");
+      return "";
+    }
+
     const len = username.length;
 
     if (len <= 2) {
-      return username;
+      return username; // Too short to mask
     }
 
     if (len <= 4) {
@@ -59,6 +62,50 @@ const LuxDropLeaderboard: React.FC = () => {
 
     return username.slice(0, 2) + "*".repeat(len - 4) + username.slice(-2);
   };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+
+      const cacheBuster = `?t=${Date.now()}`;
+      const apiUrl = `${API_PROXY_URL}${cacheBuster}`;
+
+      try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+          throw new Error(`API returned ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        if (!result.data || !Array.isArray(result.data)) {
+          throw new Error("Invalid data format from API");
+        }
+
+        const processedData = result.data
+          .filter((user: any) => user.username)
+          .slice(0, 20)
+          .map((user: any, index: number) => ({
+            username: maskUsername(user.username),
+            wagered: Number(user.wagered) || 0,
+            reward: rewardMapping[index + 1] || 0,
+          }));
+        
+        setData(processedData);
+      } catch (err: any) {
+        console.error("Luxdrop API error:", err.message);
+        setError(`Unable to load leaderboard: ${err.message}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) return <Loader />;
+  if (error)
+    return <p className="text-red-500 p-4 text-center">Error: {error}</p>;
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat("en-US", {
@@ -72,170 +119,126 @@ const LuxDropLeaderboard: React.FC = () => {
       currency: "USD",
       minimumFractionDigits: 0,
     }).format(amount);
-
     return formattedAmount.endsWith(".00")
       ? formattedAmount.slice(0, -3)
       : formattedAmount;
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(API_PROXY_URL);
-        const result = await response.json();
-
-        if (result.error) {
-          throw new Error(result.error);
-        }
-
-        setCountdownDate(result.dates.beforeDate);
-
-        const mappedData: User[] = result.ranking.map((entry: any) => ({
-          username: entry.user.name,
-          wagerAmount: entry.total,
-          rewardAmount: 0,
-        }));
-
-        const sortedData = mappedData.sort(
-          (a: User, b: User) => b.wagerAmount - a.wagerAmount,
-        );
-
-        const leaderboardWithRewards = sortedData.map(
-          (user: User, index: number) => {
-            const rank = index + 1;
-            user.rewardAmount = rewardMapping[rank] || 0;
-            user.username = maskUsername(user.username);
-            return user;
-          },
-        );
-
-        setData(leaderboardWithRewards);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    if (data.length > 0 && !fireworksLaunched.current) {
-      const topUsers = data.slice(0, 3);
-      if (topUsers[0]) {
-        fireworksLaunched.current = true;
-        confetti({
-          particleCount: 100,
-          spread: 120,
-          origin: { y: 0.6 },
-        });
-      }
-    }
-  }, [data]);
-
-  if (loading) return <Loader />;
-  if (error) return <p className="text-red-500">Error: {error}</p>;
-
   const topUsers = data.slice(0, 3);
-
   const restUsers = data.slice(3, 20);
 
-  // Countdown to October 15, 2025
-  const countDownDate = DateTime.fromObject({
-    year: 2025,
-    month: 10,
-    day: 15,
-    hour: 23,
-    minute: 59,
-    second: 59,
-  }).setZone("UTC").toISO();
+  const countDownDate = (() => {
+    const now = DateTime.utc();
+
+    let targetDate;
+
+    // Bi-weekly logic: 1st-15th and 16th-end of month
+    if (now.day <= 15) {
+      // First half of the month: countdown to 15th at 23:59:59 UTC
+      targetDate = DateTime.utc(now.year, now.month, 15, 23, 59, 59, 999);
+    } else {
+      // Second half of the month: countdown to last day of month at 23:59:59 UTC
+      const endOfMonth = now.endOf('month').set({ hour: 23, minute: 59, second: 59, millisecond: 999 });
+      targetDate = endOfMonth;
+    }
+
+    return targetDate.toISO(); // ➜ will be interpreted correctly as UTC
+  })();
+
+  console.log("Component mounted");
 
   return (
     <div className="mt-4 p-4 text-white">
-      {/* Floating Image */}
-      <div className="floating-image1 animate-line3">
-        <Image
-          src="/images/icon/richard_mille_red.webp"
-          alt="Richard Mille Red"
-          className="h-25 w-25 rotate-[-18.63deg]"
-          width={100}
-          height={100}
-        />
-      </div>
-      <div className="floating-image2 animate-line3">
-        <Image
-          src="/images/icon/Patek_Aquanaut.webp"
-          alt="Patek Aquanaut"
-          className="h-25 w-25 rotate-[-18.63deg]"
-          width={100}
-          height={100}
-        />
-      </div>
-      <div className="FooterBg relative mx-auto flex h-80 w-full transform flex-col items-center justify-between overflow-hidden rounded-xl p-4 transition-all sm:w-3/4 sm:flex-row sm:items-start md:w-5/6">
+      <div className="FooterBg relative mx-auto flex h-80 w-full transform flex-col items-center justify-between overflow-hidden rounded-xl p-4 shadow-[inset_0_0_20px_rgba(0,0,0,0.4)] transition-all sm:w-3/4 sm:flex-row sm:items-start md:w-5/6">
         {/* Left Image */}
         <div className="hide-on-ipad absolute left-0 hidden sm:block">
           <Image
-            src="/images/cover/Character Box Dior.png"
-            alt="LuxDrop Box"
+            src="/images/icon/luxdrop_chest.png"
+            alt="Luxdrop Sneaker Chest"
             className="transform"
-            width={491}
-            height={270}
+            width={540}
+            height={378}
           />
         </div>
 
         {/* Right Image */}
-        <div className="hide-on-ipad absolute right-0 hidden sm:block">
+        <div className="hide-on-ipad absolute right-0 top-[30px] hidden sm:block">
           <Image
-            src="/images/cover/G-Class Box Ranks.png"
-            alt="Gclass Box"
+            src="/images/icon/luxdrop_car.png"
+            alt="Luxdrop Car"
             className="transform"
-            width={449}
-            height={312}
+            width={540}
+            height={378}
           />
         </div>
+        {/* Left Image mobile */}
+        {/* <div className="absolute -left-1 top-[-20px] sm:block md:hidden">
+          <Image
+            src="/images/icon/luxdrop_chest.png"
+            alt="Luxdrop Sneaker Chest"
+            className="h-[103px] w-[68.05px] transform"
+            width={68.05}
+            height={103}
+          />
+        </div> */}
 
+        {/* Right Image mobile*/}
+        {/* <div className="absolute -right-5 top-[250px] sm:block md:hidden">
+          <Image
+            src="/images/icon/luxdrop_car.png"
+            alt="Luxdrop Car"
+            className="h-[103px] w-[68.05px] transform"
+            width={68.05}
+            height={103}
+          />
+        </div> */}
         <div className="absolute left-0 right-0 mx-auto mt-6 max-w-screen-lg px-4 text-center md:mt-10">
-          <b className="text-4xl text-white sm:text-2xl md:text-3xl lg:text-4xl xl:text-4xl">
+          <b className="animate-pulse-glow text-5xl text-[#fff] sm:text-2xl md:text-3xl lg:text-4xl xl:text-4xl">
             $11,000
           </b>
           <div className="mt-4 flex flex-col items-center justify-center sm:flex-row sm:space-x-4">
-            <div className="mb-3 transition-all duration-300 sm:mb-0 sm:w-[150px] md:w-[200px] lg:w-[300px] xl:w-[250px]">
-              <div className="text-6xl font-bold text-purple-400">LuxDrop</div>
-            </div>
+            <Image
+              src="/images/logo/luxdrop_logo.png" // Verified path
+              alt="Luxdrop Logo"
+              width={280} // Adjusted for SVG aspect ratio
+              height={53} // Adjusted for SVG aspect ratio
+              className="mb-3 transition-all duration-300 sm:mb-0"
+            />
             <b className="text-4xl text-white sm:text-2xl md:text-3xl lg:mt-4 lg:text-3xl">
-              Bi-Weekly Leaderboard
+              Leaderboard
             </b>
           </div>
-          <p className="m-4 mx-auto text-center text-white sm:m-6 sm:text-xl md:text-2xl lg:m-8 lg:text-3xl xl:text-xl">
-            Bi-Weekly leaderboard - All wager between October 1st 00:00 UTC - October 15th 23:59:59 UTC<br></br>
-            (Same thing between 16th-31st Oct after that) - $11,000 distributed across 20 users.
+          <p className="m-4 mx-auto text-center leading-relaxed text-white sm:m-6 sm:text-xl md:text-2xl lg:m-8 lg:text-3xl xl:text-xl">
+            Every two weeks, a total of $11,000 is distributed across the top 20 users!
           </p>
         </div>
       </div>
+
       <div className="mb-4 mt-12 flex flex-col items-center text-2xl font-bold">
         Leaderboard ends in
       </div>
-      <div className="relative mb-15 flex justify-center space-x-4">
-        {countDownDate && (
+      {countDownDate && (
+        <div className="relative mb-15 flex justify-center space-x-4">
           <div
             className="mx-12 flex flex-col items-center rounded-3xl md:mx-80"
             data-aos="fade-up"
           >
             <Timer type="normal" date={countDownDate} />
           </div>
-        )}
-      </div>
-      <div className="TopLeaderboard">
-        {topUsers && topUsers.length >= 3 && (
+        </div>
+      )}
+      {/* src/components/Luxdrop/LuxdropLeaderboard.tsx */}
+
+      <div className="TopLeaderboard mt-12">
+        {topUsers.length >= 3 ? (
           <>
-            <div className="TopLeaderboard__card TopLeaderboard__card--left duration-200 ease-in hover:scale-110 md:mt-10">
+            {/* Left Card (Rank 2) */}
+            <div className="TopLeaderboard__card TopLeaderboard__card--left border border-purple-700 shadow-lg shadow-purple-900/50 duration-200 ease-in hover:scale-110 md:mt-10">
               <div className="TopLeaderboard__card-inner">
                 <div className="TopLeaderboard__number-wrapper">
                   <Image
                     src="/images/icon/Second_Place.png"
-                    alt="Second Place"
-                    className="h-8 w-8"
+                    alt="Rank 2"
                     width={32}
                     height={32}
                   />
@@ -243,8 +246,7 @@ const LuxDropLeaderboard: React.FC = () => {
                 <div className="TopLeaderboard__card-image">
                   <Image
                     src="/images/logo/sweet_flips_emblem_silver.png"
-                    alt="Sweetflips Emblem Silver"
-                    className="h-24 w-24"
+                    alt="Silver Emblem"
                     width={96}
                     height={96}
                   />
@@ -254,21 +256,22 @@ const LuxDropLeaderboard: React.FC = () => {
                     {topUsers[1].username}
                   </p>
                   <p className="TopLeaderboard__amount">
-                    {formatCurrency(topUsers[1].wagerAmount)}
+                    {formatCurrency(topUsers[1].wagered)}
                   </p>
                   <p className="TopLeaderboard__prize">
-                    Prize: {formatRewardCurrency(topUsers[1].rewardAmount!)}
+                    Prize: {formatRewardCurrency(topUsers[1].reward)}
                   </p>
                 </div>
               </div>
             </div>
-            <div className="TopLeaderboard__card TopLeaderboard__card--middle duration-200 ease-in hover:scale-110">
+
+            {/* Middle Card (Rank 1) */}
+            <div className="TopLeaderboard__card TopLeaderboard__card--middle border border-purple-700 shadow-lg shadow-purple-900/50 duration-200 ease-in hover:scale-110">
               <div className="TopLeaderboard__card-inner">
                 <div className="TopLeaderboard__number-wrapper">
                   <Image
                     src="/images/icon/First_Place.png"
-                    alt="First Place"
-                    className="h-8 w-8"
+                    alt="Rank 1"
                     width={32}
                     height={32}
                   />
@@ -276,8 +279,7 @@ const LuxDropLeaderboard: React.FC = () => {
                 <div className="TopLeaderboard__card-image">
                   <Image
                     src="/images/logo/sweet_flips_emblem_gold.png"
-                    alt="Sweetflips Emblem Gold"
-                    className="h-24 w-24"
+                    alt="Gold Emblem"
                     width={96}
                     height={96}
                   />
@@ -287,21 +289,22 @@ const LuxDropLeaderboard: React.FC = () => {
                     {topUsers[0].username}
                   </p>
                   <p className="TopLeaderboard__amount">
-                    {formatCurrency(topUsers[0].wagerAmount)}
+                    {formatCurrency(topUsers[0].wagered)}
                   </p>
                   <p className="TopLeaderboard__prize">
-                    Prize: {formatRewardCurrency(topUsers[0].rewardAmount!)}
+                    Prize: {formatRewardCurrency(topUsers[0].reward)}
                   </p>
                 </div>
               </div>
             </div>
-            <div className="TopLeaderboard__card TopLeaderboard__card--right duration-200 ease-in hover:scale-110 md:mt-10">
+
+            {/* Right Card (Rank 3) */}
+            <div className="TopLeaderboard__card TopLeaderboard__card--right border border-purple-700 shadow-lg shadow-purple-900/50 duration-200 ease-in hover:scale-110 md:mt-10">
               <div className="TopLeaderboard__card-inner">
                 <div className="TopLeaderboard__number-wrapper">
                   <Image
                     src="/images/icon/Third_Place.png"
-                    alt="Third Place"
-                    className="h-8 w-8"
+                    alt="Rank 3"
                     width={32}
                     height={32}
                   />
@@ -309,8 +312,7 @@ const LuxDropLeaderboard: React.FC = () => {
                 <div className="TopLeaderboard__card-image">
                   <Image
                     src="/images/logo/sweet_flips_emblem_bronze.png"
-                    alt="Sweetflips Emblem Bronze"
-                    className="h-24 w-24"
+                    alt="Bronze Emblem"
                     width={96}
                     height={96}
                   />
@@ -320,52 +322,69 @@ const LuxDropLeaderboard: React.FC = () => {
                     {topUsers[2].username}
                   </p>
                   <p className="TopLeaderboard__amount">
-                    {formatCurrency(topUsers[2].wagerAmount)}
+                    {formatCurrency(topUsers[2].wagered)}
                   </p>
                   <p className="TopLeaderboard__prize">
-                    Prize: {formatRewardCurrency(topUsers[2].rewardAmount!)}
+                    Prize: {formatRewardCurrency(topUsers[2].reward)}
                   </p>
                 </div>
               </div>
             </div>
           </>
+        ) : (
+          <p className="w-full py-10 text-center">
+            Top user data is loading or not enough users to display top 3...
+          </p>
         )}
       </div>
 
-      <div className="flex items-center justify-center overflow-x-auto">
-        <div className="w-full sm:w-6/12">
-          <div className="bg-gray-800 hidden grid-cols-4 rounded-lg p-2 text-center font-bold sm:grid">
-            <div className="px-4 py-2">Rank</div>
-            <div className="px-4 py-2">Name</div>
-            <div className="px-4 py-2">Wager</div>
-            <div className="px-4 py-2">Reward</div>
-          </div>
-
-          <div>
-            {restUsers.map((user, index) => (
-              <div
-                key={index}
-                className="Leaderboard__card relative my-2 rounded-lg p-1 shadow-lg md:my-4"
-              >
-                <div className="Leaderboard__card-inner grid grid-cols-3 gap-4 text-center sm:grid-cols-4">
-                  <div className="hidden py-2 font-bold sm:block">
-                    {index + 4}
-                  </div>
-                  <div className="py-2 font-bold">{user.username}</div>
-                  <div className="py-2">{formatCurrency(user.wagerAmount)}</div>
-                  <div className="text-red-400 px-4 py-2">
-                    {formatRewardCurrency(user.rewardAmount!)}
+      <div className="mt-8 flex items-center justify-center overflow-x-auto">
+        <div className="w-full md:w-10/12 lg:w-8/12 xl:w-7/12">
+          <div className="mx-auto max-w-[1000px]">
+            {/* Mobile Header */}
+            <div className="bg-gray-800 grid grid-cols-3 rounded-lg text-center font-bold sm:hidden">
+              <div className="px-2 py-2 text-sm">Name</div>
+              <div className="px-2 py-2 text-sm">Wager</div>
+              <div className="px-2 py-2 text-sm">Reward</div>
+            </div>
+            {/* Desktop Header */}
+            <div className="bg-gray-800 hidden grid-cols-4 rounded-lg text-center font-bold sm:grid">
+              <div className="px-3 py-2">Rank</div>
+              <div className="px-3 py-2">Name</div>
+              <div className="px-3 py-2">Wager</div>
+              <div className="px-3 py-2">Reward</div>
+            </div>
+            <div>
+              {restUsers.map((user, index) => (
+                <div
+                  key={index + 3}
+                  className="Leaderboard__card relative my-2 rounded-lg p-1 shadow-lg md:my-4"
+                >
+                  <div className="Leaderboard__card-inner grid grid-cols-3 text-center sm:grid-cols-4">
+                    {/* Rank visible on sm and up */}
+                    <div className="hidden px-3 py-2 font-bold sm:block">
+                      {index + 4}
+                    </div>
+                    {/* Mobile: Show rank as prefix in username */}
+                    <div className="px-2 py-2 font-bold text-sm sm:px-3 sm:text-base">
+                      <span className="sm:hidden text-gray-400 mr-1">#{index + 4}</span>
+                      {user.username}
+                    </div>
+                    <div className="px-2 py-2 text-sm sm:px-3 sm:text-base">
+                      {formatCurrency(user.wagered)}
+                    </div>
+                    <div className="px-2 py-2 text-green-400 text-sm sm:px-3 sm:text-base">
+                      {formatRewardCurrency(user.reward)}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </div>
-
-      <Footer />
     </div>
   );
 };
 
-export default LuxDropLeaderboard;
+export default LuxdropLeaderboard;
