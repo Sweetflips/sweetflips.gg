@@ -15,26 +15,26 @@ type LeaderboardEntry = {
 };
 
 const rewardMapping: { [key: number]: number } = {
-  1: 4250,
-  2: 2100,
-  3: 1050,
-  4: 700,
-  5: 500,
-  6: 350,
-  7: 300,
-  8: 275,
-  9: 250,
-  10: 225,
-  11: 200,
-  12: 180,
-  13: 160,
-  14: 130,
-  15: 110,
-  16: 80,
-  17: 50,
-  18: 40,
-  19: 30,
-  20: 20,
+  1: 8500,
+  2: 4200,
+  3: 2100,
+  4: 1400,
+  5: 1000,
+  6: 700,
+  7: 600,
+  8: 550,
+  9: 500,
+  10: 450,
+  11: 400,
+  12: 360,
+  13: 320,
+  14: 260,
+  15: 220,
+  16: 160,
+  17: 100,
+  18: 80,
+  19: 60,
+  20: 40,
 };
 
 const LuxdropLeaderboard: React.FC = () => {
@@ -194,7 +194,7 @@ const LuxdropLeaderboard: React.FC = () => {
         </div> */}
         <div className="absolute left-0 right-0 mx-auto mt-6 max-w-screen-lg px-4 text-center md:mt-10">
           <b className="animate-pulse-glow text-5xl text-[#fff] sm:text-2xl md:text-3xl lg:text-4xl xl:text-4xl">
-            $11,000
+            $22,000
           </b>
           <div className="mt-4 flex flex-col items-center justify-center sm:flex-row sm:space-x-4">
             <Image
@@ -209,7 +209,7 @@ const LuxdropLeaderboard: React.FC = () => {
             </b>
           </div>
           <p className="m-4 mx-auto text-center leading-relaxed text-white sm:m-6 sm:text-xl md:text-2xl lg:m-8 lg:text-3xl xl:text-xl">
-            Every two weeks, a total of $11,000 is distributed across the top 20 users!
+            Every two weeks, a total of $22,000 is distributed across the top 20 users!
           </p>
         </div>
       </div>
