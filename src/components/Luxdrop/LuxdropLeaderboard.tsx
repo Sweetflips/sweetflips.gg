@@ -215,7 +215,7 @@ const LuxdropLeaderboard: React.FC = () => {
       </div>
 
       <div className="mb-4 mt-12 flex flex-col items-center text-2xl font-bold">
-        Leaderboard ends in
+      Bi-weekly Leaderboard ends in
       </div>
       {countDownDate && (
         <div className="relative mb-15 flex justify-center space-x-4">
