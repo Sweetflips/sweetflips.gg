@@ -14,29 +14,6 @@ type LeaderboardEntry = {
   reward: number;
 };
 
-const mockLeaderboardData: LeaderboardEntry[] = [
-  { username: "TopGamer", wagered: 150000, reward: 0 },
-  { username: "ProPlayer", wagered: 125000, reward: 0 },
-  { username: "LuckyCat", wagered: 98000, reward: 0 },
-  { username: "DevUser4", wagered: 75000, reward: 0 },
-  { username: "DevUser5", wagered: 72000, reward: 0 },
-  { username: "DevUser6", wagered: 68000, reward: 0 },
-  { username: "DevUser7", wagered: 65000, reward: 0 },
-  { username: "DevUser8", wagered: 61000, reward: 0 },
-  { username: "DevUser9", wagered: 58000, reward: 0 },
-  { username: "DevUser10", wagered: 55000, reward: 0 },
-  { username: "DevUser11", wagered: 51000, reward: 0 },
-  { username: "DevUser12", wagered: 48000, reward: 0 },
-  { username: "DevUser13", wagered: 45000, reward: 0 },
-  { username: "DevUser14", wagered: 42000, reward: 0 },
-  { username: "DevUser15", wagered: 40000, reward: 0 },
-  { username: "DevUser16", wagered: 38000, reward: 0 },
-  { username: "DevUser17", wagered: 36000, reward: 0 },
-  { username: "DevUser18", wagered: 34000, reward: 0 },
-  { username: "DevUser19", wagered: 32000, reward: 0 },
-  { username: "DevUser20", wagered: 30000, reward: 0 },
-];
-// Define the reward mapping based on rank
 const rewardMapping: { [key: number]: number } = {
   1: 4250,
   2: 2100,
@@ -54,7 +31,7 @@ const rewardMapping: { [key: number]: number } = {
   14: 130,
   15: 110,
   16: 80,
-  17: 60,
+  17: 50,
   18: 40,
   19: 30,
   20: 20,
@@ -89,142 +66,41 @@ const LuxdropLeaderboard: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      setError(null);
 
-      // Add cache-busting parameter to force fresh data
       const cacheBuster = `?t=${Date.now()}`;
       const apiUrl = `${API_PROXY_URL}${cacheBuster}`;
 
-      // Development mode: prioritize mock data or attempt API fetch
-      if (process.env.NODE_ENV === "development") {
-        console.log("Running in development mode");
-        try {
-          const response = await fetch(apiUrl);
-          if (!response.ok)
-            throw new Error("API failed, falling back to mock data");
-          const result = await response.json();
-          if (!result.data || !Array.isArray(result.data)) {
-            throw new Error("Invalid API data, falling back to mock data");
-          }
-
-          // Process real data if fetch succeeds
-          // Use the static reward mapping
-          const processedData = result.data
-            .filter((user: any) => user.username)
-            .map((user: any, index: number) => ({
-              username: maskUsername(user.username),
-              wagered: Number(user.wagered) || 0,
-              reward: rewardMapping[index + 1] || 0,
-            }));
-          console.log("Using real API data:", processedData);
-          setData(processedData);
-        } catch (devError: any) {
-          console.warn(`DEV MODE: ${devError.message}, using realistic fallback data`);
-          // Fallback to realistic-looking data in development
-          const currentDate = new Date();
-          const dayOfMonth = currentDate.getDate();
-
-          const realisticFallbackData = [
-            { username: "CryptoWolf", wagered: 189.45 + (dayOfMonth * 3.2), reward: 0 },
-            { username: "LuxGamer", wagered: 167.80 + (dayOfMonth * 2.8), reward: 0 },
-            { username: "RollKing", wagered: 145.25 + (dayOfMonth * 2.4), reward: 0 },
-            { username: "BetMaster", wagered: 128.90 + (dayOfMonth * 2.0), reward: 0 },
-            { username: "WinBig", wagered: 112.35 + (dayOfMonth * 1.6), reward: 0 },
-            { username: "SlotPro", wagered: 98.70 + (dayOfMonth * 1.3), reward: 0 },
-            { username: "CashKing", wagered: 87.15 + (dayOfMonth * 1.1), reward: 0 },
-            { username: "LuckyStar", wagered: 76.80 + (dayOfMonth * 0.9), reward: 0 },
-            { username: "GoldHunter", wagered: 65.25 + (dayOfMonth * 0.7), reward: 0 },
-            { username: "BigSpender", wagered: 56.90 + (dayOfMonth * 0.6), reward: 0 },
-            { username: "HighStakes", wagered: 48.75 + (dayOfMonth * 0.5), reward: 0 },
-            { username: "RiskTaker", wagered: 41.60 + (dayOfMonth * 0.4), reward: 0 },
-            { username: "BetBeast", wagered: 35.45 + (dayOfMonth * 0.3), reward: 0 },
-            { username: "SpinMaster", wagered: 29.80 + (dayOfMonth * 0.25), reward: 0 },
-            { username: "LuxPlayer", wagered: 24.95 + (dayOfMonth * 0.2), reward: 0 },
-          ];
-
-          // Use the static reward mapping
-          const processedFallbackData = realisticFallbackData
-            .map((user, index) => ({
-              username: maskUsername(user.username),
-              wagered: user.wagered,
-              reward: rewardMapping[index + 1] || 0,
-            }));
-          console.log("Using realistic fallback data:", processedFallbackData);
-          setData(processedFallbackData);
-          setError(null); // Clear any errors
-        } finally {
-          setLoading(false);
-        }
-        return; // Exit after handling development mode
-      }
-
-      // Production mode: fetch from API with fallback to mock data
       try {
         const response = await fetch(apiUrl);
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(
-            errorData.error || "Failed to fetch leaderboard data",
-          );
+          throw new Error(`API returned ${response.status}: ${response.statusText}`);
         }
+        
         const result = await response.json();
         if (!result.data || !Array.isArray(result.data)) {
-          throw new Error("Invalid data format from proxy");
+          throw new Error("Invalid data format from API");
         }
 
-        // Use the static reward mapping
         const processedData = result.data
           .filter((user: any) => user.username)
+          .slice(0, 20)
           .map((user: any, index: number) => ({
             username: maskUsername(user.username),
             wagered: Number(user.wagered) || 0,
             reward: rewardMapping[index + 1] || 0,
           }));
+        
         setData(processedData);
       } catch (err: any) {
-        console.warn("Production API failed, using fallback data:", err.message);
-        // Fallback to realistic-looking leaderboard data
-        const currentDate = new Date();
-        const dayOfMonth = currentDate.getDate();
-
-        // Generate more realistic fallback data based on current date
-        const fallbackData = [
-          { username: "CryptoKing", wagered: 156.75 + (dayOfMonth * 2.3), reward: 0 },
-          { username: "LuxPlayer", wagered: 134.20 + (dayOfMonth * 1.8), reward: 0 },
-          { username: "RollMaster", wagered: 128.95 + (dayOfMonth * 1.5), reward: 0 },
-          { username: "BetLegend", wagered: 112.40 + (dayOfMonth * 1.2), reward: 0 },
-          { username: "WinStreak", wagered: 98.75 + (dayOfMonth * 0.9), reward: 0 },
-          { username: "LuckySpin", wagered: 87.60 + (dayOfMonth * 0.8), reward: 0 },
-          { username: "CashFlow", wagered: 76.30 + (dayOfMonth * 0.7), reward: 0 },
-          { username: "GoldRush", wagered: 65.85 + (dayOfMonth * 0.6), reward: 0 },
-          { username: "BigWins", wagered: 54.20 + (dayOfMonth * 0.5), reward: 0 },
-          { username: "HighRoll", wagered: 43.95 + (dayOfMonth * 0.4), reward: 0 },
-          { username: "SlotKing", wagered: 38.75 + (dayOfMonth * 0.3), reward: 0 },
-          { username: "JackPot", wagered: 32.40 + (dayOfMonth * 0.25), reward: 0 },
-          { username: "Fortune", wagered: 28.90 + (dayOfMonth * 0.2), reward: 0 },
-          { username: "Spinner", wagered: 24.65 + (dayOfMonth * 0.15), reward: 0 },
-          { username: "Lucky7", wagered: 21.30 + (dayOfMonth * 0.1), reward: 0 },
-        ];
-
-        // Use the static reward mapping
-        const processedFallbackData = fallbackData
-          .map((user, index) => ({
-            username: maskUsername(user.username),
-            wagered: user.wagered,
-            reward: rewardMapping[index + 1] || 0,
-          }));
-
-        setData(processedFallbackData);
-        setError(null); // Clear error since we have fallback data
+        console.error("Luxdrop API error:", err.message);
+        setError(`Unable to load leaderboard: ${err.message}`);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData().catch(err => {
-      console.error("fetchData error:", err);
-      setLoading(false);
-      setError(err.message);
-    });
+    fetchData();
   }, []);
 
   if (loading) return <Loader />;
@@ -256,15 +132,12 @@ const LuxdropLeaderboard: React.FC = () => {
 
     let targetDate;
 
-    // Special transition period: July 28, 2025 - August 31, 2025
-    if ((now.year === 2025 && now.month === 7 && now.day >= 28) || (now.year === 2025 && now.month === 8)) {
-      // During transition period: countdown to August 31, 2025 23:59:59 UTC
-      targetDate = DateTime.utc(2025, 8, 31, 23, 59, 59, 999);
-    } else if (now.year === 2025 && now.month === 7 && now.day < 28) {
-      // Before transition period: countdown to July 28, 2025 00:00:00 UTC
-      targetDate = DateTime.utc(2025, 7, 28, 0, 0, 0, 0);
+    // Bi-weekly logic: 1st-15th and 16th-end of month
+    if (now.day <= 15) {
+      // First half of the month: countdown to 15th at 23:59:59 UTC
+      targetDate = DateTime.utc(now.year, now.month, 15, 23, 59, 59, 999);
     } else {
-      // From September 2025 onwards: 1st to last day of current month
+      // Second half of the month: countdown to last day of month at 23:59:59 UTC
       const endOfMonth = now.endOf('month').set({ hour: 23, minute: 59, second: 59, millisecond: 999 });
       targetDate = endOfMonth;
     }
@@ -321,7 +194,7 @@ const LuxdropLeaderboard: React.FC = () => {
         </div> */}
         <div className="absolute left-0 right-0 mx-auto mt-6 max-w-screen-lg px-4 text-center md:mt-10">
           <b className="animate-pulse-glow text-5xl text-[#fff] sm:text-2xl md:text-3xl lg:text-4xl xl:text-4xl">
-            $20,000
+            $11,000
           </b>
           <div className="mt-4 flex flex-col items-center justify-center sm:flex-row sm:space-x-4">
             <Image
@@ -336,7 +209,7 @@ const LuxdropLeaderboard: React.FC = () => {
             </b>
           </div>
           <p className="m-4 mx-auto text-center leading-relaxed text-white sm:m-6 sm:text-xl md:text-2xl lg:m-8 lg:text-3xl xl:text-xl">
-            Each month, a total of $20,000 is distributed across the top users!
+            Every two weeks, a total of $11,000 is distributed across the top 20 users!
           </p>
         </div>
       </div>
