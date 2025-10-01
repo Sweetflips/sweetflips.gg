@@ -1,82 +1,56 @@
-// src/components/Luxdrop/LuxdropLeaderboard.tsx
 "use client";
-import React, { useEffect, useState, useRef } from "react";
-import Loader from "@/components/common/Loader";
 import { Timer } from "@/app/ui/timer/Timer";
+import Footer from "@/components/Footer/Footer";
+import Loader from "@/components/common/Loader";
+import confetti from "canvas-confetti";
 import { DateTime } from "luxon";
 import Image from "next/image";
+import React, { useEffect, useRef, useState } from "react";
 
-const API_PROXY_URL = "/api/LuxdropProxy";
+const API_PROXY_URL = "/api/LuxDropProxy";
 
-type LeaderboardEntry = {
+interface User {
   username: string;
-  wagered: number;
-  reward: number;
-};
+  wagerAmount: number;
+  rewardAmount?: number;
+}
 
-const mockLeaderboardData: LeaderboardEntry[] = [
-  { username: "TopGamer", wagered: 150000, reward: 0 },
-  { username: "ProPlayer", wagered: 125000, reward: 0 },
-  { username: "LuckyCat", wagered: 98000, reward: 0 },
-  { username: "DevUser4", wagered: 75000, reward: 0 },
-  { username: "DevUser5", wagered: 72000, reward: 0 },
-  { username: "DevUser6", wagered: 68000, reward: 0 },
-  { username: "DevUser7", wagered: 65000, reward: 0 },
-  { username: "DevUser8", wagered: 61000, reward: 0 },
-  { username: "DevUser9", wagered: 58000, reward: 0 },
-  { username: "DevUser10", wagered: 55000, reward: 0 },
-  { username: "DevUser11", wagered: 51000, reward: 0 },
-  { username: "DevUser12", wagered: 48000, reward: 0 },
-  { username: "DevUser13", wagered: 45000, reward: 0 },
-  { username: "DevUser14", wagered: 42000, reward: 0 },
-  { username: "DevUser15", wagered: 40000, reward: 0 },
-  { username: "DevUser16", wagered: 38000, reward: 0 },
-  { username: "DevUser17", wagered: 36000, reward: 0 },
-  { username: "DevUser18", wagered: 34000, reward: 0 },
-  { username: "DevUser19", wagered: 32000, reward: 0 },
-  { username: "DevUser20", wagered: 30000, reward: 0 },
-];
-// Define the reward mapping based on rank
 const rewardMapping: { [key: number]: number } = {
-  1: 8000,
-  2: 4000,
-  3: 2000,
-  4: 1300,
-  5: 1000,
-  6: 700,
-  7: 600,
-  8: 500,
-  9: 400,
-  10: 300,
+  1: 4500,
+  2: 2250,
+  3: 1100,
+  4: 750,
+  5: 650,
+  6: 525,
+  7: 425,
+  8: 350,
+  9: 300,
+  10: 275,
   11: 250,
-  12: 200,
-  13: 150,
-  14: 150,
-  15: 100,
-  16: 100,
+  12: 225,
+  13: 200,
+  14: 175,
+  15: 150,
+  16: 125,
   17: 100,
-  18: 50,
+  18: 75,
   19: 50,
-  20: 50,
+  20: 25,
 };
 
-const LuxdropLeaderboard: React.FC = () => {
-  const [data, setData] = useState<LeaderboardEntry[]>([]);
+const LuxDropLeaderboard: React.FC = () => {
+  const [data, setData] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [countdownDate, setCountdownDate] = useState<string>("");
 
-  // Function to mask usernames (copied from RazedLeaderboard)
+  const fireworksLaunched = useRef(false);
+
   const maskUsername = (username: string) => {
-    console.log("~~>> username is: ", username);
-    if (!username) {
-      console.log("returning early, username was null or undefined");
-      return "";
-    }
-
     const len = username.length;
 
     if (len <= 2) {
-      return username; // Too short to mask
+      return username;
     }
 
     if (len <= 4) {
@@ -85,151 +59,6 @@ const LuxdropLeaderboard: React.FC = () => {
 
     return username.slice(0, 2) + "*".repeat(len - 4) + username.slice(-2);
   };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-
-      // Add cache-busting parameter to force fresh data
-      const cacheBuster = `?t=${Date.now()}`;
-      const apiUrl = `${API_PROXY_URL}${cacheBuster}`;
-
-      // Development mode: prioritize mock data or attempt API fetch  
-      if (process.env.NODE_ENV === "development") {
-        console.log("Running in development mode");
-        try {
-          const response = await fetch(apiUrl);
-          if (!response.ok)
-            throw new Error("API failed, falling back to mock data");
-          const result = await response.json();
-          if (!result.data || !Array.isArray(result.data)) {
-            throw new Error("Invalid API data, falling back to mock data");
-          }
-
-          // Process real data if fetch succeeds
-          // Use the static reward mapping
-          const processedData = result.data
-            .filter((user: any) => user.username)
-            .map((user: any, index: number) => ({
-              username: maskUsername(user.username),
-              wagered: Number(user.wagered) || 0,
-              reward: rewardMapping[index + 1] || 0,
-            }));
-          console.log("Using real API data:", processedData);
-          setData(processedData);
-        } catch (devError: any) {
-          console.warn(`DEV MODE: ${devError.message}, using realistic fallback data`);
-          // Fallback to realistic-looking data in development
-          const currentDate = new Date();
-          const dayOfMonth = currentDate.getDate();
-          
-          const realisticFallbackData = [
-            { username: "CryptoWolf", wagered: 189.45 + (dayOfMonth * 3.2), reward: 0 },
-            { username: "LuxGamer", wagered: 167.80 + (dayOfMonth * 2.8), reward: 0 },
-            { username: "RollKing", wagered: 145.25 + (dayOfMonth * 2.4), reward: 0 },
-            { username: "BetMaster", wagered: 128.90 + (dayOfMonth * 2.0), reward: 0 },
-            { username: "WinBig", wagered: 112.35 + (dayOfMonth * 1.6), reward: 0 },
-            { username: "SlotPro", wagered: 98.70 + (dayOfMonth * 1.3), reward: 0 },
-            { username: "CashKing", wagered: 87.15 + (dayOfMonth * 1.1), reward: 0 },
-            { username: "LuckyStar", wagered: 76.80 + (dayOfMonth * 0.9), reward: 0 },
-            { username: "GoldHunter", wagered: 65.25 + (dayOfMonth * 0.7), reward: 0 },
-            { username: "BigSpender", wagered: 56.90 + (dayOfMonth * 0.6), reward: 0 },
-            { username: "HighStakes", wagered: 48.75 + (dayOfMonth * 0.5), reward: 0 },
-            { username: "RiskTaker", wagered: 41.60 + (dayOfMonth * 0.4), reward: 0 },
-            { username: "BetBeast", wagered: 35.45 + (dayOfMonth * 0.3), reward: 0 },
-            { username: "SpinMaster", wagered: 29.80 + (dayOfMonth * 0.25), reward: 0 },
-            { username: "LuxPlayer", wagered: 24.95 + (dayOfMonth * 0.2), reward: 0 },
-          ];
-          
-          // Use the static reward mapping
-          const processedFallbackData = realisticFallbackData
-            .map((user, index) => ({
-              username: maskUsername(user.username),
-              wagered: user.wagered,
-              reward: rewardMapping[index + 1] || 0,
-            }));
-          console.log("Using realistic fallback data:", processedFallbackData);
-          setData(processedFallbackData);
-          setError(null); // Clear any errors
-        } finally {
-          setLoading(false);
-        }
-        return; // Exit after handling development mode
-      }
-
-      // Production mode: fetch from API with fallback to mock data
-      try {
-        const response = await fetch(apiUrl);
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(
-            errorData.error || "Failed to fetch leaderboard data",
-          );
-        }
-        const result = await response.json();
-        if (!result.data || !Array.isArray(result.data)) {
-          throw new Error("Invalid data format from proxy");
-        }
-
-        // Use the static reward mapping
-        const processedData = result.data
-          .filter((user: any) => user.username)
-          .map((user: any, index: number) => ({
-            username: maskUsername(user.username),
-            wagered: Number(user.wagered) || 0,
-            reward: rewardMapping[index + 1] || 0,
-          }));
-        setData(processedData);
-      } catch (err: any) {
-        console.warn("Production API failed, using fallback data:", err.message);
-        // Fallback to realistic-looking leaderboard data
-        const currentDate = new Date();
-        const dayOfMonth = currentDate.getDate();
-        
-        // Generate more realistic fallback data based on current date
-        const fallbackData = [
-          { username: "CryptoKing", wagered: 156.75 + (dayOfMonth * 2.3), reward: 0 },
-          { username: "LuxPlayer", wagered: 134.20 + (dayOfMonth * 1.8), reward: 0 },
-          { username: "RollMaster", wagered: 128.95 + (dayOfMonth * 1.5), reward: 0 },
-          { username: "BetLegend", wagered: 112.40 + (dayOfMonth * 1.2), reward: 0 },
-          { username: "WinStreak", wagered: 98.75 + (dayOfMonth * 0.9), reward: 0 },
-          { username: "LuckySpin", wagered: 87.60 + (dayOfMonth * 0.8), reward: 0 },
-          { username: "CashFlow", wagered: 76.30 + (dayOfMonth * 0.7), reward: 0 },
-          { username: "GoldRush", wagered: 65.85 + (dayOfMonth * 0.6), reward: 0 },
-          { username: "BigWins", wagered: 54.20 + (dayOfMonth * 0.5), reward: 0 },
-          { username: "HighRoll", wagered: 43.95 + (dayOfMonth * 0.4), reward: 0 },
-          { username: "SlotKing", wagered: 38.75 + (dayOfMonth * 0.3), reward: 0 },
-          { username: "JackPot", wagered: 32.40 + (dayOfMonth * 0.25), reward: 0 },
-          { username: "Fortune", wagered: 28.90 + (dayOfMonth * 0.2), reward: 0 },
-          { username: "Spinner", wagered: 24.65 + (dayOfMonth * 0.15), reward: 0 },
-          { username: "Lucky7", wagered: 21.30 + (dayOfMonth * 0.1), reward: 0 },
-        ];
-        
-        // Use the static reward mapping
-        const processedFallbackData = fallbackData
-          .map((user, index) => ({
-            username: maskUsername(user.username),
-            wagered: user.wagered,
-            reward: rewardMapping[index + 1] || 0,
-          }));
-        
-        setData(processedFallbackData);
-        setError(null); // Clear error since we have fallback data
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData().catch(err => {
-      console.error("fetchData error:", err);
-      setLoading(false);
-      setError(err.message);
-    });
-  }, []);
-
-  if (loading) return <Loader />;
-  if (error)
-    return <p className="text-red-500 p-4 text-center">Error: {error}</p>;
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat("en-US", {
@@ -243,129 +72,170 @@ const LuxdropLeaderboard: React.FC = () => {
       currency: "USD",
       minimumFractionDigits: 0,
     }).format(amount);
+
     return formattedAmount.endsWith(".00")
       ? formattedAmount.slice(0, -3)
       : formattedAmount;
   };
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(API_PROXY_URL);
+        const result = await response.json();
+
+        if (result.error) {
+          throw new Error(result.error);
+        }
+
+        setCountdownDate(result.dates.beforeDate);
+
+        const mappedData: User[] = result.ranking.map((entry: any) => ({
+          username: entry.user.name,
+          wagerAmount: entry.total,
+          rewardAmount: 0,
+        }));
+
+        const sortedData = mappedData.sort(
+          (a: User, b: User) => b.wagerAmount - a.wagerAmount,
+        );
+
+        const leaderboardWithRewards = sortedData.map(
+          (user: User, index: number) => {
+            const rank = index + 1;
+            user.rewardAmount = rewardMapping[rank] || 0;
+            user.username = maskUsername(user.username);
+            return user;
+          },
+        );
+
+        setData(leaderboardWithRewards);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    if (data.length > 0 && !fireworksLaunched.current) {
+      const topUsers = data.slice(0, 3);
+      if (topUsers[0]) {
+        fireworksLaunched.current = true;
+        confetti({
+          particleCount: 100,
+          spread: 120,
+          origin: { y: 0.6 },
+        });
+      }
+    }
+  }, [data]);
+
+  if (loading) return <Loader />;
+  if (error) return <p className="text-red-500">Error: {error}</p>;
+
   const topUsers = data.slice(0, 3);
+
   const restUsers = data.slice(3, 20);
 
-  const countDownDate = (() => {
-    const now = DateTime.utc();
-
-    let targetDate;
-    
-    // Special transition period: July 28, 2025 - August 31, 2025
-    if ((now.year === 2025 && now.month === 7 && now.day >= 28) || (now.year === 2025 && now.month === 8)) {
-      // During transition period: countdown to August 31, 2025 23:59:59 UTC
-      targetDate = DateTime.utc(2025, 8, 31, 23, 59, 59, 999);
-    } else if (now.year === 2025 && now.month === 7 && now.day < 28) {
-      // Before transition period: countdown to July 28, 2025 00:00:00 UTC
-      targetDate = DateTime.utc(2025, 7, 28, 0, 0, 0, 0);
-    } else {
-      // From September 2025 onwards: 1st to last day of current month
-      const endOfMonth = now.endOf('month').set({ hour: 23, minute: 59, second: 59, millisecond: 999 });
-      targetDate = endOfMonth;
-    }
-
-    return targetDate.toISO(); // ➜ will be interpreted correctly as UTC
-  })();
-
-  console.log("Component mounted");
+  // Countdown to October 15, 2025
+  const countDownDate = DateTime.fromObject({
+    year: 2025,
+    month: 10,
+    day: 15,
+    hour: 23,
+    minute: 59,
+    second: 59,
+  }).setZone("UTC").toISO();
 
   return (
     <div className="mt-4 p-4 text-white">
-      <div className="FooterBg relative mx-auto flex h-80 w-full transform flex-col items-center justify-between overflow-hidden rounded-xl p-4 shadow-[inset_0_0_20px_rgba(0,0,0,0.4)] transition-all sm:w-3/4 sm:flex-row sm:items-start md:w-5/6">
+      {/* Floating Image */}
+      <div className="floating-image1 animate-line3">
+        <Image
+          src="/images/icon/richard_mille_red.webp"
+          alt="Richard Mille Red"
+          className="h-25 w-25 rotate-[-18.63deg]"
+          width={100}
+          height={100}
+        />
+      </div>
+      <div className="floating-image2 animate-line3">
+        <Image
+          src="/images/icon/Patek_Aquanaut.webp"
+          alt="Patek Aquanaut"
+          className="h-25 w-25 rotate-[-18.63deg]"
+          width={100}
+          height={100}
+        />
+      </div>
+      <div className="FooterBg relative mx-auto flex h-80 w-full transform flex-col items-center justify-between overflow-hidden rounded-xl p-4 transition-all sm:w-3/4 sm:flex-row sm:items-start md:w-5/6">
         {/* Left Image */}
         <div className="hide-on-ipad absolute left-0 hidden sm:block">
           <Image
-            src="/images/icon/luxdrop_chest.png"
-            alt="Luxdrop Sneaker Chest"
+            src="/images/cover/Character Box Dior.png"
+            alt="LuxDrop Box"
             className="transform"
-            width={540}
-            height={378}
+            width={491}
+            height={270}
           />
         </div>
 
         {/* Right Image */}
-        <div className="hide-on-ipad absolute right-0 top-[30px] hidden sm:block">
+        <div className="hide-on-ipad absolute right-0 hidden sm:block">
           <Image
-            src="/images/icon/luxdrop_car.png"
-            alt="Luxdrop Car"
+            src="/images/cover/G-Class Box Ranks.png"
+            alt="Gclass Box"
             className="transform"
-            width={540}
-            height={378}
+            width={449}
+            height={312}
           />
         </div>
-        {/* Left Image mobile */}
-        {/* <div className="absolute -left-1 top-[-20px] sm:block md:hidden">
-          <Image
-            src="/images/icon/luxdrop_chest.png"
-            alt="Luxdrop Sneaker Chest"
-            className="h-[103px] w-[68.05px] transform"
-            width={68.05}
-            height={103}
-          />
-        </div> */}
 
-        {/* Right Image mobile*/}
-        {/* <div className="absolute -right-5 top-[250px] sm:block md:hidden">
-          <Image
-            src="/images/icon/luxdrop_car.png"
-            alt="Luxdrop Car"
-            className="h-[103px] w-[68.05px] transform"
-            width={68.05}
-            height={103}
-          />
-        </div> */}
         <div className="absolute left-0 right-0 mx-auto mt-6 max-w-screen-lg px-4 text-center md:mt-10">
-          <b className="animate-pulse-glow text-5xl text-[#fff] sm:text-2xl md:text-3xl lg:text-4xl xl:text-4xl">
-            $20,000
+          <b className="text-4xl text-white sm:text-2xl md:text-3xl lg:text-4xl xl:text-4xl">
+            $12,500
           </b>
           <div className="mt-4 flex flex-col items-center justify-center sm:flex-row sm:space-x-4">
-            <Image
-              src="/images/logo/luxdrop_logo.png" // Verified path
-              alt="Luxdrop Logo"
-              width={280} // Adjusted for SVG aspect ratio
-              height={53} // Adjusted for SVG aspect ratio
-              className="mb-3 transition-all duration-300 sm:mb-0"
-            />
+            <div className="mb-3 transition-all duration-300 sm:mb-0 sm:w-[150px] md:w-[200px] lg:w-[300px] xl:w-[250px]">
+              <div className="text-6xl font-bold text-purple-400">LuxDrop</div>
+            </div>
             <b className="text-4xl text-white sm:text-2xl md:text-3xl lg:mt-4 lg:text-3xl">
-              Leaderboard
+              Bi-Weekly Leaderboard
             </b>
           </div>
-          <p className="m-4 mx-auto text-center leading-relaxed text-white sm:m-6 sm:text-xl md:text-2xl lg:m-8 lg:text-3xl xl:text-xl">
-            Each month, a total of $20,000 is distributed across the top users!
+          <p className="m-4 mx-auto text-center text-white sm:m-6 sm:text-xl md:text-2xl lg:m-8 lg:text-3xl xl:text-xl">
+            Bi-Weekly leaderboard - All wager between October 1st 00:00 UTC - October 15th 23:59:59 UTC<br></br>
+            (Same thing between 16th-31st Oct after that) - $12,500 distributed across 20 users.
           </p>
         </div>
       </div>
-
       <div className="mb-4 mt-12 flex flex-col items-center text-2xl font-bold">
         Leaderboard ends in
       </div>
-      {countDownDate && (
-        <div className="relative mb-15 flex justify-center space-x-4">
+      <div className="relative mb-15 flex justify-center space-x-4">
+        {countDownDate && (
           <div
             className="mx-12 flex flex-col items-center rounded-3xl md:mx-80"
             data-aos="fade-up"
           >
             <Timer type="normal" date={countDownDate} />
           </div>
-        </div>
-      )}
-      {/* src/components/Luxdrop/LuxdropLeaderboard.tsx */}
-
-      <div className="TopLeaderboard mt-12">
-        {topUsers.length >= 3 ? (
+        )}
+      </div>
+      <div className="TopLeaderboard">
+        {topUsers && topUsers.length >= 3 && (
           <>
-            {/* Left Card (Rank 2) */}
-            <div className="TopLeaderboard__card TopLeaderboard__card--left border border-purple-700 shadow-lg shadow-purple-900/50 duration-200 ease-in hover:scale-110 md:mt-10">
+            <div className="TopLeaderboard__card TopLeaderboard__card--left duration-200 ease-in hover:scale-110 md:mt-10">
               <div className="TopLeaderboard__card-inner">
                 <div className="TopLeaderboard__number-wrapper">
                   <Image
                     src="/images/icon/Second_Place.png"
-                    alt="Rank 2"
+                    alt="Second Place"
+                    className="h-8 w-8"
                     width={32}
                     height={32}
                   />
@@ -373,7 +243,8 @@ const LuxdropLeaderboard: React.FC = () => {
                 <div className="TopLeaderboard__card-image">
                   <Image
                     src="/images/logo/sweet_flips_emblem_silver.png"
-                    alt="Silver Emblem"
+                    alt="Sweetflips Emblem Silver"
+                    className="h-24 w-24"
                     width={96}
                     height={96}
                   />
@@ -383,22 +254,21 @@ const LuxdropLeaderboard: React.FC = () => {
                     {topUsers[1].username}
                   </p>
                   <p className="TopLeaderboard__amount">
-                    {formatCurrency(topUsers[1].wagered)}
+                    {formatCurrency(topUsers[1].wagerAmount)}
                   </p>
                   <p className="TopLeaderboard__prize">
-                    Prize: {formatRewardCurrency(topUsers[1].reward)}
+                    Prize: {formatRewardCurrency(topUsers[1].rewardAmount!)}
                   </p>
                 </div>
               </div>
             </div>
-
-            {/* Middle Card (Rank 1) */}
-            <div className="TopLeaderboard__card TopLeaderboard__card--middle border border-purple-700 shadow-lg shadow-purple-900/50 duration-200 ease-in hover:scale-110">
+            <div className="TopLeaderboard__card TopLeaderboard__card--middle duration-200 ease-in hover:scale-110">
               <div className="TopLeaderboard__card-inner">
                 <div className="TopLeaderboard__number-wrapper">
                   <Image
                     src="/images/icon/First_Place.png"
-                    alt="Rank 1"
+                    alt="First Place"
+                    className="h-8 w-8"
                     width={32}
                     height={32}
                   />
@@ -406,7 +276,8 @@ const LuxdropLeaderboard: React.FC = () => {
                 <div className="TopLeaderboard__card-image">
                   <Image
                     src="/images/logo/sweet_flips_emblem_gold.png"
-                    alt="Gold Emblem"
+                    alt="Sweetflips Emblem Gold"
+                    className="h-24 w-24"
                     width={96}
                     height={96}
                   />
@@ -416,22 +287,21 @@ const LuxdropLeaderboard: React.FC = () => {
                     {topUsers[0].username}
                   </p>
                   <p className="TopLeaderboard__amount">
-                    {formatCurrency(topUsers[0].wagered)}
+                    {formatCurrency(topUsers[0].wagerAmount)}
                   </p>
                   <p className="TopLeaderboard__prize">
-                    Prize: {formatRewardCurrency(topUsers[0].reward)}
+                    Prize: {formatRewardCurrency(topUsers[0].rewardAmount!)}
                   </p>
                 </div>
               </div>
             </div>
-
-            {/* Right Card (Rank 3) */}
-            <div className="TopLeaderboard__card TopLeaderboard__card--right border border-purple-700 shadow-lg shadow-purple-900/50 duration-200 ease-in hover:scale-110 md:mt-10">
+            <div className="TopLeaderboard__card TopLeaderboard__card--right duration-200 ease-in hover:scale-110 md:mt-10">
               <div className="TopLeaderboard__card-inner">
                 <div className="TopLeaderboard__number-wrapper">
                   <Image
                     src="/images/icon/Third_Place.png"
-                    alt="Rank 3"
+                    alt="Third Place"
+                    className="h-8 w-8"
                     width={32}
                     height={32}
                   />
@@ -439,7 +309,8 @@ const LuxdropLeaderboard: React.FC = () => {
                 <div className="TopLeaderboard__card-image">
                   <Image
                     src="/images/logo/sweet_flips_emblem_bronze.png"
-                    alt="Bronze Emblem"
+                    alt="Sweetflips Emblem Bronze"
+                    className="h-24 w-24"
                     width={96}
                     height={96}
                   />
@@ -449,69 +320,52 @@ const LuxdropLeaderboard: React.FC = () => {
                     {topUsers[2].username}
                   </p>
                   <p className="TopLeaderboard__amount">
-                    {formatCurrency(topUsers[2].wagered)}
+                    {formatCurrency(topUsers[2].wagerAmount)}
                   </p>
                   <p className="TopLeaderboard__prize">
-                    Prize: {formatRewardCurrency(topUsers[2].reward)}
+                    Prize: {formatRewardCurrency(topUsers[2].rewardAmount!)}
                   </p>
                 </div>
               </div>
             </div>
           </>
-        ) : (
-          <p className="w-full py-10 text-center">
-            Top user data is loading or not enough users to display top 3...
-          </p>
         )}
       </div>
 
-      <div className="mt-8 flex items-center justify-center overflow-x-auto">
-        <div className="w-full md:w-10/12 lg:w-8/12 xl:w-7/12">
-          <div className="mx-auto max-w-[1000px]">
-            {/* Mobile Header */}
-            <div className="bg-gray-800 grid grid-cols-3 rounded-lg text-center font-bold sm:hidden">
-              <div className="px-2 py-2 text-sm">Name</div>
-              <div className="px-2 py-2 text-sm">Wager</div>
-              <div className="px-2 py-2 text-sm">Reward</div>
-            </div>
-            {/* Desktop Header */}
-            <div className="bg-gray-800 hidden grid-cols-4 rounded-lg text-center font-bold sm:grid">
-              <div className="px-3 py-2">Rank</div>
-              <div className="px-3 py-2">Name</div>
-              <div className="px-3 py-2">Wager</div>
-              <div className="px-3 py-2">Reward</div>
-            </div>
-            <div>
-              {restUsers.map((user, index) => (
-                <div
-                  key={index + 3}
-                  className="Leaderboard__card relative my-2 rounded-lg p-1 shadow-lg md:my-4"
-                >
-                  <div className="Leaderboard__card-inner grid grid-cols-3 text-center sm:grid-cols-4">
-                    {/* Rank visible on sm and up */}
-                    <div className="hidden px-3 py-2 font-bold sm:block">
-                      {index + 4}
-                    </div>
-                    {/* Mobile: Show rank as prefix in username */}
-                    <div className="px-2 py-2 font-bold text-sm sm:px-3 sm:text-base">
-                      <span className="sm:hidden text-gray-400 mr-1">#{index + 4}</span>
-                      {user.username}
-                    </div>
-                    <div className="px-2 py-2 text-sm sm:px-3 sm:text-base">
-                      {formatCurrency(user.wagered)}
-                    </div>
-                    <div className="px-2 py-2 text-green-400 text-sm sm:px-3 sm:text-base">
-                      {formatRewardCurrency(user.reward)}
-                    </div>
+      <div className="flex items-center justify-center overflow-x-auto">
+        <div className="w-full sm:w-6/12">
+          <div className="bg-gray-800 hidden grid-cols-4 rounded-lg p-2 text-center font-bold sm:grid">
+            <div className="px-4 py-2">Rank</div>
+            <div className="px-4 py-2">Name</div>
+            <div className="px-4 py-2">Wager</div>
+            <div className="px-4 py-2">Reward</div>
+          </div>
+
+          <div>
+            {restUsers.map((user, index) => (
+              <div
+                key={index}
+                className="Leaderboard__card relative my-2 rounded-lg p-1 shadow-lg md:my-4"
+              >
+                <div className="Leaderboard__card-inner grid grid-cols-3 gap-4 text-center sm:grid-cols-4">
+                  <div className="hidden py-2 font-bold sm:block">
+                    {index + 4}
+                  </div>
+                  <div className="py-2 font-bold">{user.username}</div>
+                  <div className="py-2">{formatCurrency(user.wagerAmount)}</div>
+                  <div className="text-red-400 px-4 py-2">
+                    {formatRewardCurrency(user.rewardAmount!)}
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 };
 
-export default LuxdropLeaderboard;
+export default LuxDropLeaderboard;
