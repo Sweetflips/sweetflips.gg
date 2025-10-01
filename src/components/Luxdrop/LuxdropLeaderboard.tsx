@@ -209,7 +209,7 @@ const LuxdropLeaderboard: React.FC = () => {
             </b>
           </div>
           <p className="m-4 mx-auto text-center leading-relaxed text-white sm:m-6 sm:text-xl md:text-2xl lg:m-8 lg:text-3xl xl:text-xl">
-            Every two weeks, a total of $22,000 is distributed across the top 20 users!
+            Every two weeks, a total of $11,000 is distributed across the top 20 users!
           </p>
         </div>
       </div>
