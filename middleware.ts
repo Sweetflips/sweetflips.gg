@@ -3,16 +3,32 @@ import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
-  
-  // Handle Unity WebGL compressed files
+
+  const env = ((globalThis as any).process?.env ?? {}) as Record<string, string | undefined>;
+  const country = (request.geo?.country || request.headers.get('x-vercel-ip-country') || '').toUpperCase();
+  const city = (request.geo?.city || request.headers.get('x-vercel-ip-city') || '').toLowerCase();
+
+  const blockedCountries = (env.EDGE_BLOCKED_COUNTRIES || '')
+    .split(',')
+    .map((s) => s.trim().toUpperCase())
+    .filter(Boolean);
+
+  const blockedCities = (env.EDGE_BLOCKED_CITIES || '')
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+
+  if ((blockedCountries.length && country && blockedCountries.includes(country)) ||
+      (blockedCities.length && city && blockedCities.includes(city))) {
+    return new NextResponse('Access from your region is not allowed.', { status: 403 });
+  }
+
   if (pathname.includes('/webgl/')) {
     const response = NextResponse.next();
-    
-    // Set appropriate headers based on file extension
+
     if (pathname.endsWith('.gz')) {
       response.headers.set('Content-Encoding', 'gzip');
-      
-      // Set correct Content-Type based on the actual file type
+
       if (pathname.includes('.js.gz')) {
         response.headers.set('Content-Type', 'application/javascript');
       } else if (pathname.includes('.wasm.gz')) {
@@ -24,8 +40,7 @@ export function middleware(request: NextRequest) {
       }
     } else if (pathname.endsWith('.br')) {
       response.headers.set('Content-Encoding', 'br');
-      
-      // Set correct Content-Type for Brotli compressed files
+
       if (pathname.includes('.js.br')) {
         response.headers.set('Content-Type', 'application/javascript');
       } else if (pathname.includes('.wasm.br')) {
@@ -36,16 +51,17 @@ export function middleware(request: NextRequest) {
     } else if (pathname.endsWith('.wasm')) {
       response.headers.set('Content-Type', 'application/wasm');
     }
-    
-    // Add CORS headers if needed
+
     response.headers.set('Access-Control-Allow-Origin', '*');
-    
+
     return response;
   }
-  
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: '/webgl/:path*',
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+  ],
 };
