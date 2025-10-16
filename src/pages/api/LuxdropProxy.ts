@@ -53,20 +53,29 @@ export default async function handler(
     }
   }
 
-  // --- Date Logic for Monthly Resetting Period ---
+  // --- Date Logic for Bi-weekly Resetting Period ---
   const currentTime = DateTime.utc();
-  
-  // Get current month's start and end dates
-  const startOfCurrentMonth = currentTime.startOf('month');
-  const endOfCurrentMonth = currentTime.endOf('month');
-  
+
+  // Calculate start date: 1 hour 20 minutes ago, but at 00:00 AM UTC
+  const oneHourTwentyMinsAgo = currentTime.minus({ hours: 1, minutes: 20 });
+  const startOfToday = oneHourTwentyMinsAgo.startOf('day');
+  const startDate = startOfToday;
+
+  // End date: end of current month
+  const endDate = currentTime.endOf('month');
+
+  // Determine which bi-weekly period we're in for reset logic
+  const isFirstHalf = currentTime.day <= 14;
+
   // Format dates as YYYY-MM-DD
-  const startDateISO = startOfCurrentMonth.toISODate(); // "2025-09-01"
-  const endDateISO = endOfCurrentMonth.toISODate();     // "2025-09-30"
+  const startDateISO = startDate.toISODate();
+  const endDateISO = endDate.toISODate();
   
-  console.log("=== DATE DEBUG (MONTHLY PERIOD) ===");
+  console.log("=== DATE DEBUG (BI-WEEKLY PERIOD) ===");
   console.log("Current time:", currentTime.toISO());
   console.log("Current month:", currentTime.monthLong, currentTime.year);
+  console.log("Bi-weekly period:", isFirstHalf ? "1st-14th" : "15th-end of month");
+  console.log("Stats from: 00:00 AM UTC today (1h20m ago) to end of month");
   console.log("Fetching data for period:", startDateISO, "to", endDateISO);
 
   // Create proxy agent if configured
@@ -112,27 +121,27 @@ export default async function handler(
     const monthlyData: AffiliateEntry[] = response.data;
 
     console.log("✅ Successfully received data from Luxdrop API!");
-    console.log("Entries for September:", Array.isArray(monthlyData) ? monthlyData.length : 'N/A');
+    console.log("Entries for current period:", Array.isArray(monthlyData) ? monthlyData.length : 'N/A');
 
     if (!Array.isArray(monthlyData)) {
       throw new Error("API response is not an array");
     }
 
-    // Filter only users with wagers > 0 for this month
+    // Filter only users with wagers > 0 for this bi-weekly period
     const activeWagerers = monthlyData.filter((entry: AffiliateEntry) => {
       const wagered = Number(entry.wagered) || 0;
       return wagered > 0;
     });
-    
-    console.log("Active wagerers in September:", activeWagerers.length);
+
+    console.log("Active wagerers in current period:", activeWagerers.length);
     
     const totalWagered = activeWagerers.reduce((sum: number, entry: AffiliateEntry) => {
       return sum + (Number(entry.wagered) || 0);
     }, 0);
     
-    console.log("Total wagered in September:", "$" + totalWagered.toFixed(2));
+    console.log("Total wagered in current period:", "$" + totalWagered.toFixed(2));
 
-    // Process the monthly data - sort by wagered amount descending
+    // Process the bi-weekly data - sort by wagered amount descending
     const leaderboard: LeaderboardEntry[] = activeWagerers
       .map((entry: AffiliateEntry) => ({
         username: entry.username || `User${entry.id}`,
@@ -142,20 +151,22 @@ export default async function handler(
       .sort((a, b) => b.wagered - a.wagered)
       .slice(0, 100); // Top 100
 
-    console.log(`${currentTime.monthLong} ${currentTime.year} leaderboard generated:`);
+    console.log(`${currentTime.monthLong} ${currentTime.year} bi-weekly leaderboard generated:`);
     console.log("- Total active wagerers:", leaderboard.length);
     if (leaderboard.length > 0) {
       console.log("- Top wagerer:", leaderboard[0].username, "$" + leaderboard[0].wagered);
     }
 
-    // Include metadata about the current period
+    // Include metadata about the current bi-weekly period
     const responseData = {
       data: leaderboard,
       period: {
         month: currentTime.monthLong,
         year: currentTime.year,
+        period: isFirstHalf ? "1st-14th" : "15th-end",
         startDate: startDateISO,
         endDate: endDateISO,
+        note: "Stats from 00:00 AM UTC today (1h20m ago) to end of month"
       }
     };
 

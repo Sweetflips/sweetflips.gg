@@ -132,10 +132,11 @@ const LuxdropLeaderboard: React.FC = () => {
 
     let targetDate;
 
-    // Bi-weekly logic: 1st-15th and 16th-end of month
-    if (now.day <= 15) {
-      // First half of the month: countdown to 15th at 23:59:59 UTC
-      targetDate = DateTime.utc(now.year, now.month, 15, 23, 59, 59, 999);
+    // Bi-weekly logic: 1st-14th and 15th-end of month
+    // Note: Stats show from 00:00 AM UTC today (1h20m ago) to end of month
+    if (now.day <= 14) {
+      // First half of the month: countdown to 14th at 23:59:59 UTC
+      targetDate = DateTime.utc(now.year, now.month, 14, 23, 59, 59, 999);
     } else {
       // Second half of the month: countdown to last day of month at 23:59:59 UTC
       const endOfMonth = now.endOf('month').set({ hour: 23, minute: 59, second: 59, millisecond: 999 });
