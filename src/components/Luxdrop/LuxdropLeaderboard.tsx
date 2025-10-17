@@ -149,7 +149,7 @@ const LuxdropLeaderboard: React.FC = () => {
     const now = DateTime.utc();
 
     // First period: 1st 00:01 UTC (8:01 PM local) to 16th 00:00 UTC (8:00 PM local)
-    // Second period: 16th 00:01 UTC (8:01 PM local) to end of month 00:00 UTC (8:00 PM local)
+    // Second period: 16th 00:01 UTC (8:01 PM local) to end-of-month (31st/30th/etc) 00:00 UTC (8:00 PM local)
     const firstPeriodStart = DateTime.utc(now.year, now.month, 1, 0, 1, 0);
     const firstPeriodEnd = DateTime.utc(now.year, now.month, 16, 0, 0, 0);
     const secondPeriodStart = DateTime.utc(now.year, now.month, 16, 0, 1, 0);
@@ -189,20 +189,12 @@ const LuxdropLeaderboard: React.FC = () => {
   })();
 
   const countDownDate = targetDate.toISO();
-  const wageCountStartUtc = wageCountStart
-    .setZone("utc")
-    .toFormat("MMM d, h:mm a 'UTC'");
-  const wageCountStartEastern = wageCountStart
-    .setZone("America/New_York")
-    .toFormat("MMM d, h:mm a z");
-  const wageCountMessage = hasPeriodStarted
-    ? `Current wage count started at ${wageCountStartUtc} (${wageCountStartEastern}).`
-    : `Next wage count starts at ${wageCountStartUtc} (${wageCountStartEastern}).`;
 
   console.log("Luxdrop period debug", {
     nowUtc: DateTime.utc().toISO(),
-    targetDate: targetDate.toISO(),
-    wageCountStart: wageCountStart.toISO(),
+    targetDate: countDownDate,
+    wageCountStartUtc: wageCountStart.toISO(),
+    wageCountStartEastern: wageCountStart.setZone("America/New_York").toISO(),
     hasPeriodStarted,
   });
 
@@ -277,19 +269,14 @@ const LuxdropLeaderboard: React.FC = () => {
       Bi-weekly Leaderboard ends in
       </div>
       {countDownDate && (
-        <>
-          <div className="relative mb-15 flex justify-center space-x-4">
-            <div
-              className="mx-12 flex flex-col items-center rounded-3xl md:mx-80"
-              data-aos="fade-up"
-            >
-              <Timer type="normal" date={countDownDate} />
-            </div>
+        <div className="relative mb-15 flex justify-center space-x-4">
+          <div
+            className="mx-12 flex flex-col items-center rounded-3xl md:mx-80"
+            data-aos="fade-up"
+          >
+            <Timer type="normal" date={countDownDate} />
           </div>
-          <p className="mt-3 text-center text-sm text-gray-300 md:text-base">
-            {wageCountMessage}
-          </p>
-        </>
+        </div>
       )}
       {/* src/components/Luxdrop/LuxdropLeaderboard.tsx */}
 
