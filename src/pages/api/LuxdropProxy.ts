@@ -56,26 +56,38 @@ export default async function handler(
   // --- Date Logic for Bi-weekly Resetting Period ---
   const currentTime = DateTime.utc();
 
-  // Calculate start date: 1 hour 20 minutes ago, but at 00:00 AM UTC
-  const oneHourTwentyMinsAgo = currentTime.minus({ hours: 1, minutes: 20 });
-  const startOfToday = oneHourTwentyMinsAgo.startOf('day');
-  const startDate = startOfToday;
+  // Period 1: 1st 00:01 UTC (previous day 8:01 PM Eastern) to 15th 00:01 UTC
+  // Period 2: 15th 00:01 UTC to 1st of next month 00:01 UTC
+  const firstPeriodStart = DateTime.utc(currentTime.year, currentTime.month, 1, 0, 1, 0);
+  const secondPeriodStart = DateTime.utc(currentTime.year, currentTime.month, 15, 0, 1, 0);
+  const nextMonthPeriodStart = DateTime.utc(currentTime.year, currentTime.month, 1, 0, 1, 0).plus({ months: 1 });
 
-  // End date: end of current month
-  const endDate = currentTime.endOf('month');
+  let startDate: DateTime;
+  let endDate: DateTime;
+  let periodLabel: string;
 
-  // Determine which bi-weekly period we're in for reset logic
-  const isFirstHalf = currentTime.day <= 14;
+  if (currentTime < secondPeriodStart) {
+    // We're in Period 1: 1st to 15th
+    startDate = firstPeriodStart;
+    endDate = secondPeriodStart;
+    periodLabel = "Period 1 (1st-14th)";
+  } else {
+    // We're in Period 2: 15th to end of month
+    startDate = secondPeriodStart;
+    endDate = nextMonthPeriodStart;
+    periodLabel = "Period 2 (15th-end)";
+  }
 
-  // Format dates as YYYY-MM-DD
+  // Format dates as YYYY-MM-DD for the API
   const startDateISO = startDate.toISODate();
-  const endDateISO = endDate.toISODate();
-  
+  const endDateISO = endDate.minus({ seconds: 1 }).toISODate(); // End just before the next period starts
+
   console.log("=== DATE DEBUG (BI-WEEKLY PERIOD) ===");
   console.log("Current time:", currentTime.toISO());
   console.log("Current month:", currentTime.monthLong, currentTime.year);
-  console.log("Bi-weekly period:", isFirstHalf ? "1st-14th" : "15th-end of month");
-  console.log("Stats from: 00:00 AM UTC today (1h20m ago) to end of month");
+  console.log("Bi-weekly period:", periodLabel);
+  console.log("Period start UTC:", startDate.toISO());
+  console.log("Period end UTC:", endDate.toISO());
   console.log("Fetching data for period:", startDateISO, "to", endDateISO);
 
   // Create proxy agent if configured
@@ -163,10 +175,10 @@ export default async function handler(
       period: {
         month: currentTime.monthLong,
         year: currentTime.year,
-        period: isFirstHalf ? "1st-14th" : "15th-end",
+        period: periodLabel,
         startDate: startDateISO,
         endDate: endDateISO,
-        note: "Stats from 00:00 AM UTC today (1h20m ago) to end of month"
+        note: `Bi-weekly leaderboard data from ${startDateISO} to ${endDateISO}`
       }
     };
 
