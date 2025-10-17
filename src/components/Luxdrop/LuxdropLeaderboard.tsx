@@ -64,9 +64,15 @@ const LuxdropLeaderboard: React.FC = () => {
   };
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
+    let isMounted = true;
+
+    const fetchData = async (showLoader = false) => {
+      if (showLoader) {
+        setLoading(true);
+      }
+      if (isMounted) {
+        setError(null);
+      }
 
       const cacheBuster = `?t=${Date.now()}`;
       const apiUrl = `${API_PROXY_URL}${cacheBuster}`;
@@ -91,16 +97,28 @@ const LuxdropLeaderboard: React.FC = () => {
             reward: rewardMapping[index + 1] || 0,
           }));
         
-        setData(processedData);
+        if (isMounted) {
+          setData(processedData);
+        }
       } catch (err: any) {
         console.error("Luxdrop API error:", err.message);
-        setError(`Unable to load leaderboard: ${err.message}`);
+        if (isMounted) {
+          setError(`Unable to load leaderboard: ${err.message}`);
+        }
       } finally {
-        setLoading(false);
+        if (showLoader && isMounted) {
+          setLoading(false);
+        }
       }
     };
 
-    fetchData();
+    fetchData(true);
+    const refreshInterval = window.setInterval(() => fetchData(false), 60_000);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(refreshInterval);
+    };
   }, []);
 
   if (loading) return <Loader />;
@@ -171,15 +189,22 @@ const LuxdropLeaderboard: React.FC = () => {
   })();
 
   const countDownDate = targetDate.toISO();
+  const wageCountStartUtc = wageCountStart
+    .setZone("utc")
+    .toFormat("MMM d, h:mm a 'UTC'");
   const wageCountStartEastern = wageCountStart
     .setZone("America/New_York")
     .toFormat("MMM d, h:mm a z");
-  const wageCountStartUtc = wageCountStart.toFormat("MMM d, h:mm a 'UTC'");
   const wageCountMessage = hasPeriodStarted
-    ? `Current wage count started at ${wageCountStartEastern} (${wageCountStartUtc}).`
-    : `Next wage count starts at ${wageCountStartEastern} (${wageCountStartUtc}).`;
+    ? `Current wage count started at ${wageCountStartUtc} (${wageCountStartEastern}).`
+    : `Next wage count starts at ${wageCountStartUtc} (${wageCountStartEastern}).`;
 
-  console.log("Component mounted");
+  console.log("Luxdrop period debug", {
+    nowUtc: DateTime.utc().toISO(),
+    targetDate: targetDate.toISO(),
+    wageCountStart: wageCountStart.toISO(),
+    hasPeriodStarted,
+  });
 
   return (
     <div className="mt-4 p-4 text-white">
