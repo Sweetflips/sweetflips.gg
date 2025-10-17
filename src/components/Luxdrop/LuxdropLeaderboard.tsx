@@ -37,6 +37,35 @@ const rewardMapping: { [key: number]: number } = {
   20: 20,
 };
 
+const parseCurrencyAmount = (value: unknown): number => {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value !== "string") {
+    return 0;
+  }
+
+  const sanitized = value.trim().toUpperCase().replace(/[\$,]/g, "");
+  let multiplier = 1;
+  let numericPortion = sanitized;
+
+  if (sanitized.endsWith("K")) {
+    multiplier = 1_000;
+    numericPortion = sanitized.slice(0, -1);
+  } else if (sanitized.endsWith("M")) {
+    multiplier = 1_000_000;
+    numericPortion = sanitized.slice(0, -1);
+  }
+
+  const parsed = parseFloat(numericPortion);
+  if (Number.isNaN(parsed)) {
+    return 0;
+  }
+
+  return parsed * multiplier;
+};
+
 const LuxdropLeaderboard: React.FC = () => {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -91,13 +120,21 @@ const LuxdropLeaderboard: React.FC = () => {
         const processedData = result.data
           .filter((user: any) => user.username)
           .slice(0, 20)
-          .map((user: any, index: number) => ({
-            username: maskUsername(user.username),
-            wagered: Number(user.wagered) || 0,
-            reward: rewardMapping[index + 1] || 0,
-          }));
+          .map((user: any, index: number) => {
+            const wagered = parseCurrencyAmount(user.wagered);
+            const rewardFromApi = parseCurrencyAmount(user.reward);
+            const reward =
+              rewardFromApi > 0 ? rewardFromApi : rewardMapping[index + 1] || 0;
+
+            return {
+              username: maskUsername(user.username),
+              wagered,
+              reward,
+            };
+          });
         
         if (isMounted) {
+          console.table(processedData.slice(0, 5), ["username", "wagered", "reward"]);
           setData(processedData);
         }
       } catch (err: any) {
