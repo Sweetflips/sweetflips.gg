@@ -127,18 +127,57 @@ const LuxdropLeaderboard: React.FC = () => {
   const topUsers = data.slice(0, 3);
   const restUsers = data.slice(3, 20);
 
-  const countDownDate = (() => {
+  const { targetDate, wageCountStart, hasPeriodStarted } = (() => {
     const now = DateTime.utc();
 
-    // First period: 1st 00:01 UTC to 16th 00:00 UTC (8:00 PM local)
-    // Second period: 16th 00:01 UTC (8:01 PM local) to end of month
+    // First period: 1st 00:01 UTC (8:01 PM local) to 16th 00:00 UTC (8:00 PM local)
+    // Second period: 16th 00:01 UTC (8:01 PM local) to end of month 00:00 UTC (8:00 PM local)
+    const firstPeriodStart = DateTime.utc(now.year, now.month, 1, 0, 1, 0);
     const firstPeriodEnd = DateTime.utc(now.year, now.month, 16, 0, 0, 0);
+    const secondPeriodStart = DateTime.utc(now.year, now.month, 16, 0, 1, 0);
     const secondPeriodEnd = DateTime.utc(now.year, now.month, 1, 0, 0, 0).plus({ months: 1 });
 
-    const targetDate = now < firstPeriodEnd ? firstPeriodEnd : secondPeriodEnd;
+    if (now < firstPeriodStart) {
+      // Waiting for the first period to begin after the top-of-month reset.
+      return {
+        targetDate: firstPeriodStart,
+        wageCountStart: firstPeriodStart,
+        hasPeriodStarted: false,
+      };
+    }
 
-    return targetDate.toISO(); // toISO will be interpreted correctly as UTC
+    if (now < firstPeriodEnd) {
+      return {
+        targetDate: firstPeriodEnd,
+        wageCountStart: firstPeriodStart,
+        hasPeriodStarted: true,
+      };
+    }
+
+    if (now < secondPeriodStart) {
+      // One-minute buffer between the first and second periods.
+      return {
+        targetDate: secondPeriodStart,
+        wageCountStart: secondPeriodStart,
+        hasPeriodStarted: false,
+      };
+    }
+
+    return {
+      targetDate: secondPeriodEnd,
+      wageCountStart: secondPeriodStart,
+      hasPeriodStarted: true,
+    };
   })();
+
+  const countDownDate = targetDate.toISO();
+  const wageCountStartEastern = wageCountStart
+    .setZone("America/New_York")
+    .toFormat("MMM d, h:mm a z");
+  const wageCountStartUtc = wageCountStart.toFormat("MMM d, h:mm a 'UTC'");
+  const wageCountMessage = hasPeriodStarted
+    ? `Current wage count started at ${wageCountStartEastern} (${wageCountStartUtc}).`
+    : `Next wage count starts at ${wageCountStartEastern} (${wageCountStartUtc}).`;
 
   console.log("Component mounted");
 
@@ -213,14 +252,19 @@ const LuxdropLeaderboard: React.FC = () => {
       Bi-weekly Leaderboard ends in
       </div>
       {countDownDate && (
-        <div className="relative mb-15 flex justify-center space-x-4">
-          <div
-            className="mx-12 flex flex-col items-center rounded-3xl md:mx-80"
-            data-aos="fade-up"
-          >
-            <Timer type="normal" date={countDownDate} />
+        <>
+          <div className="relative mb-15 flex justify-center space-x-4">
+            <div
+              className="mx-12 flex flex-col items-center rounded-3xl md:mx-80"
+              data-aos="fade-up"
+            >
+              <Timer type="normal" date={countDownDate} />
+            </div>
           </div>
-        </div>
+          <p className="mt-3 text-center text-sm text-gray-300 md:text-base">
+            {wageCountMessage}
+          </p>
+        </>
       )}
       {/* src/components/Luxdrop/LuxdropLeaderboard.tsx */}
 
