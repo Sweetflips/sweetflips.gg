@@ -130,21 +130,14 @@ const LuxdropLeaderboard: React.FC = () => {
   const countDownDate = (() => {
     const now = DateTime.utc();
 
-    let targetDate;
+    // First period: 1st 00:01 UTC to 16th 00:00 UTC (8:00 PM local)
+    // Second period: 16th 00:01 UTC (8:01 PM local) to end of month
+    const firstPeriodEnd = DateTime.utc(now.year, now.month, 16, 0, 0, 0);
+    const secondPeriodEnd = DateTime.utc(now.year, now.month, 1, 0, 0, 0).plus({ months: 1 });
 
-    // Bi-weekly logic: 1st-15th and 16th-end of month
-    // First period: 1st 00:01 UTC to 15th 17:00 UTC (8:00 PM local)
-    // Second period: 15th 17:01 UTC (8:01 PM local) to end of month
-    if (now.day <= 15) {
-      // First half of the month: countdown to 15th at 17:00:00 UTC (8:00 PM local)
-      targetDate = DateTime.utc(now.year, now.month, 15, 17, 0, 0, 0);
-    } else {
-      // Second half of the month: countdown to last day of month at 17:00:00 UTC (8:00 PM local)
-      const endOfMonth = now.endOf('month').set({ hour: 17, minute: 0, second: 0, millisecond: 0 });
-      targetDate = endOfMonth;
-    }
+    const targetDate = now < firstPeriodEnd ? firstPeriodEnd : secondPeriodEnd;
 
-    return targetDate.toISO(); // ➜ will be interpreted correctly as UTC
+    return targetDate.toISO(); // toISO will be interpreted correctly as UTC
   })();
 
   console.log("Component mounted");
