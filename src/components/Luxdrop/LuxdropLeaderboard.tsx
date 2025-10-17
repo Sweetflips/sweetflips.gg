@@ -37,6 +37,46 @@ const rewardMapping: { [key: number]: number } = {
   20: 20,
 };
 
+const normalizeNumericPortion = (input: string): number => {
+  let numericPortion = input.trim();
+
+  // Detect decimal separator heuristically (last occurrence wins).
+  const lastComma = numericPortion.lastIndexOf(",");
+  const lastDot = numericPortion.lastIndexOf(".");
+
+  if (lastComma !== -1 && lastDot !== -1) {
+    // Both present: whichever appears last is the decimal separator.
+    if (lastComma > lastDot) {
+      numericPortion = numericPortion.replace(/\./g, "").replace(",", ".");
+    } else {
+      numericPortion = numericPortion.replace(/,/g, "");
+    }
+  } else if (lastComma !== -1) {
+    const fractionalLength = numericPortion.length - lastComma - 1;
+    if (fractionalLength === 3) {
+      // Example: 1,234 -> thousands separator
+      numericPortion = numericPortion.replace(/,/g, "");
+    } else {
+      // Example: 36,5 -> decimal
+      numericPortion = numericPortion.replace(",", ".");
+    }
+  } else if (lastDot !== -1) {
+    const fractionalLength = numericPortion.length - lastDot - 1;
+    if (fractionalLength === 3) {
+      // Example: 1.234 -> thousands separator (European formatting)
+      numericPortion = numericPortion.replace(/\./g, "");
+    }
+    // Otherwise treat dot as decimal (e.g. 36.5)
+  }
+
+  const parsed = parseFloat(numericPortion);
+  if (Number.isNaN(parsed)) {
+    return 0;
+  }
+
+  return parsed;
+};
+
 const parseCurrencyAmount = (value: unknown): number => {
   if (typeof value === "number" && Number.isFinite(value)) {
     return value;
@@ -46,7 +86,8 @@ const parseCurrencyAmount = (value: unknown): number => {
     return 0;
   }
 
-  const sanitized = value.trim().toUpperCase().replace(/[\$,]/g, "");
+  const sanitized = value.trim().toUpperCase().replace(/[^0-9.,KMB-]/g, "");
+
   let multiplier = 1;
   let numericPortion = sanitized;
 
@@ -56,14 +97,12 @@ const parseCurrencyAmount = (value: unknown): number => {
   } else if (sanitized.endsWith("M")) {
     multiplier = 1_000_000;
     numericPortion = sanitized.slice(0, -1);
+  } else if (sanitized.endsWith("B")) {
+    multiplier = 1_000_000_000;
+    numericPortion = sanitized.slice(0, -1);
   }
 
-  const parsed = parseFloat(numericPortion);
-  if (Number.isNaN(parsed)) {
-    return 0;
-  }
-
-  return parsed * multiplier;
+  return normalizeNumericPortion(numericPortion) * multiplier;
 };
 
 const LuxdropLeaderboard: React.FC = () => {
@@ -121,8 +160,21 @@ const LuxdropLeaderboard: React.FC = () => {
           .filter((user: any) => user.username)
           .slice(0, 20)
           .map((user: any, index: number) => {
-            const wagered = parseCurrencyAmount(user.wagered);
-            const rewardFromApi = parseCurrencyAmount(user.reward);
+            const wageredRaw = user.wagered;
+            const rewardRaw = user.reward;
+            const wagered = parseCurrencyAmount(wageredRaw);
+            const rewardFromApi = parseCurrencyAmount(rewardRaw);
+
+            if (index === 0) {
+              console.log("Luxdrop raw top user", {
+                username: user.username,
+                wageredRaw,
+                wageredParsed: wagered,
+                rewardRaw,
+                rewardParsed: rewardFromApi,
+              });
+            }
+
             const reward =
               rewardFromApi > 0 ? rewardFromApi : rewardMapping[index + 1] || 0;
 
@@ -182,46 +234,28 @@ const LuxdropLeaderboard: React.FC = () => {
   const topUsers = data.slice(0, 3);
   const restUsers = data.slice(3, 20);
 
-  const { targetDate, wageCountStart, hasPeriodStarted } = (() => {
+  const { targetDate, periodStart, periodLabel } = (() => {
     const now = DateTime.utc();
 
-    // First period: 1st 00:01 UTC (8:01 PM local) to 16th 00:00 UTC (8:00 PM local)
-    // Second period: 16th 00:01 UTC (8:01 PM local) to end-of-month (31st/30th/etc) 00:00 UTC (8:00 PM local)
+    // Period 1: 1st 00:01 UTC (previous day 8:01 PM Eastern) to 15th 00:01 UTC
+    // Period 2: 15th 00:01 UTC to 1st of next month 00:01 UTC
     const firstPeriodStart = DateTime.utc(now.year, now.month, 1, 0, 1, 0);
-    const firstPeriodEnd = DateTime.utc(now.year, now.month, 16, 0, 0, 0);
-    const secondPeriodStart = DateTime.utc(now.year, now.month, 16, 0, 1, 0);
-    const secondPeriodEnd = DateTime.utc(now.year, now.month, 1, 0, 0, 0).plus({ months: 1 });
-
-    if (now < firstPeriodStart) {
-      // Waiting for the first period to begin after the top-of-month reset.
-      return {
-        targetDate: firstPeriodStart,
-        wageCountStart: firstPeriodStart,
-        hasPeriodStarted: false,
-      };
-    }
-
-    if (now < firstPeriodEnd) {
-      return {
-        targetDate: firstPeriodEnd,
-        wageCountStart: firstPeriodStart,
-        hasPeriodStarted: true,
-      };
-    }
+    const secondPeriodStart = DateTime.utc(now.year, now.month, 15, 0, 1, 0);
+    const nextMonthPeriodStart = DateTime.utc(now.year, now.month, 1, 0, 1, 0).plus({ months: 1 });
 
     if (now < secondPeriodStart) {
-      // One-minute buffer between the first and second periods.
+      const upcomingReset = secondPeriodStart;
       return {
-        targetDate: secondPeriodStart,
-        wageCountStart: secondPeriodStart,
-        hasPeriodStarted: false,
+        targetDate: upcomingReset,
+        periodStart: firstPeriodStart,
+        periodLabel: "Period 1",
       };
     }
 
     return {
-      targetDate: secondPeriodEnd,
-      wageCountStart: secondPeriodStart,
-      hasPeriodStarted: true,
+      targetDate: nextMonthPeriodStart,
+      periodStart: secondPeriodStart,
+      periodLabel: "Period 2",
     };
   })();
 
@@ -229,10 +263,13 @@ const LuxdropLeaderboard: React.FC = () => {
 
   console.log("Luxdrop period debug", {
     nowUtc: DateTime.utc().toISO(),
-    targetDate: countDownDate,
-    wageCountStartUtc: wageCountStart.toISO(),
-    wageCountStartEastern: wageCountStart.setZone("America/New_York").toISO(),
-    hasPeriodStarted,
+    period: periodLabel,
+    periodStartUtc: periodStart.toISO(),
+    periodStartEastern: periodStart.setZone("America/New_York").toISO(),
+    nextResetUtc: countDownDate,
+    nextResetEastern: countDownDate ? DateTime.fromISO(countDownDate, { zone: "utc" })
+      .setZone("America/New_York")
+      .toISO() : null,
   });
 
   return (
