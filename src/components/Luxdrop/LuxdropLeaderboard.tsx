@@ -132,14 +132,16 @@ const LuxdropLeaderboard: React.FC = () => {
 
     let targetDate;
 
-    // Bi-weekly logic: 1st-14th and 15th-end of month
-    // Note: Stats show from 00:00 AM UTC today (1h20m ago) to end of month
-    if (now.day <= 14) {
-      // First half of the month: countdown to 14th at 23:59:59 UTC
-      targetDate = DateTime.utc(now.year, now.month, 14, 23, 59, 59, 999);
+    // Bi-weekly logic: 1st-15th and 16th-end of month
+    // Timezone: CEST (UTC+2)
+    // First period: 1st 00:00 CEST to 15th 22:00 CEST
+    // Second period: 16th 22:01 CEST to end of month
+    if (now.day <= 15) {
+      // First half of the month: countdown to 15th at 22:00 CEST (20:00 UTC)
+      targetDate = DateTime.utc(now.year, now.month, 15, 20, 0, 0, 0);
     } else {
-      // Second half of the month: countdown to last day of month at 23:59:59 UTC
-      const endOfMonth = now.endOf('month').set({ hour: 23, minute: 59, second: 59, millisecond: 999 });
+      // Second half of the month: countdown to last day of month at 22:00 CEST (20:00 UTC)
+      const endOfMonth = now.endOf('month').set({ hour: 20, minute: 0, second: 0, millisecond: 0 });
       targetDate = endOfMonth;
     }
 
@@ -195,7 +197,7 @@ const LuxdropLeaderboard: React.FC = () => {
         </div> */}
         <div className="absolute left-0 right-0 mx-auto mt-6 max-w-screen-lg px-4 text-center md:mt-10">
           <b className="animate-pulse-glow text-5xl text-[#fff] sm:text-2xl md:text-3xl lg:text-4xl xl:text-4xl">
-            $22,000
+            $11,000
           </b>
           <div className="mt-4 flex flex-col items-center justify-center sm:flex-row sm:space-x-4">
             <Image
