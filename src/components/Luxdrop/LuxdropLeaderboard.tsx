@@ -132,18 +132,13 @@ const LuxdropLeaderboard: React.FC = () => {
 
     let targetDate;
 
-    // Bi-weekly logic: 1st-15th and 16th-end of month
-    // Timezone: CEST (UTC+2)
-    // First period: 1st 00:00 CEST to 15th 22:00 CEST
-    // Second period: 16th 22:01 CEST to end of month
-    if (now.day <= 15) {
-      // First half of the month: countdown to 15th at 22:00 CEST (20:00 UTC)
-      targetDate = DateTime.utc(now.year, now.month, 15, 20, 0, 0, 0);
-    } else {
-      // Second half of the month: countdown to last day of month at 22:00 CEST (20:00 UTC)
-      const endOfMonth = now.endOf('month').set({ hour: 20, minute: 0, second: 0, millisecond: 0 });
-      targetDate = endOfMonth;
-    }
+    // Current period logic: Today (16th) 00:01 UTC to 31st at 22:00 CEST
+    // The wager was reset 2 hours ago (at 00:01 UTC today)
+    // Current period runs until the end of the month at 22:00 CEST (20:00 UTC)
+
+    // Set target to last day of current month at 22:00 CEST (20:00 UTC)
+    const endOfMonth = now.endOf('month').set({ hour: 20, minute: 0, second: 0, millisecond: 0 });
+    targetDate = endOfMonth;
 
     return targetDate.toISO(); // ➜ will be interpreted correctly as UTC
   })();
