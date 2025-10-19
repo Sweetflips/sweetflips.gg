@@ -12,7 +12,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     baseUrl = baseUrl.slice(0, -1);
   }
 
-  const redirectUri = `${baseUrl}/auth/callback`;
+const redirectUri = process.env.KICK_REDIRECT_URI || `${baseUrl}/auth/callback`;
 
   const codeVerifier = randomBytes(32).toString('base64url');
   const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');

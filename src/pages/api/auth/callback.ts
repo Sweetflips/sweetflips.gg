@@ -54,7 +54,7 @@ export default async function handler(
     baseUrl = baseUrl.slice(0, -1);
   }
 
-  const redirectUri = `${baseUrl}/auth/callback`;
+const redirectUri = process.env.KICK_REDIRECT_URI || `${baseUrl}/auth/callback`;
 
   try {
     // Exchange code for tokens
