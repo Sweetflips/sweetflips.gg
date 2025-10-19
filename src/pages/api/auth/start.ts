@@ -39,7 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     authUrl.searchParams.append('code_challenge_method', 'S256');
     authUrl.searchParams.append('state', JSON.stringify({ sessionId, action: 'login' }));
 
-    return res.status(200).json({ authUrl: authUrl.toString(), sessionId });
+    return res.status(200).json({ redirectUrl: authUrl.toString(), codeVerifier, expiresAt: Date.now() + 10 * 60 * 1000, sessionId });
   } catch (err) {
     console.error('Error starting Kick OAuth:', err);
     return res.status(500).json({ error: 'Internal server error' });
