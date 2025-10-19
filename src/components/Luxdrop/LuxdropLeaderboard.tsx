@@ -150,7 +150,7 @@ const LuxdropLeaderboard: React.FC = () => {
         if (!response.ok) {
           throw new Error(`API returned ${response.status}: ${response.statusText}`);
         }
-        
+
         const result = await response.json();
         if (!result.data || !Array.isArray(result.data)) {
           throw new Error("Invalid data format from API");
@@ -184,7 +184,7 @@ const LuxdropLeaderboard: React.FC = () => {
               reward,
             };
           });
-        
+
         if (isMounted) {
           console.table(processedData.slice(0, 5), ["username", "wagered", "reward"]);
           setData(processedData);
@@ -236,26 +236,13 @@ const LuxdropLeaderboard: React.FC = () => {
 
   const { targetDate, periodStart, periodLabel } = (() => {
     const now = DateTime.utc();
-
-    // Period 1: 1st 00:01 UTC (previous day 8:01 PM Eastern) to 15th 00:01 UTC
-    // Period 2: 15th 00:01 UTC to 1st of next month 00:01 UTC
-    const firstPeriodStart = DateTime.utc(now.year, now.month, 1, 0, 1, 0);
-    const secondPeriodStart = DateTime.utc(now.year, now.month, 15, 0, 1, 0);
-    const nextMonthPeriodStart = DateTime.utc(now.year, now.month, 1, 0, 1, 0).plus({ months: 1 });
-
-    if (now < secondPeriodStart) {
-      const upcomingReset = secondPeriodStart;
-      return {
-        targetDate: upcomingReset,
-        periodStart: firstPeriodStart,
-        periodLabel: "Period 1",
-      };
-    }
+    const periodStartDate = DateTime.utc(2025, 10, 16, 0, 0, 0);
+    const periodEndDate = DateTime.utc(2025, 10, 31, 23, 59, 59);
 
     return {
-      targetDate: nextMonthPeriodStart,
-      periodStart: secondPeriodStart,
-      periodLabel: "Period 2",
+      targetDate: periodEndDate,
+      periodStart: periodStartDate,
+      periodLabel: "October 16-31, 2025",
     };
   })();
 

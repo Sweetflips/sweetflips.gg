@@ -53,39 +53,18 @@ export default async function handler(
     }
   }
 
-  // --- Date Logic for Bi-weekly Resetting Period ---
   const currentTime = DateTime.utc();
 
-  // Period 1: 1st 00:01 UTC (previous day 8:01 PM Eastern) to 15th 00:01 UTC
-  // Period 2: 15th 00:01 UTC to 1st of next month 00:01 UTC
-  const firstPeriodStart = DateTime.utc(currentTime.year, currentTime.month, 1, 0, 1, 0);
-  const secondPeriodStart = DateTime.utc(currentTime.year, currentTime.month, 15, 0, 1, 0);
-  const nextMonthPeriodStart = DateTime.utc(currentTime.year, currentTime.month, 1, 0, 1, 0).plus({ months: 1 });
+  const startDate = DateTime.utc(2025, 10, 16, 0, 0, 0);
+  const endDate = DateTime.utc(2025, 10, 31, 23, 59, 59);
+  const periodLabel = "October 16-31, 2025";
 
-  let startDate: DateTime;
-  let endDate: DateTime;
-  let periodLabel: string;
-
-  if (currentTime < secondPeriodStart) {
-    // We're in Period 1: 1st to 15th
-    startDate = firstPeriodStart;
-    endDate = secondPeriodStart;
-    periodLabel = "Period 1 (1st-14th)";
-  } else {
-    // We're in Period 2: 15th to end of month
-    startDate = secondPeriodStart;
-    endDate = nextMonthPeriodStart;
-    periodLabel = "Period 2 (15th-end)";
-  }
-
-  // Format dates as YYYY-MM-DD for the API
   const startDateISO = startDate.toISODate();
-  const endDateISO = endDate.minus({ seconds: 1 }).toISODate(); // End just before the next period starts
+  const endDateISO = endDate.toISODate();
 
-  console.log("=== DATE DEBUG (BI-WEEKLY PERIOD) ===");
+  console.log("=== DATE DEBUG (FIXED PERIOD) ===");
   console.log("Current time:", currentTime.toISO());
-  console.log("Current month:", currentTime.monthLong, currentTime.year);
-  console.log("Bi-weekly period:", periodLabel);
+  console.log("Fixed period:", periodLabel);
   console.log("Period start UTC:", startDate.toISO());
   console.log("Period end UTC:", endDate.toISO());
   console.log("Fetching data for period:", startDateISO, "to", endDateISO);
@@ -128,7 +107,7 @@ export default async function handler(
     console.log("=== API REQUEST ===");
     console.log("URL:", config.url);
     console.log("Params:", JSON.stringify(params, null, 2));
-    
+
     const response = await axios(config);
     const monthlyData: AffiliateEntry[] = response.data;
 
@@ -146,11 +125,11 @@ export default async function handler(
     });
 
     console.log("Active wagerers in current period:", activeWagerers.length);
-    
+
     const totalWagered = activeWagerers.reduce((sum: number, entry: AffiliateEntry) => {
       return sum + (Number(entry.wagered) || 0);
     }, 0);
-    
+
     console.log("Total wagered in current period:", "$" + totalWagered.toFixed(2));
 
     // Process the bi-weekly data - sort by wagered amount descending
@@ -163,22 +142,21 @@ export default async function handler(
       .sort((a, b) => b.wagered - a.wagered)
       .slice(0, 100); // Top 100
 
-    console.log(`${currentTime.monthLong} ${currentTime.year} bi-weekly leaderboard generated:`);
+    console.log(`${periodLabel} leaderboard generated:`);
     console.log("- Total active wagerers:", leaderboard.length);
     if (leaderboard.length > 0) {
       console.log("- Top wagerer:", leaderboard[0].username, "$" + leaderboard[0].wagered);
     }
 
-    // Include metadata about the current bi-weekly period
     const responseData = {
       data: leaderboard,
       period: {
-        month: currentTime.monthLong,
-        year: currentTime.year,
+        month: "October",
+        year: 2025,
         period: periodLabel,
         startDate: startDateISO,
         endDate: endDateISO,
-        note: `Bi-weekly leaderboard data from ${startDateISO} to ${endDateISO}`
+        note: `Leaderboard data from ${startDateISO} to ${endDateISO}`
       }
     };
 
@@ -188,7 +166,7 @@ export default async function handler(
   } catch (error: any) {
     console.error("❌ API request failed:", error.message);
     console.error("Status:", error.response?.status);
-    
+
     if (error.response?.data) {
       console.error("API Error Response:", JSON.stringify(error.response.data, null, 2));
     }
