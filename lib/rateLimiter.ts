@@ -28,8 +28,8 @@ if (typeof setInterval !== 'undefined') {
 }
 
 // Cleanup on process exit
-if (typeof process !== 'undefined' && process.on) {
-  process.on('exit', () => {
+if (typeof process !== 'undefined' && (process as any).on) {
+  (process as any).on('exit', () => {
     if (cleanupInterval) {
       clearInterval(cleanupInterval);
     }

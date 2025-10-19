@@ -61,8 +61,8 @@ if (typeof setInterval !== 'undefined' && process.env.NODE_ENV !== 'production')
 }
 
 // Cleanup on process exit (for non-serverless environments)
-if (typeof process !== 'undefined' && process.on) {
-  process.on('exit', () => {
+if (typeof process !== 'undefined' && (process as any).on) {
+  (process as any).on('exit', () => {
     if (cleanupInterval) {
       clearInterval(cleanupInterval);
     }
