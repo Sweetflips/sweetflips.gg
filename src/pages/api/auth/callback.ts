@@ -43,7 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   let baseUrl = getBaseUrl();
   if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
 
-  const redirectUri = 'https://sweetflips-67d8mwzuw-sweetflips-projects.vercel.app/auth/callback';
+  const redirectUri = process.env.KICK_REDIRECT_URI || `${baseUrl}/auth/callback`;
 
   try {
     // Exchange code for tokens
