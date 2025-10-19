@@ -9,6 +9,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Debug: Log all query parameters received
+  console.log('OAuth callback - Full query params:', req.query);
+  console.log('OAuth callback - URL:', req.url);
+
   const { code, state, error } = req.query;
   
   // Handle OAuth errors from Kick
@@ -17,7 +21,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: `OAuth failed: ${error}` });
   }
   if (!code || !state || typeof state !== 'string') {
-    return res.status(400).json({ error: 'Missing code or state' });
+    console.error('OAuth callback - Missing parameters:', { code: !!code, state: !!state, stateType: typeof state });
+    return res.status(400).json({ error: 'No valid authorization parameters found in callback URL' });
   }
 
   // Parse state to handle both regular auth and account linking
