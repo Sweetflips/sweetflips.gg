@@ -1,44 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx prisma migrate dev:*)",
-      "Bash(ls:*)",
-      "Bash(find:*)",
-      "Bash(git checkout:*)",
-      "Bash(git add:*)",
-      "Bash(git stash:*)",
-      "Bash(npm run build:*)",
-      "Bash(pnpm install:*)",
-      "Bash(pnpm run:*)",
-      "Bash(pnpm vite:*)",
-      "Bash(rm:*)",
-      "Bash(git commit:*)",
-      "Bash(git push:*)",
-      "Bash(git config:*)",
-      "Bash(vercel:*)",
-      "Bash(grep:*)",
-      "Bash(mkdir:*)",
-      "Bash(npm install:*)",
-      "Bash(npx prisma generate:*)",
-      "Read(/D:\\Sweetflips\\Sweetflips\\Library\\PackageCache\\com.readyplayerme.core@0f11fca654\\Runtime\\AvatarCreator\\Scripts\\Data/**)",
-      "Read(/D:\\Sweetflips\\Sweetflips\\Library\\PackageCache\\com.readyplayerme.core@0f11fca654\\Runtime\\Core\\Scripts\\Data/**)",
-      "Read(/D:\\Sweetflips\\Sweetflips\\Library\\PackageCache\\com.readyplayerme.core@0f11fca654/**)",
-      "Read(/D:\\Sweetflips\\Sweetflips\\Library\\PackageCache\\com.readyplayerme.core@0f11fca654\\Runtime\\AvatarCreator\\Scripts\\Data/**)",
-      "Read(/D:\\Sweetflips\\Sweetflips\\Library\\PackageCache\\com.readyplayerme.core@0f11fca654/**)",
-      "Read(/D:\\Sweetflips\\Sweetflips\\Library\\PackageCache\\com.readyplayerme.core@0f11fca654\\Runtime\\AvatarCreator\\Scripts\\JsonConverters/**)",
-      "Read(/D:\\Sweetflips\\Sweetflips\\Library\\PackageCache\\com.readyplayerme.core@0f11fca654/**)",
-      "Read(/D:\\Sweetflips\\Sweetflips\\Library\\PackageCache\\com.readyplayerme.core@0f11fca654\\Runtime\\AvatarCreator\\Scripts\\JsonConverters/**)",
-      "Read(/D:\\Sweetflips\\Sweetflips\\Assets\\Samples\\Ready Player Me Core\\7.4.0\\AvatarCreatorSamples/**)",
-      "Read(/D:\\Sweetflips\\Sweetflips\\Assets\\Samples\\Ready Player Me Core\\7.4.0\\AvatarCreatorSamples\\AvatarCreatorWizard\\Scripts/**)",
-      "Read(/D:\\Sweetflips\\Sweetflips\\Assets/**)",
-      "Read(/D:\\Sweetflips\\Sweetflips\\Assets\\Plugins\\WebGL/**)",
-      "Read(/D:\\Sweetflips\\Sweetflips\\Assets/**)",
-      "Read(/D:\\Sweetflips\\Sweetflips\\Assets\\Scripts/**)",
-      "Bash(npx tsc:*)",
-      "WebFetch(domain:supabase.com)",
-      "Bash(npm run dev:*)",
-      "Bash(npm run lint)"
+      "Bash(Select-String:*)"
     ],
-    "deny": []
+    "deny": [],
+    "ask": []
   }
 }

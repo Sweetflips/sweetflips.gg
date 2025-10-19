@@ -112,11 +112,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Save or update user in DB
     try {
+      console.log('ℹ️ Saving user to DB - Action:', action);
+      console.log('ℹ️ User data:', { kickId, username, email, hasRefreshToken: !!refreshToken, auth_user_id });
+
       if (action === 'link' && auth_user_id) {
         // Linking flow: attach Kick account to existing Supabase user
         const existingByAuth = await prisma.user.findUnique({ where: { auth_user_id } });
         if (existingByAuth) {
           try {
+            console.log('🔄 Updating existing Supabase user with Kick data:', { userId: existingByAuth.id, kickId, username });
             await prisma.user.update({
               where: { id: existingByAuth.id },
               data: {
@@ -127,15 +131,37 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 kick_linked_at: new Date(),
               },
             });
+            console.log('✅ Successfully updated user with Kick data');
           } catch (e: any) {
+            console.error('❌ Failed to update Supabase user with Kick data:', e);
             const target = e?.meta?.target;
             const isKickIdConflict = e?.code === 'P2002' && (Array.isArray(target) ? target.includes('kickId') : target === 'kickId');
+            const isAuthUserIdConflict = e?.code === 'P2002' && (Array.isArray(target) ? target.includes('auth_user_id') : target === 'auth_user_id');
+
+            console.log('🔍 Constraint conflict details:', {
+              errorCode: e?.code,
+              target,
+              isKickIdConflict,
+              isAuthUserIdConflict
+            });
+
             if (isKickIdConflict) {
               // A user with this kickId already exists; merge by moving auth_user_id to that record
+              console.log('🔄 Handling kickId conflict - merging accounts');
               const existingByKick = await prisma.user.findUnique({ where: { kickId } });
               if (existingByKick) {
+                console.log('📝 Found existing user with same kickId:', {
+                  existingKickId: existingByKick.id,
+                  existingAuthUserId: existingByKick.auth_user_id,
+                  newAuthUserId: auth_user_id
+                });
+
                 // Clear auth_user_id on the Supabase-only record to free the unique constraint
-                await prisma.user.update({ where: { id: existingByAuth.id }, data: { auth_user_id: null } });
+                await prisma.user.update({
+                  where: { id: existingByAuth.id },
+                  data: { auth_user_id: null }
+                });
+
                 // Assign auth_user_id to the Kick record and update fields
                 await prisma.user.update({
                   where: { id: existingByKick.id },
@@ -147,9 +173,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     kick_linked_at: new Date(),
                   },
                 });
+                console.log('✅ Successfully merged accounts');
               }
+            } else if (isAuthUserIdConflict) {
+              console.error('❌ auth_user_id conflict - this should not happen as we searched by it');
             } else {
-              console.error('Failed to link Kick to Supabase user:', e);
+              console.error('❌ Unknown constraint error while linking Kick to Supabase user:', e);
+              throw e; // Re-throw for outer handler
             }
           }
         } else {
@@ -174,21 +204,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       } else {
         // Regular login flow: upsert by kickId
-        await prisma.user.upsert({
-          where: { kickId },
-          update: {
-            email,
-            username,
-            ...(refreshToken && { refresh_token: refreshToken }),
-          },
-          create: {
+        console.log('🔄 Regular login flow - upserting user by kickId:', { kickId, username });
+        try {
+          await prisma.user.upsert({
+            where: { kickId },
+            update: {
+              email,
+              username,
+              ...(refreshToken && { refresh_token: refreshToken }),
+            },
+            create: {
+              kickId,
+              email,
+              username,
+              tokens: 0,
+              ...(refreshToken && { refresh_token: refreshToken }),
+            },
+          });
+          console.log('✅ Successfully upserted user');
+        } catch (e: any) {
+          console.error('❌ Failed to upsert user:', e);
+          console.error('❌ Upsert error details:', {
+            message: e?.message,
+            code: e?.code,
+            meta: e?.meta,
             kickId,
-            email,
-            username,
-            tokens: 0,
-            ...(refreshToken && { refresh_token: refreshToken }),
-          },
-        });
+            username
+          });
+          throw e;
+        }
       }
 
       // Link UserData record by username if it exists and is not yet linked
@@ -214,13 +258,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         console.warn('Warning: Failed to link UserData record:', e);
       }
     } catch (saveErr: any) {
-      console.error('Error saving user info:', saveErr);
+      console.error('❌ Failed to save user info to DB:', saveErr);
+      console.error('❌ Error details:', {
+        message: saveErr?.message,
+        code: saveErr?.code,
+        meta: saveErr?.meta,
+        cause: saveErr?.cause
+      });
+
+      // Log the full error stack trace
+      if (saveErr.stack) {
+        console.error('❌ Stack trace:', saveErr.stack);
+      }
+
       const target = saveErr?.meta?.target;
       const isKickIdConflict = saveErr?.code === 'P2002' && (Array.isArray(target) ? target.includes('kickId') : target === 'kickId');
+
       if (!isKickIdConflict) {
-        return res.status(500).json({ error: 'Error saving user info' });
+        // Send a more detailed error response for debugging
+        return res.status(500).json({
+          error: 'Failed to save user info to DB',
+          details: saveErr?.message || 'Unknown error',
+          code: saveErr?.code
+        });
       }
       // If duplicate kickId, treat as success to unblock login
+      console.log('⚠️ Duplicate kickId detected, treating as success for login flow');
     }
 
     // Set cookies for subsequent requests
