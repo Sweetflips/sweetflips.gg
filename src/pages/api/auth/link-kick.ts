@@ -61,7 +61,7 @@ export default async function handler(
     authUrl.searchParams.append("client_id", KICK_CLIENT_ID);
     authUrl.searchParams.append("response_type", "code");
     authUrl.searchParams.append("scope", "user:read");
-    authUrl.searchParams.append("redirect_uri", `${BASE_URL}/api/auth/callback`);
+    authUrl.searchParams.append("redirect_uri", `${BASE_URL}/auth/callback`);
     authUrl.searchParams.append("code_challenge", codeChallenge);
     authUrl.searchParams.append("code_challenge_method", "S256");
     authUrl.searchParams.append("state", JSON.stringify({ 

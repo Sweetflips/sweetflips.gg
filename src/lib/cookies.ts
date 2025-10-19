@@ -13,15 +13,22 @@ export const COOKIE_OPTIONS = {
 /**
  * Set a cookie value (client-side)
  */
-export function setCookie(name: string, value: string, days: number = 7): void {
+export function setCookie(
+  name: string,
+  value: string,
+  days: number = 7,
+  sameSite: 'lax' | 'none' | 'strict' = 'lax',
+  forceSecure?: boolean,
+): void {
   if (typeof window === 'undefined') return;
   
   const expires = new Date();
   expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
   
+  const useSecure = forceSecure ?? (window.location.protocol === 'https:');
   document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires.toUTCString()}; path=/; ${
-    window.location.protocol === 'https:' ? 'secure; ' : ''
-  }samesite=lax`;
+    useSecure ? 'secure; ' : ''
+  }samesite=${sameSite}`;
   
   // Also store in localStorage and sessionStorage for redundancy
   try {
@@ -89,11 +96,11 @@ export function deleteCookie(name: string): void {
  */
 export function storeAuthForUnity(token: string, userId: string | number, authUserId?: string): void {
   // Store in multiple places for Unity to find
-  setCookie('authToken', token);
-  setCookie('userId', userId.toString());
+  setCookie('authToken', token, 7, 'none', true);
+  setCookie('userId', userId.toString(), 7, 'none', true);
   
   if (authUserId) {
-    setCookie('authUserId', authUserId);
+    setCookie('authUserId', authUserId, 7, 'none', true);
   }
   
   // Also set on window object for immediate access

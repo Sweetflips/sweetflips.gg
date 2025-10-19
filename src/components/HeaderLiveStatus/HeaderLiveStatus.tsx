@@ -9,7 +9,7 @@ export function HeaderLiveStatus() {
   useEffect(() => {
     async function fetchStatus() {
       try {
-        const res = await fetch('https://kick.com/api/v2/channels/sweetflips');
+        const res = await fetch('/api/kick/channel-status?channel=sweetflips');
         const data = await res.json();
         setIsLive(data.livestream?.is_live ?? false);
       } catch (err) {

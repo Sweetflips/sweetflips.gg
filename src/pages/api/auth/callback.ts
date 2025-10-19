@@ -54,7 +54,7 @@ export default async function handler(
     baseUrl = baseUrl.slice(0, -1);
   }
 
-  const redirectUri = `${baseUrl}/api/auth/callback`;
+  const redirectUri = `${baseUrl}/auth/callback`;
 
   try {
     // Exchange code for tokens
@@ -154,12 +154,18 @@ export default async function handler(
       }),
       // Unity-accessible cookies (not httpOnly)
       serialize("authToken", accessToken, {
-        ...COOKIE_OPTIONS,
-        httpOnly: false, // Allow JavaScript/Unity access
+        httpOnly: false,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "none",
+        maxAge: 60 * 60 * 24,
+        path: "/",
       }),
       serialize("userId", user?.id.toString() || "0", {
-        ...COOKIE_OPTIONS,
-        httpOnly: false, // Allow JavaScript/Unity access
+        httpOnly: false,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "none",
+        maxAge: 60 * 60 * 24,
+        path: "/",
       }),
     ];
 
@@ -167,8 +173,11 @@ export default async function handler(
     if (auth_user_id) {
       cookies.push(
         serialize("authUserId", auth_user_id, {
-          ...COOKIE_OPTIONS,
-          httpOnly: false, // Allow JavaScript/Unity access
+          httpOnly: false,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "none",
+          maxAge: 60 * 60 * 24,
+          path: "/",
         })
       );
     }
