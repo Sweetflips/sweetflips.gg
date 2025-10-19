@@ -9,7 +9,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { code, state } = req.query;
+  const { code, state, error } = req.query;
+  
+  // Handle OAuth errors from Kick
+  if (error) {
+    console.error('OAuth error from Kick:', error);
+    return res.status(400).json({ error: `OAuth failed: ${error}` });
+  }
   if (!code || !state || typeof state !== 'string') {
     return res.status(400).json({ error: 'Missing code or state' });
   }
@@ -44,6 +50,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
 
   const redirectUri = process.env.KICK_REDIRECT_URI || `${baseUrl}/auth/callback`;
+  
+  // Debug: Log the redirect URI being used
+  console.log('OAuth callback - redirectUri:', redirectUri);
+  console.log('OAuth callback - baseUrl:', baseUrl);
 
   try {
     // Exchange code for tokens

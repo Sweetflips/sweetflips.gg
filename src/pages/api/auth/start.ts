@@ -14,6 +14,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
 
     const redirectUri = process.env.KICK_REDIRECT_URI || `${baseUrl}/auth/callback`;
+    
+    // Debug: Log the redirect URI being used
+    console.log('OAuth start - redirectUri:', redirectUri);
+    console.log('OAuth start - baseUrl:', baseUrl);
+    console.log('OAuth start - VERCEL_ENV:', process.env.VERCEL_ENV);
+    console.log('OAuth start - VERCEL_URL:', process.env.VERCEL_URL);
 
     // PKCE
     const codeVerifier = randomBytes(32).toString('base64url');
