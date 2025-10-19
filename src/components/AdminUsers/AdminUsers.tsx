@@ -184,9 +184,9 @@ export default function AdminUsers() {
                 <X size={20} />
               </button>
               <Dialog.Title className="text-lg font-semibold">Edit User</Dialog.Title>
-+             <Dialog.Description className="text-sm text-purple-300">
-+               Update the selected user's profile information and permissions.
-+             </Dialog.Description>
+-             <Dialog.Description className="text-sm text-purple-300">
++               Update the selected user&apos;s profile information and permissions.
+              </Dialog.Description>
 
               <div className="space-y-2">
                 <label className="block">
