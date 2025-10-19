@@ -19,7 +19,15 @@ const CallbackPage = () => {
 
       const code = searchParams.get('code');
       const state = searchParams.get('state');
-      
+      const errorParam = searchParams.get('error');
+
+      // If provider returned an error, surface it and stop
+      if (errorParam) {
+        console.error(`[OAuth Callback] ❌ error from provider: ${errorParam}, state: ${state ?? 'none'}`);
+        router.push('/auth/signin?error=' + encodeURIComponent(errorParam));
+        return;
+      }
+
       // Check for Supabase auth tokens (email verification)
       const accessToken = searchParams.get('access_token');
       const refreshToken = searchParams.get('refresh_token');
@@ -61,6 +69,7 @@ const CallbackPage = () => {
       }
 
       console.error('❌ No valid auth parameters found in callback');
+      router.push('/auth/signin?error=' + encodeURIComponent('No valid auth parameters in callback'));
     };
 
     handleAuthCallback();

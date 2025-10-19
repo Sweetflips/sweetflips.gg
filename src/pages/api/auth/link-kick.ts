@@ -1,12 +1,12 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { createClient } from "@supabase/supabase-js";
 import { prisma } from "../../../../lib/prisma";
+import { getBaseUrl } from "../../../../lib/getBaseUrl";
 import { v4 as uuidv4 } from "uuid";
 import { randomBytes, createHash } from "crypto";
 
 const KICK_CLIENT_ID = process.env.NEXT_PUBLIC_KICK_CLIENT_ID!;
 const KICK_CLIENT_SECRET = process.env.KICK_CLIENT_SECRET!;
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://sweetflips.gg";
 
 export default async function handler(
   req: NextApiRequest,
@@ -61,7 +61,11 @@ export default async function handler(
     authUrl.searchParams.append("client_id", KICK_CLIENT_ID);
     authUrl.searchParams.append("response_type", "code");
     authUrl.searchParams.append("scope", "user:read");
-    authUrl.searchParams.append("redirect_uri", `${BASE_URL}/auth/callback`);
+
+    let baseUrl = getBaseUrl();
+    if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+
+    authUrl.searchParams.append("redirect_uri", `${baseUrl}/auth/callback`);
     authUrl.searchParams.append("code_challenge", codeChallenge);
     authUrl.searchParams.append("code_challenge_method", "S256");
     authUrl.searchParams.append("state", JSON.stringify({ 
