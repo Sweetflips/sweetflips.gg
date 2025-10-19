@@ -84,11 +84,157 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const tokenData = await tokenResp.json();
     const accessToken = tokenData.access_token as string;
 
-    // Set basic cookies so UI can proceed; adjust as needed
-    const cookies = [
+    // Fetch user info from Kick using the access token
+    const kickUserResp = await fetch('https://api.kick.com/public/v1/users', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!kickUserResp.ok) {
+      const errText = await kickUserResp.text();
+      console.error('Failed to fetch user info from Kick:', errText);
+      return res.status(400).json({ error: 'Failed to fetch user info from Kick' });
+    }
+
+    const kickData = await kickUserResp.json();
+    const kickUser = kickData?.data?.[0];
+
+    if (!kickUser || !kickUser.user_id || !kickUser.name) {
+      console.error('Invalid Kick user data received:', kickData);
+      return res.status(400).json({ error: 'Invalid user data from Kick' });
+    }
+
+    const kickId = String(kickUser.user_id);
+    const username = kickUser.name as string;
+    const email = (kickUser.email as string) || '';
+    const refreshToken = (tokenData.refresh_token as string) || undefined;
+
+    // Save or update user in DB
+    try {
+      if (action === 'link' && auth_user_id) {
+        // Linking flow: attach Kick account to existing Supabase user
+        const existingByAuth = await prisma.user.findUnique({ where: { auth_user_id } });
+        if (existingByAuth) {
+          try {
+            await prisma.user.update({
+              where: { id: existingByAuth.id },
+              data: {
+                kickId,
+                email,
+                username,
+                ...(refreshToken && { refresh_token: refreshToken }),
+                kick_linked_at: new Date(),
+              },
+            });
+          } catch (e: any) {
+            const target = e?.meta?.target;
+            const isKickIdConflict = e?.code === 'P2002' && (Array.isArray(target) ? target.includes('kickId') : target === 'kickId');
+            if (isKickIdConflict) {
+              // A user with this kickId already exists; merge by moving auth_user_id to that record
+              const existingByKick = await prisma.user.findUnique({ where: { kickId } });
+              if (existingByKick) {
+                // Clear auth_user_id on the Supabase-only record to free the unique constraint
+                await prisma.user.update({ where: { id: existingByAuth.id }, data: { auth_user_id: null } });
+                // Assign auth_user_id to the Kick record and update fields
+                await prisma.user.update({
+                  where: { id: existingByKick.id },
+                  data: {
+                    auth_user_id,
+                    email,
+                    username,
+                    ...(refreshToken && { refresh_token: refreshToken }),
+                    kick_linked_at: new Date(),
+                  },
+                });
+              }
+            } else {
+              console.error('Failed to link Kick to Supabase user:', e);
+            }
+          }
+        } else {
+          // No Supabase record found; create or update by kickId and attach auth_user_id
+          await prisma.user.upsert({
+            where: { kickId },
+            update: {
+              email,
+              username,
+              ...(refreshToken && { refresh_token: refreshToken }),
+              auth_user_id,
+            },
+            create: {
+              kickId,
+              email,
+              username,
+              auth_user_id,
+              tokens: 0,
+              ...(refreshToken && { refresh_token: refreshToken }),
+            },
+          });
+        }
+      } else {
+        // Regular login flow: upsert by kickId
+        await prisma.user.upsert({
+          where: { kickId },
+          update: {
+            email,
+            username,
+            ...(refreshToken && { refresh_token: refreshToken }),
+          },
+          create: {
+            kickId,
+            email,
+            username,
+            tokens: 0,
+            ...(refreshToken && { refresh_token: refreshToken }),
+          },
+        });
+      }
+
+      // Link UserData record by username if it exists and is not yet linked
+      try {
+        const userDataMatch = await prisma.userData.findMany({
+          where: {
+            username,
+            kickId: null,
+          },
+        });
+
+        if (userDataMatch.length === 1) {
+          await prisma.userData.update({
+            where: { id: userDataMatch[0].id },
+            data: {
+              kickId,
+              updatedAt: new Date(),
+            },
+          });
+          console.log(`✔️ Linked kickId ${kickId} to existing UserData record for ${username}`);
+        }
+      } catch (e) {
+        console.warn('Warning: Failed to link UserData record:', e);
+      }
+    } catch (saveErr: any) {
+      console.error('Error saving user info:', saveErr);
+      const target = saveErr?.meta?.target;
+      const isKickIdConflict = saveErr?.code === 'P2002' && (Array.isArray(target) ? target.includes('kickId') : target === 'kickId');
+      if (!isKickIdConflict) {
+        return res.status(500).json({ error: 'Error saving user info' });
+      }
+      // If duplicate kickId, treat as success to unblock login
+    }
+
+    // Set cookies for subsequent requests
+    const cookies: string[] = [
+      // Server APIs expect 'access_token' cookie for Kick
+      serialize('access_token', accessToken, COOKIE_OPTIONS),
+      // Unity helpers also use 'authToken'
       serialize('authToken', accessToken, COOKIE_OPTIONS),
-      serialize('authUserId', auth_user_id ?? '', COOKIE_OPTIONS),
     ];
+
+    if (auth_user_id) {
+      cookies.push(serialize('authUserId', auth_user_id, COOKIE_OPTIONS));
+    }
+
     res.setHeader('Set-Cookie', cookies);
 
     // Redirect back to account page or home
