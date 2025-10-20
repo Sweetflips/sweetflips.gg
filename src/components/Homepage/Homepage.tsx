@@ -1,19 +1,17 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
+import React, { useEffect, useRef, useState } from "react";
 // import { withAuth } from '@/components/withAuth'; // Assuming not needed for this specific leaderboard display
-import YoutubeSlider from "@/components/YoutubeSlider/YoutubeSlider";
 // import TopLeaderboard from "@/components/TopLeaderboard/TopLeaderboard"; // Will be replaced
+import BannerVideo from "@/components/BannerVideo/BannerVideo";
 import HomeBanner from "@/components/HomeBanner/HomeBanner";
 import RegisterBlocks from "@/components/RegisterBlocks/RegisterBlocks";
-import BannerVideo from "@/components/BannerVideo/BannerVideo";
 // import BannerImage from "@/components/BannerImage/BannerImage";
-import GiveAwayCounter from "../GiveAwayCounter/GiveAwayCounter";
 import Image from "next/image";
-import RaffleTicketBanner from "../RaffleTicketBanner/RaffleTicketBanner";
+import GiveAwayCounter from "../GiveAwayCounter/GiveAwayCounter";
 // import confetti from "canvas-confetti";
-import Loader from "@/components/common/Loader";
 import { Timer } from "@/app/ui/timer/Timer";
+import Loader from "@/components/common/Loader";
 // import Footer from "@/components/Footer/Footer"; // Removed Footer import
 
 const API_PROXY_URL = "/api/RazedProxy";
@@ -183,10 +181,10 @@ const Homepage: React.FC = () => {
   // Handle URL parameters for error/success messages
   useEffect(() => {
     if (!searchParams) return;
-    
+
     const error = searchParams.get('error');
     const linked = searchParams.get('linked');
-    
+
     if (error) {
       setUrlError(decodeURIComponent(error));
       // Clean up URL after showing error
@@ -194,7 +192,7 @@ const Homepage: React.FC = () => {
       url.searchParams.delete('error');
       window.history.replaceState({}, '', url.toString());
     }
-    
+
     if (linked === 'success') {
       setSuccessMessage('Kick account successfully linked!');
       // Clean up URL after showing success
@@ -296,7 +294,6 @@ const Homepage: React.FC = () => {
         <div className="col-span-12 xl:col-span-8">
           <BannerVideo />
           <HomeBanner />
-          <RaffleTicketBanner />
           <RegisterBlocks />
           <GiveAwayCounter />
           {/* Razed Leaderboard Section START */}
