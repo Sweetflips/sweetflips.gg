@@ -108,10 +108,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           return res.status(400).json({ error: "Message content is required" });
         }
 
+        // At this point, user is guaranteed to be non-null due to check above
         const message = await prisma.chatMessage.create({
           data: {
             content: content.trim(),
-            userId: user.id,
+            userId: user!.id,
             chatRoomId: roomId,
           },
           include: {

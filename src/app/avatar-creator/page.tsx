@@ -105,7 +105,7 @@ export default function AvatarCreatorPage() {
         });
       }
     };
-  }, [supabaseUser]);
+  }, [supabaseUser, supabaseClient]);
 
   // Handle avatar creation and authentication
   const handleAvatarSaved = useCallback(async (avatarData: any) => {
