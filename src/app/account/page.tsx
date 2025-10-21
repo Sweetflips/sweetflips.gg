@@ -1,15 +1,15 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation"; // We still need this to update the URL
-import DefaultLayout from "../../components/Layouts/DefaultLayout";
+import AccountDetails from "@/components/Account/AccountDetails";
+import ChatContainer from "@/components/Chat/ChatContainer";
 import Loader from "@/components/common/Loader";
 import TokenExchange from "@/components/TokenExchange/TokenExchange";
 import UserOrders from "@/components/UserOrders/UserOrders";
 import { withAuth } from "@/components/withAuth";
 import { useAuth } from "@/contexts/AuthContext";
-import ChatContainer from "@/components/Chat/ChatContainer";
-import AccountDetails from "@/components/Account/AccountDetails";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { useRouter } from "next/navigation"; // We still need this to update the URL
+import { useCallback, useEffect, useState } from "react";
+import DefaultLayout from "../../components/Layouts/DefaultLayout";
 
 const ProfilePage = () => {
   const router = useRouter(); // Initialize router to manage URL history
@@ -33,14 +33,14 @@ const ProfilePage = () => {
       // Build headers - add Supabase auth if available
       const headers: HeadersInit = {};
       const { data: { session } } = await supabaseClient.auth.getSession();
-      
+
       if (session?.access_token) {
         headers['Authorization'] = `Bearer ${session.access_token}`;
       }
-      
+
       // Call unified endpoint that handles both Kick and Supabase auth
       const res = await fetch("/api/user/profile", { headers });
-      
+
       if (res.ok) {
         const data = await res.json();
         setUser(data.user);
@@ -121,15 +121,7 @@ const ProfilePage = () => {
     return () => window.removeEventListener('message', handleMessage);
   }, [user]);
 
-  // Check avatar when chat tab is active (non-blocking)
-  useEffect(() => {
-    if (activeSection === "chat" && user?.id) {
-      // Don't block chat loading on avatar check
-      checkUserAvatar(user.id);
-    }
-  }, [activeSection, user]);
-
-  const checkUserAvatar = async (userId: number) => {
+  const checkUserAvatar = useCallback(async (userId: number) => {
     try {
       setCheckingAvatar(true);
       if (!userId || userId <= 0) {
@@ -137,9 +129,9 @@ const ProfilePage = () => {
         setHasAvatar(false);
         return;
       }
-      
+
       const headers: HeadersInit = {};
-      
+
       // Add authorization header for Supabase users
       if (supabaseClient) {
         const { data: { session } } = await supabaseClient.auth.getSession();
@@ -147,22 +139,22 @@ const ProfilePage = () => {
           headers['Authorization'] = `Bearer ${session.access_token}`;
         }
       }
-      
+
       const response = await fetch(`/api/avatar/${userId}`, { headers });
-      
+
       if (response.ok) {
         const data = await response.json();
         let hasValidAvatar = false;
-        
+
         if (data.success && data.avatar) {
           hasValidAvatar = !!(
-            data.avatar.Base64Image || 
+            data.avatar.Base64Image ||
             data.avatar.base64Image ||
             data.Base64Image ||
             data.base64Image
           );
         }
-        
+
         setHasAvatar(hasValidAvatar);
       } else if (response.status === 404) {
         setHasAvatar(false);
@@ -175,7 +167,15 @@ const ProfilePage = () => {
     } finally {
       setCheckingAvatar(false);
     }
-  };
+  }, [supabaseClient]);
+
+  // Check avatar when chat tab is active (non-blocking)
+  useEffect(() => {
+    if (activeSection === "chat" && user?.id) {
+      // Don't block chat loading on avatar check
+      checkUserAvatar(user.id);
+    }
+  }, [activeSection, user, checkUserAvatar]);
 
 
   const handleSetupAvatar = () => {
@@ -198,7 +198,7 @@ const ProfilePage = () => {
     try {
       // First try without additional auth (for Kick users)
       let res = await fetch("/api/user/sync-botrix", { method: "POST" });
-      
+
       // If unauthorized, try with Supabase auth
       if (res.status === 401) {
         const { data: { session } } = await supabaseClient.auth.getSession();
@@ -209,7 +209,7 @@ const ProfilePage = () => {
           return;
         }
 
-        res = await fetch("/api/user/sync-botrix", { 
+        res = await fetch("/api/user/sync-botrix", {
           method: "POST",
           headers: {
             'Authorization': `Bearer ${session.access_token}`
@@ -295,8 +295,8 @@ const ProfilePage = () => {
 
         <section>
           {activeSection === "details" && user && (
-            <AccountDetails 
-              user={user} 
+            <AccountDetails
+              user={user}
               userData={userData}
               onOpenAvatarCreator={() => setShowAvatarCreator(true)}
             />
@@ -321,7 +321,7 @@ const ProfilePage = () => {
 
           {activeSection === "chat" && user && (
             <>
-              <ChatContainer 
+              <ChatContainer
                 userId={user.id}
                 checkAvatar={false}
                 onAvatarCheck={(hasAvatar) => setHasAvatar(hasAvatar)}
@@ -338,7 +338,7 @@ const ProfilePage = () => {
                       exit={{ opacity: 0 }}
                       className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50"
                     />
-                    
+
                     {/* Modal */}
                     <motion.div
                       initial={{ opacity: 0, scale: 0.9 }}
@@ -348,7 +348,7 @@ const ProfilePage = () => {
                     >
                       <div className="bg-[#1b1324] border border-purple-700/50 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
                         <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-transparent to-pink-500/10 pointer-events-none" />
-                        
+
                         <div className="relative p-8">
                           <div className="mb-6 flex justify-center">
                             <div className="relative">
@@ -360,15 +360,15 @@ const ProfilePage = () => {
                               </div>
                             </div>
                           </div>
-                          
+
                           <h2 className="text-2xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-4">
                             Create Your Avatar
                           </h2>
-                          
+
                           <p className="text-gray-300 text-center mb-2">
                             To join the Sweetflips chat, you need to create your unique 3D avatar!
                           </p>
-                        
+
                           <div className="space-y-3 mb-8">
                             <div className="flex items-center gap-3">
                               <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
@@ -395,7 +395,7 @@ const ProfilePage = () => {
                               <span className="text-sm text-gray-300">Quick and easy setup</span>
                             </div>
                           </div>
-                          
+
                           <div className="space-y-3">
                             <motion.button
                               whileHover={{ scale: 1.02 }}
@@ -405,7 +405,7 @@ const ProfilePage = () => {
                             >
                               Setup My Avatar
                             </motion.button>
-                            
+
                             <button
                               onClick={() => {
                                 setCheckingAvatar(true);
@@ -418,7 +418,7 @@ const ProfilePage = () => {
                               Already have an avatar? Click to refresh
                             </button>
                           </div>
-                          
+
                           <p className="text-xs text-gray-500 text-center mt-4">
                             Takes only 2-3 minutes to create
                           </p>
@@ -441,7 +441,7 @@ const ProfilePage = () => {
                       onClick={() => setShowAvatarCreator(false)}
                       className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60]"
                     />
-                    
+
                     {/* Modal with iframe - 80% of screen */}
                     <motion.div
                       initial={{ opacity: 0, scale: 0.9 }}
@@ -451,7 +451,7 @@ const ProfilePage = () => {
                     >
                       <div className="relative w-[80vw] h-[80vh] bg-[#1b1324] border-2 border-purple-700/50 rounded-2xl shadow-2xl overflow-hidden">
                         <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-transparent to-pink-500/10 pointer-events-none" />
-                        
+
                         {/* Header with close button */}
                         <div className="relative z-10 flex items-center justify-between p-4 bg-[#0d0816]/90 border-b border-purple-700/30">
                           <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
@@ -466,7 +466,7 @@ const ProfilePage = () => {
                             </svg>
                           </button>
                         </div>
-                        
+
                         {/* Iframe container */}
                         <div className="relative w-full h-[calc(100%-73px)]">
                           <iframe
@@ -476,7 +476,7 @@ const ProfilePage = () => {
                             allow="camera; microphone"
                             style={{ display: avatarCreatorLoading ? 'none' : 'block' }}
                           />
-                          
+
                           {/* Loading overlay */}
                           {avatarCreatorLoading && (
                             <div className="absolute inset-0 flex items-center justify-center bg-[#1b1324]">

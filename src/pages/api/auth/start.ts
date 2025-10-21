@@ -13,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let baseUrl = getBaseUrl();
     if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
 
-    const redirectUri = 'https://sweetflips.gg/auth/callback';
+    const redirectUri = `${baseUrl}/api/auth/callback`;
     
     // Debug: Log the redirect URI being used
     console.log('OAuth start - redirectUri:', redirectUri);

@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { useAuthHeaders } from "@/hooks/useAuthHeaders";
+import { motion } from "framer-motion";
+import { useCallback, useEffect, useState } from "react";
 
 interface ChatRoom {
   id: string;
@@ -29,9 +29,9 @@ export default function ChatSidebar({ selectedRoomId, onRoomSelect, isMobile = f
 
   useEffect(() => {
     fetchRooms();
-  }, []);
+  }, [fetchRooms]);
 
-  const fetchRooms = async () => {
+  const fetchRooms = useCallback(async () => {
     try {
       setIsLoading(true);
       setHasError(false);
@@ -50,7 +50,7 @@ export default function ChatSidebar({ selectedRoomId, onRoomSelect, isMobile = f
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [getAuthHeaders]);
 
 
   return (
@@ -98,16 +98,15 @@ export default function ChatSidebar({ selectedRoomId, onRoomSelect, isMobile = f
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => onRoomSelect(room.id)}
-                className={`w-full p-4 mb-2 rounded-xl text-left transition-all relative overflow-hidden group ${
-                  selectedRoomId === room.id
+                className={`w-full p-4 mb-2 rounded-xl text-left transition-all relative overflow-hidden group ${selectedRoomId === room.id
                     ? "bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/50"
                     : "bg-[#2a1b3d]/30 hover:bg-[#2a1b3d]/50 border border-transparent"
-                }`}
+                  }`}
               >
                 {selectedRoomId === room.id && (
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 to-pink-600/10 animate-pulse" />
                 )}
-                
+
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-1">
                     <h4 className="font-semibold text-white flex items-center">

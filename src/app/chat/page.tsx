@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import ChatRoom from "@/components/Chat/ChatRoom";
 import ChatSidebar from "@/components/Chat/ChatSidebar";
+import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import { useAuth } from "@/contexts/AuthContext";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 
 export default function ChatPage() {
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
@@ -25,42 +25,18 @@ export default function ChatPage() {
       router.push('/auth/signin');
       return;
     }
-    
+
     // Fetch current user data
     if (isLoggedIn) {
       fetchCurrentUser();
     }
   }, [isLoggedIn, loading, router]);
 
-  useEffect(() => {
-    // Auto-select first room or create general room
-    if (!selectedRoomId && currentUser) {
-      initializeChat();
-    }
-  }, [currentUser, selectedRoomId]);
-  
-  useEffect(() => {
-    // Check if user is coming back from avatar creation
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('avatar_created') === 'true') {
-      // Force re-check avatar after a short delay
-      setTimeout(() => {
-        if (currentUser?.id) {
-          setCheckingAvatar(true);
-          checkUserAvatar(currentUser.id);
-        }
-      }, 1000);
-      
-      // Clean up URL
-      window.history.replaceState({}, '', '/account#chat');
-    }
-  }, [currentUser]);
-
-  const fetchCurrentUser = async () => {
+  const fetchCurrentUser = useCallback(async () => {
     try {
       // First try the new endpoint that handles both auth types
       const headers: HeadersInit = {};
-      
+
       // If we have a Supabase user, add the authorization header
       if (isLoggedIn && currentUser === null && supabaseClient) {
         const { data: { session } } = await supabaseClient.auth.getSession();
@@ -68,13 +44,13 @@ export default function ChatPage() {
           headers['Authorization'] = `Bearer ${session.access_token}`;
         }
       }
-      
+
       const response = await fetch("/api/auth/current-user", { headers });
-      
+
       if (response.ok) {
         const data = await response.json();
         setCurrentUser(data.user);
-        
+
         // Check if user has an avatar
         await checkUserAvatar(data.user.id);
       } else {
@@ -83,7 +59,7 @@ export default function ChatPage() {
         if (oldResponse.ok) {
           const data = await oldResponse.json();
           setCurrentUser(data.user);
-          
+
           // Check if user has an avatar
           await checkUserAvatar(data.user.id);
         }
@@ -92,9 +68,9 @@ export default function ChatPage() {
       console.error("Error fetching user:", error);
       setCheckingAvatar(false);
     }
-  };
+  }, [isLoggedIn, currentUser, supabaseClient]);
 
-  const checkUserAvatar = async (userId: number) => {
+  const checkUserAvatar = useCallback(async (userId: number) => {
     try {
       if (!userId || userId <= 0) {
         console.error("Invalid userId for avatar check:", userId);
@@ -102,9 +78,9 @@ export default function ChatPage() {
         setCheckingAvatar(false);
         return;
       }
-      
+
       const headers: HeadersInit = {};
-      
+
       // Add authorization header for Supabase users
       if (supabaseClient) {
         const { data: { session } } = await supabaseClient.auth.getSession();
@@ -112,30 +88,24 @@ export default function ChatPage() {
           headers['Authorization'] = `Bearer ${session.access_token}`;
         }
       }
-      
+
       const response = await fetch(`/api/avatar/${userId}`, { headers });
-      
+
       if (response.ok) {
         const data = await response.json();
-        // Check if avatar exists and has Base64Image (handle both capital and lowercase)
-        // The API returns Base64Image (capital B) but we should check both to be safe
         let hasValidAvatar = false;
-        
+
         if (data.success && data.avatar) {
-          // Check for base64 image in various possible locations
           hasValidAvatar = !!(
-            data.avatar.Base64Image || // Capital B from API
-            data.avatar.base64Image || // lowercase b
-            data.Base64Image ||         // Root level capital
-            data.base64Image            // Root level lowercase
+            data.avatar.Base64Image ||
+            data.avatar.base64Image ||
+            data.Base64Image ||
+            data.base64Image
           );
         }
-        
-        console.log("Avatar check - Full response:", data);
-        console.log("Avatar check - Has valid avatar:", hasValidAvatar);
+
         setHasAvatar(hasValidAvatar);
       } else if (response.status === 404) {
-        console.log("No avatar found for user (404)");
         setHasAvatar(false);
       } else {
         console.error("Error checking avatar status:", response.status);
@@ -147,17 +117,41 @@ export default function ChatPage() {
     } finally {
       setCheckingAvatar(false);
     }
-  };
+  }, [supabaseClient]);
+
+  useEffect(() => {
+    // Auto-select first room or create general room
+    if (!selectedRoomId && currentUser) {
+      initializeChat();
+    }
+  }, [currentUser, selectedRoomId, initializeChat]);
+
+  useEffect(() => {
+    // Check if user is coming back from avatar creation
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('avatar_created') === 'true') {
+      // Force re-check avatar after a short delay
+      setTimeout(() => {
+        if (currentUser?.id) {
+          setCheckingAvatar(true);
+          checkUserAvatar(currentUser.id);
+        }
+      }, 1000);
+
+      // Clean up URL
+      window.history.replaceState({}, '', '/account#chat');
+    }
+  }, [currentUser, checkUserAvatar]);
 
   const handleSetupAvatar = () => {
     // Redirect to Unity WebGL avatar creator
     window.location.href = "/webgl/index.html";
   };
 
-  const initializeChat = async () => {
+  const initializeChat = useCallback(async () => {
     try {
       const headers: HeadersInit = {};
-      
+
       // Add authorization header for Supabase users
       if (supabaseClient) {
         const { data: { session } } = await supabaseClient.auth.getSession();
@@ -165,7 +159,7 @@ export default function ChatPage() {
           headers['Authorization'] = `Bearer ${session.access_token}`;
         }
       }
-      
+
       const response = await fetch("/api/chat/rooms", { headers });
       if (response.ok) {
         const data = await response.json();
@@ -177,7 +171,7 @@ export default function ChatPage() {
           const createHeaders: HeadersInit = {
             "Content-Type": "application/json",
           };
-          
+
           // Add authorization header for Supabase users
           if (supabaseClient) {
             const { data: { session } } = await supabaseClient.auth.getSession();
@@ -185,7 +179,7 @@ export default function ChatPage() {
               createHeaders['Authorization'] = `Bearer ${session.access_token}`;
             }
           }
-          
+
           const createResponse = await fetch("/api/chat/rooms", {
             method: "POST",
             headers: createHeaders,
@@ -194,7 +188,7 @@ export default function ChatPage() {
               isPrivate: false,
             }),
           });
-          
+
           if (createResponse.ok) {
             const newRoom = await createResponse.json();
             setSelectedRoomId(newRoom.room.id);
@@ -205,16 +199,16 @@ export default function ChatPage() {
     } catch (error) {
       console.error("Error initializing chat:", error);
     }
-  };
+  }, [supabaseClient]);
 
   const handleRoomSelect = async (roomId: string) => {
     setSelectedRoomId(roomId);
     setIsSidebarOpen(false); // Close sidebar on mobile after room selection
-    
+
     // Fetch room details to get the name
     try {
       const headers: HeadersInit = {};
-      
+
       // Add authorization header for Supabase users
       if (supabaseClient) {
         const { data: { session } } = await supabaseClient.auth.getSession();
@@ -222,7 +216,7 @@ export default function ChatPage() {
           headers['Authorization'] = `Bearer ${session.access_token}`;
         }
       }
-      
+
       const response = await fetch("/api/chat/rooms", { headers });
       if (response.ok) {
         const data = await response.json();
@@ -264,7 +258,7 @@ export default function ChatPage() {
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50"
             />
-            
+
             {/* Modal */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
@@ -275,7 +269,7 @@ export default function ChatPage() {
               <div className="bg-[#1b1324] border border-purple-700/50 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
                 {/* Glow effect */}
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-transparent to-pink-500/10 pointer-events-none" />
-                
+
                 <div className="relative p-8">
                   {/* Avatar Icon */}
                   <div className="mb-6 flex justify-center">
@@ -288,21 +282,21 @@ export default function ChatPage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Title */}
                   <h2 className="text-2xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-4">
                     Create Your Avatar
                   </h2>
-                  
+
                   {/* Description */}
                   <p className="text-gray-300 text-center mb-2">
                     To join the Sweetflips chat, you need to create your unique 3D avatar!
                   </p>
-                  
+
                   <p className="text-gray-400 text-sm text-center mb-8">
                     Express yourself with a personalized Ready Player Me avatar that represents you in our community.
                   </p>
-                  
+
                   {/* Features */}
                   <div className="space-y-3 mb-8">
                     <div className="flex items-center gap-3">
@@ -330,7 +324,7 @@ export default function ChatPage() {
                       <span className="text-sm text-gray-300">Quick and easy setup</span>
                     </div>
                   </div>
-                  
+
                   {/* Buttons */}
                   <div className="space-y-3">
                     <motion.button
@@ -341,7 +335,7 @@ export default function ChatPage() {
                     >
                       Setup My Avatar
                     </motion.button>
-                    
+
                     {/* Refresh button for users who just created avatar */}
                     <button
                       onClick={() => {
@@ -355,7 +349,7 @@ export default function ChatPage() {
                       Already have an avatar? Click to refresh
                     </button>
                   </div>
-                  
+
                   <p className="text-xs text-gray-500 text-center mt-4">
                     Takes only 2-3 minutes to create
                   </p>
@@ -378,7 +372,7 @@ export default function ChatPage() {
                 Connect with the community
               </p>
             </div>
-            
+
             {/* Mobile menu button */}
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -398,11 +392,11 @@ export default function ChatPage() {
         <div className="relative">
           {/* Glow effect background - hidden on mobile for performance */}
           <div className="hidden sm:block absolute inset-0 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-purple-600/20 blur-3xl" />
-          
+
           <div className="relative bg-[#1b1324] border border-purple-700/50 rounded-lg sm:rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl" style={{ height: "calc(100vh - 200px)", minHeight: "500px" }}>
             {/* Inner glow */}
             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-pink-500/5 pointer-events-none" />
-            
+
             <div className="flex h-full relative z-10">
               {/* Mobile sidebar overlay */}
               <AnimatePresence>
@@ -431,7 +425,7 @@ export default function ChatPage() {
                   </>
                 )}
               </AnimatePresence>
-              
+
               {/* Desktop sidebar */}
               <div className="hidden md:block">
                 <ChatSidebar
@@ -439,7 +433,7 @@ export default function ChatPage() {
                   onRoomSelect={handleRoomSelect}
                 />
               </div>
-              
+
               {selectedRoomId ? (
                 <div className="flex-1 relative">
                   <ChatRoom
@@ -460,7 +454,7 @@ export default function ChatPage() {
                     </div>
                     <p className="text-base sm:text-lg text-gray-400 font-medium">Select a chat room to start messaging</p>
                     <p className="text-xs sm:text-sm text-gray-500 mt-2">Join the conversation with other Sweetflips members</p>
-                    
+
                     {/* Mobile prompt to open sidebar */}
                     <button
                       onClick={() => setIsSidebarOpen(true)}

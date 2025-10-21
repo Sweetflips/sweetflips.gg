@@ -51,10 +51,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const clientId = process.env.NEXT_PUBLIC_KICK_CLIENT_ID!;
   const clientSecret = process.env.KICK_CLIENT_SECRET!;
 
+  // Debug: Log environment variables (without exposing secrets)
+  console.log('OAuth callback - clientId:', clientId ? 'present' : 'missing');
+  console.log('OAuth callback - clientSecret:', clientSecret ? 'present' : 'missing');
+
   let baseUrl = getBaseUrl();
   if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
 
-  const redirectUri = 'https://sweetflips.gg/auth/callback';
+  const redirectUri = `${baseUrl}/api/auth/callback`;
   
   // Debug: Log the redirect URI being used
   console.log('OAuth callback - redirectUri:', redirectUri);
@@ -78,6 +82,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!tokenResp.ok) {
       const errText = await tokenResp.text();
       console.error('Kick token exchange failed:', errText);
+      console.error('Token exchange request details:', {
+        url: 'https://id.kick.com/oauth/token',
+        clientId: clientId ? 'present' : 'missing',
+        clientSecret: clientSecret ? 'present' : 'missing',
+        code: String(code),
+        redirectUri,
+        codeVerifier: codeVerifier ? 'present' : 'missing'
+      });
       return res.status(400).json({ error: 'Token exchange failed' });
     }
 

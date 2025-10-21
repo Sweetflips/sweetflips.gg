@@ -1,7 +1,7 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { RealtimeChannel } from '@supabase/supabase-js';
 import { useAuth } from '@/contexts/AuthContext';
-import { ChatService, ChatMessage, ChatRoom } from '@/services/chat.service';
+import { ChatMessage, ChatService } from '@/services/chat.service';
+import { RealtimeChannel } from '@supabase/supabase-js';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface UseRealtimeChatOptions {
   roomId: string;
@@ -28,7 +28,7 @@ export function useRealtimeChat({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('connecting');
-  
+
   const channelRef = useRef<RealtimeChannel | null>(null);
   const chatServiceRef = useRef<ChatService | null>(null);
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -44,13 +44,13 @@ export function useRealtimeChat({
   // Fetch initial messages
   const fetchInitialMessages = useCallback(async () => {
     if (!chatServiceRef.current || !roomId) return;
-    
+
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const fetchedMessages = await chatServiceRef.current.getMessages(roomId);
-      
+
       if (mountedRef.current) {
         setMessages(fetchedMessages);
         setIsLoading(false);
@@ -68,7 +68,7 @@ export function useRealtimeChat({
   // Send a message
   const sendMessage = useCallback(async (content: string) => {
     if (!chatServiceRef.current || !roomId || !content.trim()) return;
-    
+
     try {
       await chatServiceRef.current.sendMessage(roomId, content);
       // Message will be added via realtime subscription
@@ -89,7 +89,7 @@ export function useRealtimeChat({
 
     mountedRef.current = true;
     setConnectionStatus('connecting');
-    
+
     // Fetch initial messages
     fetchInitialMessages();
 
@@ -106,22 +106,22 @@ export function useRealtimeChat({
         },
         async (payload: { new: any; old?: any; eventType: string }) => {
           console.log('New message received via realtime:', payload);
-          
+
           if (!mountedRef.current) return;
-          
+
           // Fetch the complete message with user data
           try {
             const messageId = payload.new.id;
-            
+
             // Fetch the message with user details via API
             const response = await fetch(`/api/chat/messages/${messageId}`, {
               headers: await chatServiceRef.current?.['getAuthHeaders']() || {},
             });
-            
+
             if (response.ok) {
               const data = await response.json();
               const newMessage = data.message;
-              
+
               if (mountedRef.current) {
                 setMessages(prev => {
                   // Check if message already exists to prevent duplicates
@@ -130,7 +130,7 @@ export function useRealtimeChat({
                   }
                   return [...prev, newMessage];
                 });
-                
+
                 onMessageReceived?.(newMessage);
               }
             } else {
@@ -147,7 +147,7 @@ export function useRealtimeChat({
                   username: 'User ' + payload.new.userId, // This will be updated when full data loads
                 },
               };
-              
+
               if (mountedRef.current) {
                 setMessages(prev => {
                   if (prev.some(m => m.id === newMessage.id)) {
@@ -155,7 +155,7 @@ export function useRealtimeChat({
                   }
                   return [...prev, newMessage];
                 });
-                
+
                 onMessageReceived?.(newMessage);
               }
             }
@@ -174,9 +174,9 @@ export function useRealtimeChat({
         },
         (payload: { new: any; old?: any }) => {
           console.log('Message updated via realtime:', payload);
-          
+
           if (!mountedRef.current) return;
-          
+
           setMessages(prev =>
             prev.map(msg =>
               msg.id === payload.new.id
@@ -190,28 +190,28 @@ export function useRealtimeChat({
         'postgres_changes',
         {
           event: 'DELETE',
-          schema: 'public',  
+          schema: 'public',
           table: 'ChatMessage',
           filter: `chatRoomId=eq.${roomId}`,
         },
         (payload: { new: any; old?: any }) => {
           console.log('Message deleted via realtime:', payload);
-          
+
           if (!mountedRef.current) return;
-          
+
           setMessages(prev => prev.filter(msg => msg.id !== payload.old.id));
         }
       )
       .subscribe((status: string) => {
         console.log('Realtime subscription status:', status);
-        
+
         if (status === 'SUBSCRIBED') {
           setConnectionStatus('connected');
           setError(null);
         } else if (status === 'CHANNEL_ERROR') {
           setConnectionStatus('error');
           setError(new Error('Realtime connection error'));
-          
+
           // Auto-retry after 5 seconds
           if (retryTimeoutRef.current) {
             clearTimeout(retryTimeoutRef.current);
@@ -234,17 +234,17 @@ export function useRealtimeChat({
     // Cleanup
     return () => {
       mountedRef.current = false;
-      
+
       if (retryTimeoutRef.current) {
         clearTimeout(retryTimeoutRef.current);
       }
-      
+
       if (channelRef.current) {
         supabaseClient.removeChannel(channelRef.current);
         channelRef.current = null;
       }
     };
-  }, [supabaseClient, roomId, fetchInitialMessages, onMessageReceived]);
+  }, [supabaseClient, roomId, fetchInitialMessages, onMessageReceived, retry]);
 
   // Retry connection
   const retry = useCallback(() => {
@@ -252,11 +252,11 @@ export function useRealtimeChat({
       // Remove old channel
       supabaseClient.removeChannel(channelRef.current);
       channelRef.current = null;
-      
+
       // Reset state
       setError(null);
       setConnectionStatus('connecting');
-      
+
       // Refetch messages
       fetchInitialMessages();
     }
