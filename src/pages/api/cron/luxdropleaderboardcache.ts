@@ -52,20 +52,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
         }
 
-        // Define the period (same as LuxdropProxy)
+        // Define the period: October 16-31, 2025
         const startDate = DateTime.utc(2025, 10, 16, 0, 0, 0);
         const endDate = DateTime.utc(2025, 10, 31, 23, 59, 59);
-        const periodLabel = "October 16-31, 2025";
+        const periodLabel = "16-31okt 2025";
         const startDateISO = startDate.toFormat('yyyy-MM-dd');
         const endDateISO = endDate.toFormat('yyyy-MM-dd');
 
         console.log(`📅 Fetching data for period: ${periodLabel} (${startDateISO} to ${endDateISO})`);
 
-        // Make API request
+        // Make API request to Luxdrop affiliates endpoint
         const params = {
-            codes: "sweetflips",
-            startDate: startDateISO,
-            endDate: endDateISO,
+            codes: "sweetflips", // Required parameter
+            startDate: startDateISO, // Optional: 2025-10-16
+            endDate: endDateISO, // Optional: 2025-10-31
         };
 
         const config: AxiosRequestConfig = {
@@ -74,7 +74,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             params: params,
             timeout: 30000,
             headers: {
-                "x-api-key": API_KEY,
+                "x-api-key": API_KEY, // Required authorization header
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
                 "Accept": "application/json",
             },
@@ -109,14 +109,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             .map((entry: AffiliateEntry) => ({
                 username: entry.username || `User${entry.id}`,
                 wagered: Math.round((Number(entry.wagered) || 0) * 100) / 100,
-                reward: Math.round((Number(entry.wagered) || 0) * 0.05 * 100) / 100, // 5% reward
+                reward: 0, // No automatic rewards - handled elsewhere
             }))
             .sort((a, b) => b.wagered - a.wagered)
             .slice(0, 100); // Top 100
 
         console.log(`🎯 Generated leaderboard: ${leaderboard.length} entries`);
         if (leaderboard.length > 0) {
-            console.log(`🏆 Top player: ${leaderboard[0].username} - $${leaderboard[0].wagered} wagered, $${leaderboard[0].reward} reward`);
+            console.log(`🏆 Top player: ${leaderboard[0].username} - $${leaderboard[0].wagered} wagered`);
         }
 
         const responseData = {
