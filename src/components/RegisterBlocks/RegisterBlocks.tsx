@@ -57,7 +57,7 @@ const RegisterBlocks: React.FC = () => {
               <a
                 target="_blank"
                 href="https://luxdrop.com/?r=sweetflips"
-                className="font-extrabold text-[rgb(223,86,255)]"
+                className="font-extrabold text-blue-500"
               >
                 Luxdrop
               </a>

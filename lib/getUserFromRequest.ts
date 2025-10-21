@@ -1,6 +1,6 @@
 import { parse } from 'cookie';
-import { prisma } from './prisma';
 import { NextApiRequest, NextApiResponse } from 'next';
+import { prisma } from './prisma';
 import { createClientForAuth } from './supabase';
 
 export async function getUserFromRequest(req: NextApiRequest, res: NextApiResponse) {
@@ -25,7 +25,7 @@ export async function getUserFromRequest(req: NextApiRequest, res: NextApiRespon
           const user = await prisma.user.findUnique({
             where: { kickId },
           });
-          
+
           if (user) {
             return user;
           }
@@ -41,26 +41,26 @@ export async function getUserFromRequest(req: NextApiRequest, res: NextApiRespon
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.split(' ')[1];
     const supabase = createClientForAuth();
-    
+
     try {
       const { data: { user: supabaseUser }, error } = await supabase.auth.getUser(token);
-      
+
       if (supabaseUser && !error) {
         // Find the user by auth_user_id first
         const user = await prisma.user.findUnique({
           where: { auth_user_id: supabaseUser.id },
         });
-        
+
         if (user) {
           return user;
         }
-        
+
         // If not found by auth_user_id, try by email
         if (supabaseUser.email) {
           const userByEmail = await prisma.user.findFirst({
             where: { email: supabaseUser.email },
           });
-          
+
           if (userByEmail) {
             // Update the auth_user_id if it's missing
             if (!userByEmail.auth_user_id) {
@@ -71,7 +71,7 @@ export async function getUserFromRequest(req: NextApiRequest, res: NextApiRespon
             }
             return userByEmail;
           }
-          
+
           // If user doesn't exist, create them
           const newUser = await prisma.user.create({
             data: {
@@ -83,7 +83,7 @@ export async function getUserFromRequest(req: NextApiRequest, res: NextApiRespon
               role: 'USER',
             },
           });
-          
+
           return newUser;
         }
       }

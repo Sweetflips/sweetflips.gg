@@ -1,0 +1,23 @@
+import { readFile } from 'fs/promises';
+import { NextRequest, NextResponse } from 'next/server';
+import { join } from 'path';
+
+export async function GET(request: NextRequest) {
+    try {
+        // Read the WebGL index.html file
+        const filePath = join(process.cwd(), 'public', 'webgl', 'index.html');
+        const fileContent = await readFile(filePath, 'utf-8');
+
+        // Return the HTML content with proper headers
+        return new NextResponse(fileContent, {
+            status: 200,
+            headers: {
+                'Content-Type': 'text/html',
+                'Cache-Control': 'public, max-age=3600',
+            },
+        });
+    } catch (error) {
+        console.error('Error serving WebGL content:', error);
+        return new NextResponse('WebGL content not found', { status: 404 });
+    }
+}

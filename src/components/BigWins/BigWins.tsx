@@ -1,6 +1,6 @@
 "use client";
-import React from "react";
 import Image from "next/image";
+import React from "react";
 import CountUp from "react-countup";
 
 const bigWins = [
@@ -26,7 +26,7 @@ const BigWins: React.FC = () => {
                 className="rounded"
                 width={40}
                 height={40}
-                src="/images/icon/Razed_icon.png"
+                src="/images/logo/sj8aDvAg_400x400.jpg"
                 alt="Razed"
                 priority
               />

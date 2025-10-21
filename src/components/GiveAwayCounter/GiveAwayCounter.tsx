@@ -1,6 +1,6 @@
 "use client";
-import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import React, { useEffect, useState } from "react";
 import CountUp from "react-countup";
 
 const GiveAwayCounter: React.FC = () => {
@@ -71,7 +71,7 @@ const GiveAwayCounter: React.FC = () => {
             <div className="flex items-center space-x-4">
               <a href="/razed" rel="noopener noreferrer">
                 <Image
-                  src="/images/icon/Razed_icon.png"
+                  src="/images/logo/sj8aDvAg_400x400.jpg"
                   alt="razed"
                   width={50}
                   height={50}

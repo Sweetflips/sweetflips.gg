@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { getUserFromRequest } from '../../../../lib/getUserFromRequest';
 import { prisma } from '../../../../lib/prisma';
-import { getUserFromRequest } from '../../../lib/auth-utils';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Enable CORS for Unity WebGL
@@ -26,22 +26,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Check if this is a Unity request by looking for Unity-specific headers or user agent
     const userAgent = req.headers['user-agent'] || '';
-    const isUnityRequest = userAgent.includes('Unity') || 
-                           req.headers['x-unity-version'] || 
-                           req.headers.referer?.includes('/webgl/');
+    const isUnityRequest = userAgent.includes('Unity') ||
+      req.headers['x-unity-version'] ||
+      req.headers.referer?.includes('/webgl/');
 
     // If it's a Unity request and no auth token, allow it for avatar creation
     if (isUnityRequest) {
       console.log('Unity WebGL request detected, bypassing authentication for avatar upload');
-      
+
       // Process the avatar upload without authentication check
       const processedAssets = avatarProperties.Assets || avatarProperties.assets;
-      
+
       // Determine which identifier to use for upsert
-      const whereClause = userId 
-        ? { userId } 
+      const whereClause = userId
+        ? { userId }
         : { auth_user_id: authUserId };
-      
+
       // Create or update avatar
       const avatar = await prisma.avatar.upsert({
         where: whereClause,
@@ -84,8 +84,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       });
 
-      return res.status(200).json({ 
-        success: true, 
+      return res.status(200).json({
+        success: true,
         message: 'Avatar uploaded successfully (Unity WebGL)',
         avatar,
         uploadedVia: 'unity-webgl'
@@ -93,29 +93,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // For non-Unity requests, continue with normal authentication
-    const requestingUser = await getUserFromRequest(req);
+    const requestingUser = await getUserFromRequest(req, res);
     if (!requestingUser) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
     // Check permission based on user type
-    const hasPermission = 
+    const hasPermission =
       (userId && requestingUser.id === userId) ||
       (authUserId && requestingUser.auth_user_id === authUserId) ||
       requestingUser.role === 'admin';
-    
+
     if (!hasPermission) {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
     // Process assets to ensure proper format
     const processedAssets = avatarProperties.Assets || avatarProperties.assets;
-    
+
     // Determine which identifier to use for upsert
-    const whereClause = userId 
-      ? { userId } 
+    const whereClause = userId
+      ? { userId }
       : { auth_user_id: authUserId };
-    
+
     // Create or update avatar
     const avatar = await prisma.avatar.upsert({
       where: whereClause,
@@ -158,10 +158,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     });
 
-    return res.status(200).json({ 
-      success: true, 
+    return res.status(200).json({
+      success: true,
       message: 'Avatar uploaded successfully',
-      avatar 
+      avatar
     });
   } catch (error) {
     console.error('Error uploading avatar:', error);

@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { RealtimeChannel, SupabaseClient } from '@supabase/supabase-js';
 import { useAuth } from '@/contexts/AuthContext';
+import { RealtimeChannel } from '@supabase/supabase-js';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export interface Message {
   id: string;
@@ -31,7 +31,7 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
   const [error, setError] = useState<Error | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('connecting');
   const [currentUserInfo, setCurrentUserInfo] = useState<{ id: number; username: string; avatar: any } | null>(null);
-  
+
   const channelRef = useRef<RealtimeChannel | null>(null);
   const mountedRef = useRef(true);
 
@@ -45,7 +45,7 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
 
       // Build headers - add Supabase auth if available
       const headers: HeadersInit = {};
-      
+
       if (supabaseClient) {
         const { data: { session } } = await supabaseClient.auth.getSession();
         if (session?.access_token) {
@@ -54,7 +54,7 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
       }
 
       // Fetch messages from API endpoint (works for both authenticated and unauthenticated users)
-      const response = await fetch(`/api/chat/messages?roomId=${roomId}`, { headers });
+      const response = await fetch(`/api/chat/rooms/${roomId}/messages`, { headers });
 
       if (!response.ok) {
         throw new Error(`Failed to fetch messages: ${response.statusText}`);
@@ -80,7 +80,7 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
   // Fetch and cache current user info
   const fetchCurrentUserInfo = useCallback(async (userId: number) => {
     if (currentUserInfo && currentUserInfo.id === userId) return; // Already cached
-    
+
     try {
       const response = await fetch(`/api/chat/user-info?userId=${userId}`);
       if (response.ok) {
@@ -125,17 +125,16 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
         'Content-Type': 'application/json'
       };
       const { data: { session } } = await supabaseClient.auth.getSession();
-      
+
       if (session?.access_token) {
         headers['Authorization'] = `Bearer ${session.access_token}`;
       }
 
       // Send message via API
-      const response = await fetch('/api/chat/messages', {
+      const response = await fetch(`/api/chat/rooms/${roomId}/messages`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ 
-          roomId,
+        body: JSON.stringify({
           content: content.trim()
         })
       });
@@ -185,7 +184,7 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
     }
 
     mountedRef.current = true;
-    
+
     // Initial fetch (works for both authenticated and unauthenticated)
     fetchMessages();
 
@@ -211,7 +210,7 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
         },
         (payload: any) => {
           console.log('New message via broadcast:', payload);
-          
+
           if (!mountedRef.current) return;
 
           const messageData = payload.payload;
@@ -222,20 +221,20 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
             // Remove any temporary messages with same content and user
             const filtered = prev.filter(m => {
               // Remove temp message if it matches this real message
-              if (m.id.startsWith('temp-') && 
-                  m.userId === messageData.userId && 
-                  m.content === messageData.content) {
+              if (m.id.startsWith('temp-') &&
+                m.userId === messageData.userId &&
+                m.content === messageData.content) {
                 return false;
               }
               // Keep all other messages
               return m.id !== messageData.id;
             });
-            
+
             // Check if message already exists
             if (filtered.some(m => m.id === messageData.id)) {
               return filtered;
             }
-            
+
             // Add the new message
             return [...filtered, messageData];
           });
@@ -251,7 +250,7 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
         },
         async (payload: any) => {
           console.log('New message via postgres changes (fallback):', payload.new);
-          
+
           if (!mountedRef.current) return;
 
           const newMessage = payload.new as any;
@@ -267,14 +266,16 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
               .then(response => response.json())
               .then(data => {
                 if (data.user) {
-                  setMessages(current => 
-                    current.map(m => 
-                      m.id === newMessage.id 
-                        ? { ...m, user: {
+                  setMessages(current =>
+                    current.map(m =>
+                      m.id === newMessage.id
+                        ? {
+                          ...m, user: {
                             id: data.user.id,
                             username: data.user.username,
                             avatar: data.user.avatar || null
-                          }} 
+                          }
+                        }
                         : m
                     )
                   );
@@ -306,7 +307,7 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
         },
         (payload: any) => {
           console.log('Message updated:', payload.new);
-          
+
           if (!mountedRef.current) return;
 
           setMessages(prev =>
@@ -328,7 +329,7 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
         },
         (payload: any) => {
           console.log('Message deleted:', payload.old);
-          
+
           if (!mountedRef.current) return;
 
           setMessages(prev => prev.filter(msg => msg.id !== payload.old.id));
@@ -336,7 +337,7 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
       )
       .subscribe((status: string) => {
         console.log('Subscription status:', status);
-        
+
         if (status === 'SUBSCRIBED') {
           setConnectionStatus('connected');
           setError(null);
@@ -358,7 +359,7 @@ export function useSupabaseRealtimeChat({ roomId }: UseSupabaseRealtimeChatProps
     return () => {
       console.log('Cleaning up realtime subscription');
       mountedRef.current = false;
-      
+
       if (channelRef.current) {
         supabaseClient.removeChannel(channelRef.current);
         channelRef.current = null;

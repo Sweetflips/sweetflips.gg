@@ -470,7 +470,7 @@ const ProfilePage = () => {
                         {/* Iframe container */}
                         <div className="relative w-full h-[calc(100%-73px)]">
                           <iframe
-                            src="/webgl/index.html"
+                            src="/webgl"
                             className="w-full h-full"
                             title="Avatar Creator"
                             allow="camera; microphone"
