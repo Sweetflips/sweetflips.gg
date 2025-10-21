@@ -131,17 +131,18 @@ const LuxdropLeaderboard: React.FC = () => {
     return username.slice(0, 2) + "*".repeat(len - 4) + username.slice(-2);
   };
 
+  const lastFetchTimeRef = useRef(0);
+  const TEN_MINUTES = 10 * 60 * 1000; // 10 minutes in milliseconds
+
   useEffect(() => {
     let isMounted = true;
-    let lastFetchTime = 0;
-    const TEN_MINUTES = 10 * 60 * 1000; // 10 minutes in milliseconds
 
     const fetchData = async (showLoader = false, force = false) => {
       const now = Date.now();
 
       // Only fetch if 10 minutes have passed since last fetch, unless forced
-      if (!force && (now - lastFetchTime) < TEN_MINUTES) {
-        console.log(`⏰ Skipping Luxdrop fetch - only ${(now - lastFetchTime) / 1000}s since last fetch`);
+      if (!force && (now - lastFetchTimeRef.current) < TEN_MINUTES) {
+        console.log(`⏰ Skipping Luxdrop fetch - only ${(now - lastFetchTimeRef.current) / 1000}s since last fetch`);
         return;
       }
 
@@ -153,7 +154,7 @@ const LuxdropLeaderboard: React.FC = () => {
       }
 
       console.log("🔄 Fetching Luxdrop data...");
-      lastFetchTime = now;
+      lastFetchTimeRef.current = now;
 
       try {
         const response = await fetch(API_PROXY_URL);

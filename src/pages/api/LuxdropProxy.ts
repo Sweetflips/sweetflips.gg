@@ -5,10 +5,10 @@ import { HttpsProxyAgent } from "https-proxy-agent";
 import { DateTime } from "luxon";
 import type { NextApiRequest, NextApiResponse } from "next";
 
-// Simple in-memory rate limiter
+// Simple in-memory rate limiter - relaxed for Luxdrop API rate limits
 const rateLimitStore: { [key: string]: { count: number; resetTime: number } } = {};
-const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
-const MAX_REQUESTS_PER_WINDOW = 10; // Max 10 requests per 15 minutes
+const RATE_LIMIT_WINDOW = 20 * 60 * 1000; // 20 minutes
+const MAX_REQUESTS_PER_WINDOW = 15; // Max 15 requests per 20 minutes
 
 // Type definitions
 interface AffiliateEntry {
@@ -116,6 +116,12 @@ export default async function handler(
   const proxyUsername = process.env.PROXY_USERNAME;
   const proxyPassword = process.env.PROXY_PASSWORD;
 
+  console.log("Proxy configuration:");
+  console.log("- PROXY_HOST:", proxyHost ? "SET" : "MISSING");
+  console.log("- PROXY_PORT:", proxyPortString || "MISSING");
+  console.log("- PROXY_USERNAME:", proxyUsername ? "SET" : "MISSING");
+  console.log("- PROXY_PASSWORD:", proxyPassword ? "SET" : "MISSING");
+
   let proxyPort: number | undefined = undefined;
   if (proxyPortString) {
     const parsedPort = parseInt(proxyPortString, 10);
@@ -138,9 +144,10 @@ export default async function handler(
   if (proxyHost && proxyPort && proxyUsername && proxyPassword) {
     const proxyUrl = `http://${proxyUsername}:${proxyPassword}@${proxyHost}:${proxyPort}`;
     proxyAgent = new HttpsProxyAgent(proxyUrl);
-    console.log("Using proxy:", `${proxyHost}:${proxyPort}`);
+    console.log("✅ Using proxy:", `${proxyHost}:${proxyPort}`);
+    console.log("Proxy URL:", proxyUrl.replace(/:[^:]+@/, ':***@')); // Hide password in logs
   } else {
-    console.log("No proxy configured");
+    console.log("❌ No proxy configuration found - making direct requests");
   }
 
   try {
