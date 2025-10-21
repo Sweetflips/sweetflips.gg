@@ -1,16 +1,14 @@
 import Link from "next/link";
 // Removed DarkModeSwitcher, DropdownMessage, DropdownNotification, DropdownUser as they are not used in the provided snippet
-import Image from "next/image";
-import { useState, useEffect } from 'react'; // useEffect might still be needed for other things if any
-import Cookies from 'js-cookie';
-import { usePathname } from 'next/navigation';
-import { User, Shield, Menu as MenuIcon, Sparkles } from "lucide-react"; // Renamed Menu to MenuIcon to avoid conflict
 import ShopTokenBar from '@/components/ShopTokenBar/ShopTokenBar';
-import React from "react";
-import { HeaderLiveStatus } from "../HeaderLiveStatus/HeaderLiveStatus";
-import { menuGroups } from "@/data/menuData"; // Import menuGroups
-import HeaderNavItem from "./HeaderNavItem"; // Import HeaderNavItem
 import { useAuth } from "@/contexts/AuthContext"; // Import useAuth
+import { menuGroups } from "@/data/menuData"; // Import menuGroups
+import { Menu as MenuIcon, Shield, Sparkles, User } from "lucide-react"; // Renamed Menu to MenuIcon to avoid conflict
+import Image from "next/image";
+import { usePathname } from 'next/navigation';
+import React, { useState } from "react";
+import { HeaderLiveStatus } from "../HeaderLiveStatus/HeaderLiveStatus";
+import HeaderNavItem from "./HeaderNavItem"; // Import HeaderNavItem
 
 // Removed sidebarOpen and setSidebarOpen from props
 const Header = () => {
@@ -129,7 +127,7 @@ const Header = () => {
               route={item.route}
               external={item.external}
               icon={item.icon}
-              // Removed children prop
+            // Removed children prop
             >
               {/* Nested children */}
               {item.children && item.children.map((childItem, childIndex) => {
@@ -140,8 +138,8 @@ const Header = () => {
                       href={childItem.route}
                       target="_blank"
                       rel="noopener noreferrer"
-                      // className and onClick will be added by HeaderNavItem
-                      // HeaderNavItem will use href for active checks
+                    // className and onClick will be added by HeaderNavItem
+                    // HeaderNavItem will use href for active checks
                     >
                       {childItem.label}
                     </a>
@@ -298,8 +296,8 @@ const Header = () => {
                   <ShopTokenBar />
                 </div>
                 {/* Mobile Create Avatar Button for logged in users */}
-                <Link 
-                  href="/webgl" 
+                <Link
+                  href="/webgl"
                   className="flex items-center mx-3 mt-2 px-4 py-2 rounded-lg text-white font-medium text-sm transition bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                 >
                   <Sparkles className="w-4 h-4 mr-2" />
@@ -308,8 +306,8 @@ const Header = () => {
               </>
             ) : (
               /* Mobile Create Avatar Button for non-logged in users - redirects to signin */
-              <Link 
-                href="/auth/signin" 
+              <Link
+                href="/auth/signin"
                 className="flex items-center mx-3 mt-2 px-4 py-2 rounded-lg text-white font-medium text-sm transition bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
               >
                 <Sparkles className="w-4 h-4 mr-2" />
@@ -320,11 +318,11 @@ const Header = () => {
             {isLoggedIn ? (
               <>
                 <Link href="/account" className="flex items-center text-white hover:bg-gray-700 hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ease-in-out">
-                   <User className="w-5 h-5 mr-2 text-gray-400" fill="currentColor" /> Account
+                  <User className="w-5 h-5 mr-2 text-gray-400" fill="currentColor" /> Account
                 </Link>
                 {userRole === "admin" && (
-                   <Link href="/admin-panel" className="flex items-center text-white hover:bg-gray-700 hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ease-in-out">
-                     <Shield className="w-5 h-5 mr-2 text-gray-400" /> Admin
+                  <Link href="/admin-panel" className="flex items-center text-white hover:bg-gray-700 hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ease-in-out">
+                    <Shield className="w-5 h-5 mr-2 text-gray-400" /> Admin
                   </Link>
                 )}
               </>
