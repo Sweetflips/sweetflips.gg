@@ -184,7 +184,7 @@ const Header = () => {
                 </div>
                 {/* Create Avatar Button for logged in users */}
                 <Link
-                  href="/webgl/index.html"
+                  href="/webgl"
                   className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium text-sm transition bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 hover:shadow-lg hover:shadow-purple-500/30"
                 >
                   <Sparkles className="w-4 h-4" />
@@ -299,7 +299,7 @@ const Header = () => {
                 </div>
                 {/* Mobile Create Avatar Button for logged in users */}
                 <Link 
-                  href="/webgl/index.html" 
+                  href="/webgl" 
                   className="flex items-center mx-3 mt-2 px-4 py-2 rounded-lg text-white font-medium text-sm transition bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                 >
                   <Sparkles className="w-4 h-4 mr-2" />

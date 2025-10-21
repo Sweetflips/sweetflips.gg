@@ -517,7 +517,7 @@ export default function PureChatRoom({
               <div className="flex gap-3">
                 <button
                   onClick={() => {
-                    window.location.href = '/webgl/index.html';
+                    window.location.href = '/webgl';
                     setShowAvatarPrompt(false);
                   }}
                   className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-medium transition-all"

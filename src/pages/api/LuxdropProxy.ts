@@ -34,8 +34,8 @@ export default async function handler(
 
   // Rate limiting check
   const forwardedFor = req.headers['x-forwarded-for'];
-  const clientIp = typeof forwardedFor === 'string' 
-    ? forwardedFor.split(',')[0] 
+  const clientIp = typeof forwardedFor === 'string'
+    ? forwardedFor.split(',')[0]
     : req.socket?.remoteAddress || 'unknown';
   const now = Date.now();
   const resetTime = now + RATE_LIMIT_WINDOW;
@@ -48,8 +48,8 @@ export default async function handler(
 
   if (rateLimitStore[clientIp].count > MAX_REQUESTS_PER_WINDOW) {
     console.log(`🚫 Rate limit exceeded for IP: ${clientIp}`);
-    return res.status(429).json({ 
-      error: 'Too many requests', 
+    return res.status(429).json({
+      error: 'Too many requests',
       retryAfter: Math.ceil((rateLimitStore[clientIp].resetTime - now) / 1000)
     });
   }

@@ -28,7 +28,7 @@ export default function AccountDetails({ user, userData, onOpenAvatarCreator }: 
   
   const handleAvatarClick = () => {
     // Navigate to the webgl avatar creator
-    window.location.href = '/webgl/index.html';
+    window.location.href = '/webgl';
   };
 
   return (
