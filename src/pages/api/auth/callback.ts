@@ -302,6 +302,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const cookies: string[] = [
       // Server APIs expect 'access_token' cookie for Kick
       serialize('access_token', accessToken, COOKIE_OPTIONS),
+      // Server APIs also expect 'kick_id' cookie for user identification
+      serialize('kick_id', kickId, COOKIE_OPTIONS),
       // Unity helpers also use 'authToken'
       serialize('authToken', accessToken, COOKIE_OPTIONS),
     ];
