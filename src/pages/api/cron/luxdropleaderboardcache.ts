@@ -109,10 +109,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             .map((entry: AffiliateEntry) => ({
                 username: entry.username || `User${entry.id}`,
                 wagered: Math.round((Number(entry.wagered) || 0) * 100) / 100,
-                reward: 0,
+                reward: Math.round((Number(entry.wagered) || 0) * 0.05 * 100) / 100, // 5% reward
             }))
             .sort((a, b) => b.wagered - a.wagered)
             .slice(0, 100); // Top 100
+
+        console.log(`🎯 Generated leaderboard: ${leaderboard.length} entries`);
+        if (leaderboard.length > 0) {
+            console.log(`🏆 Top player: ${leaderboard[0].username} - $${leaderboard[0].wagered} wagered, $${leaderboard[0].reward} reward`);
+        }
 
         const responseData = {
             data: leaderboard,
@@ -153,13 +158,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         console.log(`💾 Storing ${leaderboard.length} leaderboard entries...`);
 
         // Delete existing entries for this period
-        await prisma.leaderboard.deleteMany({
+        const deletedCount = await prisma.leaderboard.deleteMany({
             where: {
                 period: periodLabel,
                 startDate: startDateISO,
                 endDate: endDateISO,
             },
         });
+        console.log(`🗑️ Deleted ${deletedCount.count} existing entries`);
 
         // Insert new entries
         const leaderboardEntries = leaderboard.map((entry, index) => ({
@@ -172,9 +178,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             endDate: endDateISO,
         }));
 
-        await prisma.leaderboard.createMany({
+        console.log(`📝 Sample entry to insert:`, leaderboardEntries[0]);
+
+        const insertResult = await prisma.leaderboard.createMany({
             data: leaderboardEntries,
         });
+        console.log(`✅ Inserted ${insertResult.count} leaderboard entries`);
 
         console.log(`💾 Successfully cached Luxdrop data: ${leaderboard.length} entries, $${totalWagered.toFixed(2)} total wagered`);
 

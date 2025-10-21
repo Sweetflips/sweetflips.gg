@@ -1,14 +1,14 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import { prisma } from '@/lib/prisma';
 import { getUserFromRequest } from '@/lib/getUserFromRequest';
+import { prisma } from '@/lib/prisma';
+import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const user = await getUserFromRequest(req, res);
-  
+
   if (req.method === 'GET') {
     try {
       const { roomId } = req.query;
-      
+
       if (!roomId || typeof roomId !== 'string') {
         return res.status(400).json({ error: 'Room ID is required' });
       }
@@ -46,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // Fetch messages with user details
       const messages = await prisma.chatMessage.findMany({
-        where: { 
+        where: {
           chatRoomId: roomId,
           userId: { not: undefined } // Filter out messages with undefined userId
         },
@@ -96,7 +96,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!user) {
       return res.status(401).json({ error: 'Authentication required to send messages' });
     }
-    
+
     try {
       const { roomId, content } = req.body;
 
