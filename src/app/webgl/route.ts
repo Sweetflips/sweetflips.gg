@@ -1,20 +1,12 @@
 import { NextRequest } from 'next/server';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 export async function GET(request: NextRequest) {
     try {
-        // Read the WebGL index.html file using fetch
-        const baseUrl = process.env.VERCEL_URL
-            ? `https://${process.env.VERCEL_URL}`
-            : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-
-        const webglUrl = `${baseUrl}/webgl/index.html`;
-        const response = await fetch(webglUrl);
-
-        if (!response.ok) {
-            throw new Error('WebGL content not found');
-        }
-
-        const fileContent = await response.text();
+        // Read the WebGL index.html file directly from filesystem
+        const filePath = join(process.cwd(), 'public', 'webgl', 'index.html');
+        const fileContent = readFileSync(filePath, 'utf-8');
 
         // Return the HTML content with proper headers
         return new Response(fileContent, {
