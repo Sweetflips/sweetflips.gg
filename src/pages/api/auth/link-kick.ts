@@ -64,7 +64,7 @@ export default async function handler(
     let baseUrl = getBaseUrl();
     if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
 
-    authUrl.searchParams.append("redirect_uri", `${baseUrl}/api/auth/callback`);
+    authUrl.searchParams.append("redirect_uri", `${baseUrl}/auth/callback`);
     authUrl.searchParams.append("code_challenge", codeChallenge);
     authUrl.searchParams.append("code_challenge_method", "S256");
     authUrl.searchParams.append("state", JSON.stringify({

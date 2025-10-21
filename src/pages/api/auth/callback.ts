@@ -58,7 +58,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   let baseUrl = getBaseUrl();
   if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
 
-  const redirectUri = `${baseUrl}/api/auth/callback`;
+  const redirectUri = `${baseUrl}/auth/callback`;
 
   // Debug: Log the redirect URI being used
   console.log('OAuth callback - redirectUri:', redirectUri);
