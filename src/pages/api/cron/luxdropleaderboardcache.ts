@@ -17,14 +17,14 @@ interface LeaderboardEntry {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    // Only allow POST requests with proper authentication
-    if (req.method !== 'POST') {
+    // Only allow GET requests with proper authentication
+    if (req.method !== 'GET') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    // Verify cron secret
-    const cronSecret = req.headers.authorization?.replace('Bearer ', '');
-    if (cronSecret !== process.env.CRON_SECRET) {
+    // Verify the request is from Vercel Cron
+    const authHeader = req.headers.authorization;
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
