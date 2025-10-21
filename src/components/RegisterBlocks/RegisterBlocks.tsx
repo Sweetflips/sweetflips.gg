@@ -48,8 +48,8 @@ const RegisterBlocks: React.FC = () => {
                 src="/images/logo/Icon colored.png"
                 alt="Luxdrop Logo"
                 className=""
-                width={280}
-                height={53}
+                width={120}
+                height={120}
               />
             </div>
             <p className="mb-4 mt-4 text-sm">
