@@ -98,8 +98,8 @@ export default function ChatSidebar({ selectedRoomId, onRoomSelect, isMobile = f
                 whileTap={{ scale: 0.98 }}
                 onClick={() => onRoomSelect(room.id)}
                 className={`w-full p-4 mb-2 rounded-xl text-left transition-all relative overflow-hidden group ${selectedRoomId === room.id
-                    ? "bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/50"
-                    : "bg-[#2a1b3d]/30 hover:bg-[#2a1b3d]/50 border border-transparent"
+                  ? "bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/50"
+                  : "bg-[#2a1b3d]/30 hover:bg-[#2a1b3d]/50 border border-transparent"
                   }`}
               >
                 {selectedRoomId === room.id && (
