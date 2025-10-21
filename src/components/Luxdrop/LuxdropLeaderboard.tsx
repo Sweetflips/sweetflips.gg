@@ -4,7 +4,7 @@ import { Timer } from "@/app/ui/timer/Timer";
 import Loader from "@/components/common/Loader";
 import { DateTime } from "luxon";
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 const API_PROXY_URL = "/api/LuxdropProxy";
 
@@ -232,7 +232,7 @@ const LuxdropLeaderboard: React.FC = () => {
       isMounted = false;
       window.clearInterval(refreshInterval);
     };
-  }, []);
+  }, [TEN_MINUTES]);
 
   if (loading) return <Loader />;
   if (error)
