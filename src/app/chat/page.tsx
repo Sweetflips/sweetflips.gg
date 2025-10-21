@@ -199,7 +199,7 @@ export default function ChatPage() {
 
   const handleSetupAvatar = () => {
     // Redirect to Unity WebGL avatar creator
-    window.location.href = "/webgl";
+    window.location.href = "/webgl/index.html";
   };
 
   const handleRoomSelect = async (roomId: string) => {
