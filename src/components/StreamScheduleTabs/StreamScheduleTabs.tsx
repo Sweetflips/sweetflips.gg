@@ -51,7 +51,7 @@ export default async function StreamScheduleTabs() {
   try {
     // Fetch schedule data from database
     const response = await fetch(`${getBaseUrl()}/api/admin/schedule`, {
-      cache: 'no-store' // Always get fresh data
+      next: { revalidate: 60 } // Cache for 60 seconds
     });
 
     if (response.ok) {
