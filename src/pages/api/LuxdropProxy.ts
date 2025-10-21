@@ -235,14 +235,14 @@ export default async function handler(
           },
         },
         update: {
-          data: responseData,
+          data: responseData as any,
           updatedAt: new Date(),
         },
         create: {
           period: periodLabel,
           startDate: startDateISO,
           endDate: endDateISO,
-          data: responseData,
+          data: responseData as any,
         },
       });
 

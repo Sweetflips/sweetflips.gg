@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 export function HeaderLiveStatus() {
   const [isLive, setIsLive] = useState<boolean | null>(null);
