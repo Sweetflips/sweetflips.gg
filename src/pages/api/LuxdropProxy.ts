@@ -224,6 +224,34 @@ export default async function handler(
       }
     };
 
+    // Save fresh data to database cache
+    try {
+      await prisma.luxdropCache.upsert({
+        where: {
+          period_startDate_endDate: {
+            period: periodLabel,
+            startDate: startDateISO,
+            endDate: endDateISO,
+          },
+        },
+        update: {
+          data: responseData,
+          updatedAt: new Date(),
+        },
+        create: {
+          period: periodLabel,
+          startDate: startDateISO,
+          endDate: endDateISO,
+          data: responseData,
+        },
+      });
+
+      console.log(`💾 Successfully cached ${leaderboard.length} entries to database`);
+    } catch (cacheError: any) {
+      console.error("❌ Failed to save to database cache:", cacheError.message);
+      // Continue serving the response even if caching fails
+    }
+
     res.setHeader("Cache-Control", "public, s-maxage=600, stale-while-revalidate=300");
     res.setHeader("X-Data-Source", "api");
     res.status(200).json(responseData);

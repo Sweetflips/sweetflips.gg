@@ -19,7 +19,8 @@ export function HeaderLiveStatus() {
     }
 
     fetchStatus();
-    const interval = setInterval(fetchStatus, 30000);
+    // Reduce polling to every 2 minutes to reduce API calls
+    const interval = setInterval(fetchStatus, 120000);
     return () => clearInterval(interval);
   }, []);
 
