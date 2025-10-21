@@ -7,8 +7,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 declare global {
   interface Window {
-    createUnityInstance: any;
-    unityInstance: any;
+    createUnityInstance?: any;
+    unityInstance?: any;
   }
 }
 
