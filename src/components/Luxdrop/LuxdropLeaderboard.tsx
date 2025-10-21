@@ -132,7 +132,8 @@ const LuxdropLeaderboard: React.FC = () => {
   };
 
   const lastFetchTimeRef = useRef(0);
-  const TEN_MINUTES = 10 * 60 * 1000; // 10 minutes in milliseconds
+  const TEN_MINUTES = 10 * 60 * 1000; // 10 minutes = 600,000 milliseconds
+  console.log("🔧 TEN_MINUTES constant:", TEN_MINUTES);
 
   useEffect(() => {
     let isMounted = true;
@@ -140,9 +141,12 @@ const LuxdropLeaderboard: React.FC = () => {
     const fetchData = async (showLoader = false, force = false) => {
       const now = Date.now();
 
+      const timeSinceLastFetch = now - lastFetchTimeRef.current;
+      console.log(`⏱️ Time since last fetch: ${timeSinceLastFetch / 1000}s, Required: ${TEN_MINUTES / 1000}s`);
+
       // Only fetch if 10 minutes have passed since last fetch, unless forced
-      if (!force && (now - lastFetchTimeRef.current) < TEN_MINUTES) {
-        console.log(`⏰ Skipping Luxdrop fetch - only ${(now - lastFetchTimeRef.current) / 1000}s since last fetch`);
+      if (!force && timeSinceLastFetch < TEN_MINUTES) {
+        console.log(`⏰ Skipping Luxdrop fetch - only ${timeSinceLastFetch / 1000}s since last fetch (need ${TEN_MINUTES / 1000}s)`);
         return;
       }
 
@@ -155,6 +159,7 @@ const LuxdropLeaderboard: React.FC = () => {
 
       console.log("🔄 Fetching Luxdrop data...");
       lastFetchTimeRef.current = now;
+      console.log(`✅ Updated lastFetchTime to: ${now}`);
 
       try {
         const response = await fetch(API_PROXY_URL);
@@ -212,10 +217,16 @@ const LuxdropLeaderboard: React.FC = () => {
       }
     };
 
+    console.log("🚀 LuxdropLeaderboard mounted - setting up 10-minute interval");
     fetchData(true, true); // Initial fetch
 
     // Set up interval for every 10 minutes
-    const refreshInterval = window.setInterval(() => fetchData(false, false), TEN_MINUTES);
+    const refreshInterval = window.setInterval(() => {
+      console.log("⏰ 10-minute interval triggered - calling fetchData");
+      fetchData(false, false);
+    }, TEN_MINUTES);
+
+    console.log(`📅 Next fetch scheduled in ${TEN_MINUTES / 1000} seconds`);
 
     return () => {
       isMounted = false;
