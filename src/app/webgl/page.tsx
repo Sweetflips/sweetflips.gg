@@ -6,7 +6,7 @@ import { useEffect, useRef } from 'react';
 // Unity WebGL types
 declare global {
     interface Window {
-        createUnityInstance?: (canvas: HTMLCanvasElement, config: any, progressCallback: (progress: number) => void) => Promise<any>;
+        createUnityInstance?: any;
         unityInstance?: any;
     }
 }
