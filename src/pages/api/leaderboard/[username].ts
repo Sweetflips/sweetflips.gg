@@ -18,8 +18,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const startDate = DateTime.utc(2025, 10, 16, 0, 0, 0);
         const endDate = DateTime.utc(2025, 10, 31, 23, 59, 59);
         const periodLabel = "October 16-31, 2025";
-        const startDateISO = startDate.toISODate();
-        const endDateISO = endDate.toISODate();
+        const startDateISO = startDate.toFormat('yyyy-MM-dd');
+        const endDateISO = endDate.toFormat('yyyy-MM-dd');
 
         console.log(`👤 Fetching leaderboard position for user: ${username}`);
 
