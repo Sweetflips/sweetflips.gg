@@ -1,7 +1,7 @@
-import { NextApiRequest, NextApiResponse } from 'next';
 import { serialize } from 'cookie';
-import { prisma } from '../../../../lib/prisma';
+import { NextApiRequest, NextApiResponse } from 'next';
 import { getBaseUrl } from '../../../../lib/getBaseUrl';
+import { prisma } from '../../../../lib/prisma';
 import { COOKIE_OPTIONS } from '../../../lib/cookies';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -14,7 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   console.log('OAuth callback - URL:', req.url);
 
   const { code, state, error } = req.query;
-  
+
   // Handle OAuth errors from Kick
   if (error) {
     console.error('OAuth error from Kick:', error);
@@ -59,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
 
   const redirectUri = `${baseUrl}/api/auth/callback`;
-  
+
   // Debug: Log the redirect URI being used
   console.log('OAuth callback - redirectUri:', redirectUri);
   console.log('OAuth callback - baseUrl:', baseUrl);

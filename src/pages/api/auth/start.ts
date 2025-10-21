@@ -1,8 +1,8 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import { randomBytes, createHash, randomUUID } from 'crypto';
-import { prisma } from '../../../../lib/prisma';
+import { createHash, randomBytes, randomUUID } from 'crypto';
 import { addMinutes } from 'date-fns';
+import { NextApiRequest, NextApiResponse } from 'next';
 import { getBaseUrl } from '../../../../lib/getBaseUrl';
+import { prisma } from '../../../../lib/prisma';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -14,7 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
 
     const redirectUri = `${baseUrl}/api/auth/callback`;
-    
+
     // Debug: Log the redirect URI being used
     console.log('OAuth start - redirectUri:', redirectUri);
     console.log('OAuth start - baseUrl:', baseUrl);

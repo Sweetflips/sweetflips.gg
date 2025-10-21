@@ -1,9 +1,8 @@
+import { createHash, randomBytes } from "crypto";
 import { NextApiRequest, NextApiResponse } from "next";
-import { createClient } from "@supabase/supabase-js";
-import { prisma } from "../../../../lib/prisma";
-import { getBaseUrl } from "../../../../lib/getBaseUrl";
 import { v4 as uuidv4 } from "uuid";
-import { randomBytes, createHash } from "crypto";
+import { getBaseUrl } from "../../../../lib/getBaseUrl";
+import { prisma } from "../../../../lib/prisma";
 
 const KICK_CLIENT_ID = process.env.NEXT_PUBLIC_KICK_CLIENT_ID!;
 const KICK_CLIENT_SECRET = process.env.KICK_CLIENT_SECRET!;
@@ -68,15 +67,15 @@ export default async function handler(
     authUrl.searchParams.append("redirect_uri", `${baseUrl}/api/auth/callback`);
     authUrl.searchParams.append("code_challenge", codeChallenge);
     authUrl.searchParams.append("code_challenge_method", "S256");
-    authUrl.searchParams.append("state", JSON.stringify({ 
-      sessionId, 
+    authUrl.searchParams.append("state", JSON.stringify({
+      sessionId,
       action: "link",
-      auth_user_id 
+      auth_user_id
     }));
 
-    return res.status(200).json({ 
+    return res.status(200).json({
       authUrl: authUrl.toString(),
-      sessionId 
+      sessionId
     });
 
   } catch (error) {
