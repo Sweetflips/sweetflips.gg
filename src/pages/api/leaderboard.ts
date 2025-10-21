@@ -8,11 +8,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
-        // Define the period: Current month
-        const now = DateTime.utc();
-        const startDate = now.startOf('month');
-        const endDate = now.endOf('month');
-        const periodLabel = `${now.toFormat('dd')}-${endDate.toFormat('dd')}${now.toFormat('MMM')} ${now.year}`;
+        // Define the period: October 16-31, 2025
+        const startDate = DateTime.utc(2025, 10, 16, 0, 0, 0);
+        const endDate = DateTime.utc(2025, 10, 31, 23, 59, 59);
+        const periodLabel = "16-31okt 2025";
         const startDateISO = startDate.toFormat('yyyy-MM-dd');
         const endDateISO = endDate.toFormat('yyyy-MM-dd');
 
