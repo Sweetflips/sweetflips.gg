@@ -7,8 +7,8 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 // Simple in-memory rate limiter
 const rateLimitStore: { [key: string]: { count: number; resetTime: number } } = {};
-const RATE_LIMIT_WINDOW = 10 * 60 * 1000; // 10 minutes
-const MAX_REQUESTS_PER_WINDOW = 20; // Max 20 requests per 10 minutes
+const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
+const MAX_REQUESTS_PER_WINDOW = 10; // Max 10 requests per 15 minutes
 
 // Type definitions
 interface AffiliateEntry {

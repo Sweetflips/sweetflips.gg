@@ -133,8 +133,18 @@ const LuxdropLeaderboard: React.FC = () => {
 
   useEffect(() => {
     let isMounted = true;
+    let lastFetchTime = 0;
+    const TEN_MINUTES = 10 * 60 * 1000; // 10 minutes in milliseconds
 
-    const fetchData = async (showLoader = false) => {
+    const fetchData = async (showLoader = false, force = false) => {
+      const now = Date.now();
+
+      // Only fetch if 10 minutes have passed since last fetch, unless forced
+      if (!force && (now - lastFetchTime) < TEN_MINUTES) {
+        console.log(`⏰ Skipping Luxdrop fetch - only ${(now - lastFetchTime) / 1000}s since last fetch`);
+        return;
+      }
+
       if (showLoader) {
         setLoading(true);
       }
@@ -142,11 +152,11 @@ const LuxdropLeaderboard: React.FC = () => {
         setError(null);
       }
 
-      const cacheBuster = `?t=${Date.now()}`;
-      const apiUrl = `${API_PROXY_URL}${cacheBuster}`;
+      console.log("🔄 Fetching Luxdrop data...");
+      lastFetchTime = now;
 
       try {
-        const response = await fetch(apiUrl);
+        const response = await fetch(API_PROXY_URL);
         if (!response.ok) {
           throw new Error(`API returned ${response.status}: ${response.statusText}`);
         }
@@ -201,9 +211,10 @@ const LuxdropLeaderboard: React.FC = () => {
       }
     };
 
-    fetchData(true);
-    // Reduce frequency to every 10 minutes to prevent rate limiting
-    const refreshInterval = window.setInterval(() => fetchData(false), 600_000);
+    fetchData(true, true); // Initial fetch
+
+    // Set up interval for every 10 minutes
+    const refreshInterval = window.setInterval(() => fetchData(false, false), TEN_MINUTES);
 
     return () => {
       isMounted = false;
