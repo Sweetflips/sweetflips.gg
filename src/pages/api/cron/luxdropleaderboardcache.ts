@@ -30,6 +30,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     console.log('🔄 Starting Luxdrop cache update...');
 
+    // Check if we have recent cached data to avoid unnecessary API calls
+    try {
+        const periodLabel = "16-31okt 2025";
+        const startDateISO = "2025-10-16";
+        const endDateISO = "2025-10-31";
+        
+        const existingCache = await prisma.luxdropCache.findUnique({
+            where: {
+                period_startDate_endDate: {
+                    period: periodLabel,
+                    startDate: startDateISO,
+                    endDate: endDateISO,
+                },
+            },
+        });
+
+        if (existingCache) {
+            const cacheAge = Date.now() - existingCache.createdAt.getTime();
+            const cacheAgeMinutes = cacheAge / (1000 * 60);
+            
+            // If cache is less than 30 minutes old, skip API call
+            if (cacheAgeMinutes < 30) {
+                console.log(`⏭️ Skipping API call - cache is only ${cacheAgeMinutes.toFixed(1)} minutes old`);
+                return res.status(200).json({
+                    success: true,
+                    message: 'Cache is fresh, skipping API call',
+                    cacheAge: cacheAgeMinutes,
+                });
+            }
+        }
+    } catch (error) {
+        console.log('⚠️ Could not check cache age, proceeding with API call');
+    }
+
     try {
         // Get API configuration
         const API_KEY = process.env.LUXDROP_API_KEY;
@@ -78,6 +112,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
                 "Accept": "application/json",
             },
+            // Add retry configuration
+            validateStatus: (status) => status < 500, // Don't throw for 4xx errors
         };
 
         if (proxyAgent) {
@@ -86,6 +122,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         const response = await axios(config);
+        
+        // Check for rate limiting before processing
+        if (response.status === 429) {
+            console.log('⚠️ Rate limited by Luxdrop API (429)');
+            return res.status(429).json({
+                error: 'Rate limited',
+                message: 'Luxdrop API rate limit reached, will retry later',
+                retryAfter: response.headers['retry-after'] || 3600, // Default 1 hour
+            });
+        }
+        
+        if (response.status !== 200) {
+            throw new Error(`API returned status ${response.status}: ${response.statusText}`);
+        }
+        
         const monthlyData: AffiliateEntry[] = response.data;
 
         if (!Array.isArray(monthlyData)) {
@@ -223,6 +274,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return res.status(429).json({
                 error: 'Rate limited',
                 message: 'Luxdrop API rate limit reached, will retry later',
+                retryAfter: error.response.headers['retry-after'] || 3600,
+            });
+        }
+
+        // If it's a network error or timeout, don't fail the cron job
+        if (error.code === 'ECONNABORTED' || error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
+            console.log('🌐 Network error - will retry on next cron run');
+            return res.status(503).json({
+                error: 'Service temporarily unavailable',
+                message: 'Network error, will retry on next cron run',
             });
         }
 
