@@ -10,17 +10,23 @@ const HomeBanner: React.FC = () => {
           Welcome to Sweetflips
         </h1>
         <p className="mt-6 text-lg font-bold text-white sm:text-xl">
-          Receive <b className="text-[rgb(223,86,255)]">Rewards</b> &amp;{" "}
-          <b className="text-[rgb(223,86,255)]">Special</b> Bonuses
+          Receive <b className="text-blue-400">Rewards</b> &amp;{" "}
+          <b className="text-blue-400">Special</b> Bonuses
         </p><br />
         <p className="text-sm text-white sm:text-base">
           Unlock and claim exclusive bonuses on{" "}
-          <b className="text-[rgb(223,86,255)]">
+          <b className="text-blue-400">
             <a href="https://www.razed.com/signup/?raf=SweetFlips" target="blank">
               Razed.com
             </a>
           </b>{" "}
-          - the world&apos;s most known and trusted online casino. From VIP
+          and{" "}
+          <b className="text-blue-400">
+            <a href="https://luxdrop.com" target="blank">
+              Luxdrop.com
+            </a>
+          </b>{" "}
+          - the world&apos;s most known and trusted online casinos. From VIP
           perks to leaderboard races, milestones, events and daily giveaways, we&apos;ve got it
           all.
         </p>

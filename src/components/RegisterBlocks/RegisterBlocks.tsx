@@ -1,6 +1,6 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
 import Image from "next/image";
+import React from "react";
 
 const RegisterBlocks: React.FC = () => {
   return (
@@ -15,7 +15,7 @@ const RegisterBlocks: React.FC = () => {
           <div className="RegisterBlocks-inner mx-2 flex h-44 flex-col justify-center rounded-lg border border-graydark p-4 text-center">
             <div className="flex justify-center">
               <Image
-                src="/images/logo/Razed_Logo.png"
+                src="https://cdn-cms.razed.com/Logo/razed-logo-2x.png"
                 alt="Razed Logo"
                 className=""
                 width={240}
@@ -45,7 +45,7 @@ const RegisterBlocks: React.FC = () => {
           <div className="RegisterBlocks-inner mx-2 flex h-44 flex-col justify-center rounded-lg border border-graydark p-4 text-center">
             <div className="flex justify-center">
               <Image
-                src="/images/logo/luxdrop_logo.png"
+                src="/images/logo/Icon colored.png"
                 alt="Luxdrop Logo"
                 className=""
                 width={280}

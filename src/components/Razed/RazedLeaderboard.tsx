@@ -1,10 +1,8 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 // import confetti from "canvas-confetti";
-import Loader from "@/components/common/Loader";
 import { Timer } from "@/app/ui/timer/Timer";
-import Footer from "@/components/Footer/Footer";
-import { DateTime } from "luxon";
+import Loader from "@/components/common/Loader";
 import Image from "next/image";
 
 const API_PROXY_URL = "/api/RazedProxy";
@@ -254,7 +252,7 @@ const RazedLeaderboard: React.FC = () => {
           <div className="mt-4 flex flex-col items-center justify-center sm:flex-row sm:space-x-4">
             {/* Razed Logo */}
             <Image
-              src="/images/logo/Razed_Logo.png"
+              src="https://cdn-cms.razed.com/Logo/razed-logo-2x.png"
               alt="Razed Logo"
               className="mb-3 transition-all duration-300 sm:mb-0 sm:w-[150px] md:w-[200px] lg:w-[250px] xl:w-[250px]"
               width={200} // Default width for the image

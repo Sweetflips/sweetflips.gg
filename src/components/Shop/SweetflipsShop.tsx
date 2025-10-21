@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import Loader from "@/components/common/Loader";
-import { useRouter } from 'next/navigation';
 import DefaultLayout from '@/components/Layouts/DefaultLayout';
 import { useToken } from '@/contexts/TokenContext';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 interface Product {
   id: number;
@@ -70,6 +70,18 @@ export default function ClientShopPage() {
     <DefaultLayout>
       <div className="max-w-7xl mx-auto px-4 py-8 text-white">
         <h1 className="text-3xl font-bold mb-6">Sweetflips Token Shop</h1>
+
+        {/* Coming Soon Banner */}
+        <div className="mb-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl p-6 text-center shadow-lg">
+          <div className="flex items-center justify-center mb-2">
+            <span className="text-4xl mr-3">🚀</span>
+            <h2 className="text-2xl font-bold text-white">COMING SOON</h2>
+            <span className="text-4xl ml-3">🚀</span>
+          </div>
+          <p className="text-lg text-gray-200">
+            Exciting new products and features are being prepared for you!
+          </p>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {products.map((product) => (

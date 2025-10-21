@@ -310,7 +310,7 @@ const LuxdropLeaderboard: React.FC = () => {
           </b>
           <div className="mt-4 flex flex-col items-center justify-center sm:flex-row sm:space-x-4">
             <Image
-              src="/images/logo/luxdrop_logo.png" // Verified path
+              src="/images/logo/Icon colored.png" // Verified path
               alt="Luxdrop Logo"
               width={280} // Adjusted for SVG aspect ratio
               height={53} // Adjusted for SVG aspect ratio
@@ -327,7 +327,7 @@ const LuxdropLeaderboard: React.FC = () => {
       </div>
 
       <div className="mb-4 mt-12 flex flex-col items-center text-2xl font-bold">
-      Bi-weekly Leaderboard ends in
+        Bi-weekly Leaderboard ends in
       </div>
       {countDownDate && (
         <div className="relative mb-15 flex justify-center space-x-4">

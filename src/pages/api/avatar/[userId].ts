@@ -1,5 +1,18 @@
+import { createClient } from '@supabase/supabase-js';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '../../../../lib/prisma';
+
+// Create a Supabase client for auth verification
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    }
+  }
+);
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -13,35 +26,100 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Invalid userId' });
     }
 
+    // Try to parse as number first (legacy userId)
     const userIdNum = parseInt(userId, 10);
-    if (isNaN(userIdNum)) {
-      return res.status(400).json({ error: 'userId must be a number' });
+    let avatar = null;
+
+    if (!isNaN(userIdNum)) {
+      // Legacy userId lookup
+      avatar = await prisma.avatar.findUnique({
+        where: { userId: userIdNum },
+        select: {
+          id: true,
+          avatarId: true,
+          partner: true,
+          gender: true,
+          bodyType: true,
+          bodyShape: true,
+          assets: true,
+          base64Image: true,
+          isDraft: true,
+          avatarUrl: true,
+          avatarLink: true,
+          thumbnailUrl: true,
+          renderPose: true,
+          expression: true,
+          isPublic: true,
+          metadata: true,
+          createdAt: true,
+          updatedAt: true
+        }
+      });
+    } else {
+      // Try auth_user_id lookup (UUID format)
+      avatar = await prisma.avatar.findUnique({
+        where: { auth_user_id: userId },
+        select: {
+          id: true,
+          avatarId: true,
+          partner: true,
+          gender: true,
+          bodyType: true,
+          bodyShape: true,
+          assets: true,
+          base64Image: true,
+          isDraft: true,
+          avatarUrl: true,
+          avatarLink: true,
+          thumbnailUrl: true,
+          renderPose: true,
+          expression: true,
+          isPublic: true,
+          metadata: true,
+          createdAt: true,
+          updatedAt: true
+        }
+      });
     }
 
-    // Get avatar properties
-    const avatar = await prisma.avatar.findUnique({
-      where: { userId: userIdNum },
-      select: {
-        id: true,
-        avatarId: true,
-        partner: true,
-        gender: true,
-        bodyType: true,
-        bodyShape: true,
-        assets: true,
-        base64Image: true,
-        isDraft: true,
-        avatarUrl: true,
-        avatarLink: true,
-        thumbnailUrl: true,
-        renderPose: true,
-        expression: true,
-        isPublic: true,
-        metadata: true,
-        createdAt: true,
-        updatedAt: true
+    // If still no avatar found, try authentication-based lookup
+    if (!avatar) {
+      const authHeader = req.headers.authorization;
+
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.substring(7);
+
+        // Verify the Supabase token
+        const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token);
+
+        if (!authError && authUser) {
+          // Try to find avatar by auth_user_id
+          avatar = await prisma.avatar.findUnique({
+            where: { auth_user_id: authUser.id },
+            select: {
+              id: true,
+              avatarId: true,
+              partner: true,
+              gender: true,
+              bodyType: true,
+              bodyShape: true,
+              assets: true,
+              base64Image: true,
+              isDraft: true,
+              avatarUrl: true,
+              avatarLink: true,
+              thumbnailUrl: true,
+              renderPose: true,
+              expression: true,
+              isPublic: true,
+              metadata: true,
+              createdAt: true,
+              updatedAt: true
+            }
+          });
+        }
       }
-    });
+    }
 
     if (!avatar) {
       return res.status(404).json({ error: 'Avatar not found for this user' });
@@ -68,7 +146,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       updatedAt: avatar.updatedAt
     };
 
-    return res.status(200).json({ 
+    return res.status(200).json({
       success: true,
       avatar: avatarProperties
     });

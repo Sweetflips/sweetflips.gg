@@ -1,5 +1,5 @@
-import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
+import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // This endpoint is public as it only returns public user info
@@ -9,31 +9,48 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const { userId } = req.query;
-    
+
     if (!userId) {
       return res.status(400).json({ error: 'User ID is required' });
     }
 
-    const userIdNum = parseInt(userId as string);
-    if (isNaN(userIdNum)) {
-      return res.status(400).json({ error: 'Invalid user ID' });
-    }
+    const userIdStr = userId as string;
+    const userIdNum = parseInt(userIdStr);
+    let user = null;
 
-    // Fetch user with avatar
-    const user = await prisma.user.findUnique({
-      where: { id: userIdNum },
-      select: {
-        id: true,
-        username: true,
-        avatar: {
-          select: {
-            base64Image: true,
-            avatarId: true,
-            gender: true
+    if (!isNaN(userIdNum)) {
+      // Legacy userId lookup
+      user = await prisma.user.findUnique({
+        where: { id: userIdNum },
+        select: {
+          id: true,
+          username: true,
+          avatar: {
+            select: {
+              base64Image: true,
+              avatarId: true,
+              gender: true
+            }
           }
         }
-      }
-    });
+      });
+    } else {
+      // Try auth_user_id lookup (UUID format)
+      user = await prisma.user.findUnique({
+        where: { auth_user_id: userIdStr },
+        select: {
+          id: true,
+          username: true,
+          avatar: {
+            select: {
+              base64Image: true,
+              avatarId: true,
+              gender: true
+            }
+          }
+        }
+      });
+    }
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });

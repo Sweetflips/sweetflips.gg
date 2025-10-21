@@ -38,6 +38,7 @@ export default function ChatPage() {
         }
       }
 
+      // Try the updated avatar endpoint that handles both auth types
       const response = await fetch(`/api/avatar/${userId}`, { headers });
 
       if (response.ok) {
