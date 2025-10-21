@@ -202,7 +202,8 @@ const LuxdropLeaderboard: React.FC = () => {
     };
 
     fetchData(true);
-    const refreshInterval = window.setInterval(() => fetchData(false), 60_000);
+    // Reduce frequency to every 10 minutes to prevent rate limiting
+    const refreshInterval = window.setInterval(() => fetchData(false), 600_000);
 
     return () => {
       isMounted = false;

@@ -99,7 +99,13 @@ export default function Avatar({
           setError(true);
           onAvatarLoad?.(false);
         }
+      } else if (response.status === 404) {
+        // Avatar not found - this is normal for users without avatars
+        console.log(`Avatar not found for user ${userId} - this is normal`);
+        setError(true);
+        onAvatarLoad?.(false);
       } else {
+        console.error(`Avatar API error: ${response.status} ${response.statusText}`);
         setError(true);
         onAvatarLoad?.(false);
       }

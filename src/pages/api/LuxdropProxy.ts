@@ -5,6 +5,11 @@ import { HttpsProxyAgent } from "https-proxy-agent";
 import { DateTime } from "luxon";
 import type { NextApiRequest, NextApiResponse } from "next";
 
+// Simple in-memory rate limiter
+const rateLimitStore: { [key: string]: { count: number; resetTime: number } } = {};
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+const MAX_REQUESTS_PER_WINDOW = 3; // Max 3 requests per minute
+
 // Type definitions
 interface AffiliateEntry {
   id?: string;
@@ -25,6 +30,25 @@ export default async function handler(
   if (req.method !== "GET") {
     res.setHeader("Allow", ["GET"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
+  }
+
+  // Rate limiting check
+  const clientIp = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
+  const now = Date.now();
+  const resetTime = now + RATE_LIMIT_WINDOW;
+
+  if (!rateLimitStore[clientIp] || rateLimitStore[clientIp].resetTime < now) {
+    rateLimitStore[clientIp] = { count: 1, resetTime };
+  } else {
+    rateLimitStore[clientIp].count++;
+  }
+
+  if (rateLimitStore[clientIp].count > MAX_REQUESTS_PER_WINDOW) {
+    console.log(`🚫 Rate limit exceeded for IP: ${clientIp}`);
+    return res.status(429).json({
+      error: 'Too many requests',
+      retryAfter: Math.ceil((rateLimitStore[clientIp].resetTime - now) / 1000)
+    });
   }
 
   console.log("=== LUXDROP API CALLED ===");
@@ -54,7 +78,8 @@ export default async function handler(
 
       console.log(`📦 Serving cached data (age: ${cacheAgeMinutes.toFixed(1)} minutes)`);
 
-      res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=600");
+      // Increase cache duration to 10 minutes to reduce API calls
+      res.setHeader("Cache-Control", "public, s-maxage=600, stale-while-revalidate=1200");
       res.setHeader("X-Data-Source", "cache");
       res.setHeader("X-Cache-Age-Minutes", cacheAgeMinutes.toString());
 
@@ -229,7 +254,8 @@ export default async function handler(
 
           console.log(`📦 Serving stale cached data (age: ${cacheAgeMinutes.toFixed(1)} minutes)`);
 
-          res.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
+          // Increase stale cache duration to reduce API pressure
+          res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=600");
           res.setHeader("X-Data-Source", "stale-cache");
           res.setHeader("X-Cache-Age-Minutes", cacheAgeMinutes.toString());
           res.setHeader("X-Rate-Limited", "true");
