@@ -27,10 +27,6 @@ export default function ChatSidebar({ selectedRoomId, onRoomSelect, isMobile = f
   const [hasError, setHasError] = useState(false);
   const { getAuthHeaders } = useAuthHeaders();
 
-  useEffect(() => {
-    fetchRooms();
-  }, [fetchRooms]);
-
   const fetchRooms = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -52,6 +48,9 @@ export default function ChatSidebar({ selectedRoomId, onRoomSelect, isMobile = f
     }
   }, [getAuthHeaders]);
 
+  useEffect(() => {
+    fetchRooms();
+  }, [fetchRooms]);
 
   return (
     <div className={`${isMobile ? 'w-80' : 'w-64 lg:w-80'} bg-[#0d0816] border-r border-purple-700/30 flex flex-col h-full`}>

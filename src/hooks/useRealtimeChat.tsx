@@ -80,6 +80,27 @@ export function useRealtimeChat({
     }
   }, [roomId, onError]);
 
+  // Retry connection
+  const retry = useCallback(() => {
+    if (channelRef.current && supabaseClient) {
+      // Remove old channel
+      supabaseClient.removeChannel(channelRef.current);
+      channelRef.current = null;
+
+      // Reset state
+      setError(null);
+      setConnectionStatus('connecting');
+
+      // Reconnect
+      setTimeout(() => {
+        if (mountedRef.current) {
+          // Trigger reconnection by updating roomId
+          setConnectionStatus('connecting');
+        }
+      }, 1000);
+    }
+  }, [supabaseClient]);
+
   // Setup realtime subscription
   useEffect(() => {
     if (!supabaseClient || !roomId) {
@@ -245,22 +266,6 @@ export function useRealtimeChat({
       }
     };
   }, [supabaseClient, roomId, fetchInitialMessages, onMessageReceived, retry]);
-
-  // Retry connection
-  const retry = useCallback(() => {
-    if (channelRef.current && supabaseClient) {
-      // Remove old channel
-      supabaseClient.removeChannel(channelRef.current);
-      channelRef.current = null;
-
-      // Reset state
-      setError(null);
-      setConnectionStatus('connecting');
-
-      // Refetch messages
-      fetchInitialMessages();
-    }
-  }, [supabaseClient, fetchInitialMessages]);
 
   // Cleanup on unmount
   useEffect(() => {

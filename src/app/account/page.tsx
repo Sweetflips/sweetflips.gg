@@ -91,36 +91,6 @@ const ProfilePage = () => {
     };
   }, []); // Empty dependency array ensures this runs only once to set up the listener
 
-  useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
-
-  // Listen for messages from the avatar creator iframe
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      // Check if message is from our avatar creator
-      if (event.origin === window.location.origin) {
-        if (event.data?.type === 'avatar-created' || event.data?.type === 'avatar-saved') {
-          // Close the modal and refresh avatar status
-          setShowAvatarCreator(false);
-          setHasAvatar(null); // Reset to trigger re-check
-          if (user?.id) {
-            checkUserAvatar(user.id);
-          }
-        } else if (event.data?.type === 'unity-ready') {
-          console.log('Unity avatar creator loaded successfully');
-          setAvatarCreatorLoading(false);
-        } else if (event.data?.type === 'unity-error') {
-          console.error('Unity avatar creator error:', event.data.error);
-          setAvatarCreatorLoading(false);
-        }
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [user, checkUserAvatar]);
-
   const checkUserAvatar = useCallback(async (userId: number) => {
     try {
       setCheckingAvatar(true);
@@ -168,6 +138,36 @@ const ProfilePage = () => {
       setCheckingAvatar(false);
     }
   }, [supabaseClient]);
+
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);
+
+  // Listen for messages from the avatar creator iframe
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      // Check if message is from our avatar creator
+      if (event.origin === window.location.origin) {
+        if (event.data?.type === 'avatar-created' || event.data?.type === 'avatar-saved') {
+          // Close the modal and refresh avatar status
+          setShowAvatarCreator(false);
+          setHasAvatar(null); // Reset to trigger re-check
+          if (user?.id) {
+            checkUserAvatar(user.id);
+          }
+        } else if (event.data?.type === 'unity-ready') {
+          console.log('Unity avatar creator loaded successfully');
+          setAvatarCreatorLoading(false);
+        } else if (event.data?.type === 'unity-error') {
+          console.error('Unity avatar creator error:', event.data.error);
+          setAvatarCreatorLoading(false);
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [user, checkUserAvatar]);
 
   // Check avatar when chat tab is active (non-blocking)
   useEffect(() => {

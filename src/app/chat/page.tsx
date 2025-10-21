@@ -19,57 +19,6 @@ export default function ChatPage() {
   const { isLoggedIn, loading, supabaseClient } = useAuth();
   const router = useRouter();
 
-  useEffect(() => {
-    // Redirect to login if not authenticated
-    if (!loading && !isLoggedIn) {
-      router.push('/auth/signin');
-      return;
-    }
-
-    // Fetch current user data
-    if (isLoggedIn) {
-      fetchCurrentUser();
-    }
-  }, [isLoggedIn, loading, router, fetchCurrentUser]);
-
-  const fetchCurrentUser = useCallback(async () => {
-    try {
-      // First try the new endpoint that handles both auth types
-      const headers: HeadersInit = {};
-
-      // If we have a Supabase user, add the authorization header
-      if (isLoggedIn && currentUser === null && supabaseClient) {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (session?.access_token) {
-          headers['Authorization'] = `Bearer ${session.access_token}`;
-        }
-      }
-
-      const response = await fetch("/api/auth/current-user", { headers });
-
-      if (response.ok) {
-        const data = await response.json();
-        setCurrentUser(data.user);
-
-        // Check if user has an avatar
-        await checkUserAvatar(data.user.id);
-      } else {
-        // Fallback to old endpoint for backward compatibility
-        const oldResponse = await fetch("/api/user");
-        if (oldResponse.ok) {
-          const data = await oldResponse.json();
-          setCurrentUser(data.user);
-
-          // Check if user has an avatar
-          await checkUserAvatar(data.user.id);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      setCheckingAvatar(false);
-    }
-  }, [isLoggedIn, currentUser, supabaseClient]);
-
   const checkUserAvatar = useCallback(async (userId: number) => {
     try {
       if (!userId || userId <= 0) {
@@ -119,34 +68,56 @@ export default function ChatPage() {
     }
   }, [supabaseClient]);
 
-  useEffect(() => {
-    // Auto-select first room or create general room
-    if (!selectedRoomId && currentUser) {
-      initializeChat();
-    }
-  }, [currentUser, selectedRoomId, initializeChat]);
+  const fetchCurrentUser = useCallback(async () => {
+    try {
+      // First try the new endpoint that handles both auth types
+      const headers: HeadersInit = {};
 
-  useEffect(() => {
-    // Check if user is coming back from avatar creation
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('avatar_created') === 'true') {
-      // Force re-check avatar after a short delay
-      setTimeout(() => {
-        if (currentUser?.id) {
-          setCheckingAvatar(true);
-          checkUserAvatar(currentUser.id);
+      // If we have a Supabase user, add the authorization header
+      if (isLoggedIn && currentUser === null && supabaseClient) {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
         }
-      }, 1000);
+      }
 
-      // Clean up URL
-      window.history.replaceState({}, '', '/account#chat');
+      const response = await fetch("/api/auth/current-user", { headers });
+
+      if (response.ok) {
+        const data = await response.json();
+        setCurrentUser(data.user);
+
+        // Check if user has an avatar
+        await checkUserAvatar(data.user.id);
+      } else {
+        // Fallback to old endpoint for backward compatibility
+        const oldResponse = await fetch("/api/user");
+        if (oldResponse.ok) {
+          const data = await oldResponse.json();
+          setCurrentUser(data.user);
+
+          // Check if user has an avatar
+          await checkUserAvatar(data.user.id);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      setCheckingAvatar(false);
     }
-  }, [currentUser, checkUserAvatar]);
+  }, [isLoggedIn, currentUser, supabaseClient, checkUserAvatar]);
 
-  const handleSetupAvatar = () => {
-    // Redirect to Unity WebGL avatar creator
-    window.location.href = "/webgl/index.html";
-  };
+  useEffect(() => {
+    // Redirect to login if not authenticated
+    if (!loading && !isLoggedIn) {
+      router.push('/auth/signin');
+      return;
+    }
+
+    // Fetch current user data
+    if (isLoggedIn) {
+      fetchCurrentUser();
+    }
+  }, [isLoggedIn, loading, router, fetchCurrentUser]);
 
   const initializeChat = useCallback(async () => {
     try {
@@ -200,6 +171,35 @@ export default function ChatPage() {
       console.error("Error initializing chat:", error);
     }
   }, [supabaseClient]);
+
+  useEffect(() => {
+    // Auto-select first room or create general room
+    if (!selectedRoomId && currentUser) {
+      initializeChat();
+    }
+  }, [currentUser, selectedRoomId, initializeChat]);
+
+  useEffect(() => {
+    // Check if user is coming back from avatar creation
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('avatar_created') === 'true') {
+      // Force re-check avatar after a short delay
+      setTimeout(() => {
+        if (currentUser?.id) {
+          setCheckingAvatar(true);
+          checkUserAvatar(currentUser.id);
+        }
+      }, 1000);
+
+      // Clean up URL
+      window.history.replaceState({}, '', '/account#chat');
+    }
+  }, [currentUser, checkUserAvatar]);
+
+  const handleSetupAvatar = () => {
+    // Redirect to Unity WebGL avatar creator
+    window.location.href = "/webgl/index.html";
+  };
 
   const handleRoomSelect = async (roomId: string) => {
     setSelectedRoomId(roomId);

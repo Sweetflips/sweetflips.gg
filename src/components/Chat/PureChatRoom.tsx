@@ -284,8 +284,8 @@ export default function PureChatRoom({
 
             <div className="flex items-center space-x-2">
               <div className={`w-2 h-2 ${connectionStatus === 'connected' ? 'bg-[#53FC18] animate-pulse' :
-                  connectionStatus === 'connecting' ? 'bg-yellow-500' :
-                    'bg-red-500'
+                connectionStatus === 'connecting' ? 'bg-yellow-500' :
+                  'bg-red-500'
                 } rounded-full`}></div>
               <span className="text-xs sm:text-sm text-gray-400">
                 {connectionStatus === 'connected' ? 'Live' :
@@ -364,8 +364,8 @@ export default function PureChatRoom({
                     )}
 
                     <div className={`px-4 py-3 rounded-2xl ${isCurrentUser
-                        ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-                        : "bg-[#2a1b3d] text-gray-100 border border-purple-700/30"
+                      ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+                      : "bg-[#2a1b3d] text-gray-100 border border-purple-700/30"
                       }`}>
                       <p className="text-sm break-words whitespace-pre-wrap">{message.content}</p>
                       {message.editedAt && (

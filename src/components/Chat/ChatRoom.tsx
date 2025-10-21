@@ -402,8 +402,8 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
 
                   <div
                     className={`px-3 sm:px-4 py-2 sm:py-3 rounded-xl sm:rounded-2xl ${isCurrentUser
-                        ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/20"
-                        : "bg-[#2a1b3d] text-gray-100 border border-purple-700/30"
+                      ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/20"
+                      : "bg-[#2a1b3d] text-gray-100 border border-purple-700/30"
                       }`}
                   >
                     <p className="text-sm break-words">{message.content}</p>
