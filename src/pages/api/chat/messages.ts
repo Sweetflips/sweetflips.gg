@@ -46,7 +46,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // Fetch messages with user details
       const messages = await prisma.chatMessage.findMany({
-        where: { chatRoomId: roomId },
+        where: { 
+          chatRoomId: roomId,
+          userId: { not: null } // Filter out messages with null userId
+        },
         include: {
           user: {
             select: {

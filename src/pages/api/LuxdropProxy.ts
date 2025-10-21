@@ -1,4 +1,5 @@
 // src/pages/api/LuxdropProxy.ts
+import { prisma } from "@/lib/prisma";
 import axios, { AxiosRequestConfig } from "axios";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import { DateTime } from "luxon";
@@ -28,6 +29,43 @@ export default async function handler(
 
   console.log("=== LUXDROP API CALLED ===");
 
+  // Define the period (same as cron job)
+  const startDate = DateTime.utc(2025, 10, 16, 0, 0, 0);
+  const endDate = DateTime.utc(2025, 10, 31, 23, 59, 59);
+  const periodLabel = "October 16-31, 2025";
+  const startDateISO = startDate.toISODate();
+  const endDateISO = endDate.toISODate();
+
+  // First, try to get cached data
+  try {
+    const cachedData = await prisma.luxdropCache.findUnique({
+      where: {
+        period_startDate_endDate: {
+          period: periodLabel,
+          startDate: startDateISO,
+          endDate: endDateISO,
+        },
+      },
+    });
+
+    if (cachedData) {
+      const cacheAge = Date.now() - cachedData.createdAt.getTime();
+      const cacheAgeMinutes = cacheAge / (1000 * 60);
+
+      console.log(`📦 Serving cached data (age: ${cacheAgeMinutes.toFixed(1)} minutes)`);
+
+      res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=600");
+      res.setHeader("X-Data-Source", "cache");
+      res.setHeader("X-Cache-Age-Minutes", cacheAgeMinutes.toString());
+
+      return res.status(200).json(cachedData.data);
+    }
+  } catch (error) {
+    console.warn("⚠️ Failed to fetch cached data:", error);
+  }
+
+  console.log("🔄 No cached data found, fetching from API...");
+
   // --- Read API and Leaderboard Config from Environment ---
   const API_KEY = process.env.LUXDROP_API_KEY;
 
@@ -54,13 +92,6 @@ export default async function handler(
   }
 
   const currentTime = DateTime.utc();
-
-  const startDate = DateTime.utc(2025, 10, 16, 0, 0, 0);
-  const endDate = DateTime.utc(2025, 10, 31, 23, 59, 59);
-  const periodLabel = "October 16-31, 2025";
-
-  const startDateISO = startDate.toISODate();
-  const endDateISO = endDate.toISODate();
 
   console.log("=== DATE DEBUG (FIXED PERIOD) ===");
   console.log("Current time:", currentTime.toISO());
@@ -161,6 +192,7 @@ export default async function handler(
     };
 
     res.setHeader("Cache-Control", "public, s-maxage=600, stale-while-revalidate=300");
+    res.setHeader("X-Data-Source", "api");
     res.status(200).json(responseData);
 
   } catch (error: any) {
@@ -171,11 +203,45 @@ export default async function handler(
       console.error("API Error Response:", JSON.stringify(error.response.data, null, 2));
     }
 
-    // DO NOT return fallback data - return the actual error
+    // If rate limited, try to serve stale cached data
+    if (error.response?.status === 429) {
+      console.log("🔄 Rate limited, attempting to serve stale cached data...");
+
+      try {
+        const staleCachedData = await prisma.luxdropCache.findUnique({
+          where: {
+            period_startDate_endDate: {
+              period: periodLabel,
+              startDate: startDateISO,
+              endDate: endDateISO,
+            },
+          },
+        });
+
+        if (staleCachedData) {
+          const cacheAge = Date.now() - staleCachedData.createdAt.getTime();
+          const cacheAgeMinutes = cacheAge / (1000 * 60);
+
+          console.log(`📦 Serving stale cached data (age: ${cacheAgeMinutes.toFixed(1)} minutes)`);
+
+          res.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
+          res.setHeader("X-Data-Source", "stale-cache");
+          res.setHeader("X-Cache-Age-Minutes", cacheAgeMinutes.toString());
+          res.setHeader("X-Rate-Limited", "true");
+
+          return res.status(200).json(staleCachedData.data);
+        }
+      } catch (cacheError) {
+        console.warn("⚠️ Failed to fetch stale cached data:", cacheError);
+      }
+    }
+
+    // Return error if no fallback available
     res.status(500).json({
       error: "Failed to fetch leaderboard data",
       message: error.message,
-      details: error.response?.data || null
+      details: error.response?.data || null,
+      rateLimited: error.response?.status === 429
     });
   }
 }

@@ -5,6 +5,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  schemas  = ["public", "auth"]
 }
 
 model User {
@@ -26,6 +27,8 @@ model User {
   avatar        Avatar?
   sentMessages  ChatMessage[] @relation("SentMessages")
   chatRooms     ChatRoomMember[]
+
+  @@schema("public")
 }
 
 model UserData {
@@ -41,12 +44,16 @@ model UserData {
   token_balance    Int
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+
+  @@schema("public")
 }
 
 model GiveawayCounter {
   id        Int      @id @default(1)
   amount    Float
   updatedAt DateTime @updatedAt
+
+  @@schema("public")
 }
 
 model StreamSchedule {
@@ -55,6 +62,8 @@ model StreamSchedule {
   name  String?
   titel String?
   time  String?
+
+  @@schema("public")
 }
 
 model FortuneWheel {
@@ -63,6 +72,8 @@ model FortuneWheel {
   telegram_username String
   created_at        DateTime @default(now())
   spin_outcome      String?
+
+  @@schema("public")
 }
 
 model TokenSettings {
@@ -70,6 +81,8 @@ model TokenSettings {
   conversionRate Int
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  @@schema("public")
 }
 
 model Product {
@@ -83,6 +96,8 @@ model Product {
   updatedAt   DateTime @updatedAt
 
   orders      Order[]
+
+  @@schema("public")
 }
 
 model Order {
@@ -95,6 +110,8 @@ model Order {
 
   user      User     @relation(fields: [userId], references: [id])
   product   Product  @relation(fields: [productId], references: [id])
+
+  @@schema("public")
 }
 
 model OAuthSession {
@@ -102,6 +119,8 @@ model OAuthSession {
   codeVerifier  String
   createdAt     DateTime @default(now())
   expiresAt     DateTime
+
+  @@schema("public")
 }
 
 model TokenTransaction {
@@ -115,61 +134,63 @@ model TokenTransaction {
   ipAddress       String?
   userAgent       String?
   createdAt       DateTime @default(now())
-  
+
   user            User     @relation(fields: [userId], references: [id])
-  
+
   @@index([userId])
   @@index([transactionType])
   @@index([createdAt])
+  @@schema("public")
 }
 
 model Avatar {
   id            String   @id @default(uuid())
-  
+
   // User linking fields - supports both auth methods
   auth_user_id  String?  @unique @map("auth_user_id") @db.Uuid // Links to auth.users (UUID type)
   userId        Int?     @unique // Links to public.User
-  
+
   // Core Ready Player Me properties
   avatarId      String?  // Ready Player Me avatar ID
   partner       String?  // Partner identifier
-  
+
   // Avatar configuration
   gender        String?  // OutfitGender: masculine, feminine, neutral
   bodyType      String?  // BodyType: fullbody, halfbody, fullbody-xr
   bodyShape     String?  // BodyShape: average, athletic, heavyset, plussize
-  
+
   // Avatar assets - stores all customization options as JSON
   // Keys are AssetType values (skinColor, hairStyle, outfit, etc.)
   // Values are asset IDs or configuration objects
   assets        Json?    @db.Json
-  
+
   // Visual representations
   base64Image   String?  @db.Text // Base64 encoded avatar preview image
   avatarUrl     String?  // URL to the 3D avatar model (.glb file)
   avatarLink    String?  // Ready Player Me shareable avatar link (e.g. https://readyplayer.me/avatar/[id])
   thumbnailUrl  String?  // URL to avatar thumbnail image
-  
+
   // Render settings
   renderPose    String?  // RenderPose: relaxed, powerStance, standing, thumbsUp
   expression    String?  // Expression: happy, lol, sad, scared, rage
-  
+
   // Status
   isDraft       Boolean  @default(false)
   isPublic      Boolean  @default(true)
-  
+
   // Metadata
   metadata      Json?    // Additional metadata (e.g., version, platform settings)
-  
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  
+
   // Relations
   user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId])
   @@index([auth_user_id])
   @@index([avatarId])
+  @@schema("public")
 }
 
 model ChatRoom {
@@ -178,9 +199,11 @@ model ChatRoom {
   isPrivate     Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  
+
   messages      ChatMessage[]
   members       ChatRoomMember[]
+
+  @@schema("public")
 }
 
 model ChatRoomMember {
@@ -188,11 +211,12 @@ model ChatRoomMember {
   userId        Int
   chatRoomId    String
   joinedAt      DateTime @default(now())
-  
+
   user          User     @relation(fields: [userId], references: [id])
   chatRoom      ChatRoom @relation(fields: [chatRoomId], references: [id])
-  
+
   @@unique([userId, chatRoomId])
+  @@schema("public")
 }
 
 model ChatMessage {
@@ -202,9 +226,43 @@ model ChatMessage {
   chatRoomId    String
   createdAt     DateTime @default(now())
   editedAt      DateTime?
-  
+
   user          User     @relation("SentMessages", fields: [userId], references: [id])
   chatRoom      ChatRoom @relation(fields: [chatRoomId], references: [id])
-  
+
   @@index([chatRoomId, createdAt])
+  @@schema("public")
+}
+
+model LuxdropCache {
+  id            String   @id @default(uuid())
+  data          Json     // Store the full API response
+  period        String   // e.g., "October 16-31, 2025"
+  startDate     String   // ISO date string
+  endDate       String   // ISO date string
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([period, startDate, endDate])
+  @@index([createdAt])
+  @@schema("public")
+}
+
+model Leaderboard {
+  id            String   @id @default(uuid())
+  username      String
+  wagered       Decimal  @db.Decimal(10, 2)
+  reward        Decimal  @db.Decimal(10, 2) @default(0)
+  rank          Int      // Position in leaderboard (1-based)
+  period        String   // e.g., "October 16-31, 2025"
+  startDate     String   // ISO date string
+  endDate       String   // ISO date string
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([username, period, startDate, endDate])
+  @@index([period, startDate, endDate])
+  @@index([rank])
+  @@index([createdAt])
+  @@schema("public")
 }

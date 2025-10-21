@@ -52,6 +52,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const messages = await prisma.chatMessage.findMany({
         where: {
           chatRoomId: roomId,
+          userId: { not: null }, // Filter out messages with null userId
           ...(before && { createdAt: { lt: new Date(before) } }),
         },
         include: {
