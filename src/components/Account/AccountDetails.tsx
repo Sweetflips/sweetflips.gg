@@ -82,10 +82,10 @@ export default function AccountDetails({ user, userData, onOpenAvatarCreator }: 
                 <label className="text-xs text-gray-500 uppercase tracking-wider">Account Type</label>
                 <p className="text-white font-medium mt-1">
                   <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${user.role === 'admin'
-                      ? 'bg-red-500/20 text-red-300 border border-red-500/30'
-                      : user.kickId
-                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                        : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                    ? 'bg-red-500/20 text-red-300 border border-red-500/30'
+                    : user.kickId
+                      ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                      : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
                     }`}>
                     {user.role === 'admin' ? 'Administrator' : user.kickId ? 'Kick Linked' : 'Standard'}
                   </span>

@@ -3,6 +3,14 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 
+// Unity WebGL types
+declare global {
+    interface Window {
+        createUnityInstance: (canvas: HTMLCanvasElement, config: any, progressCallback: (progress: number) => void) => Promise<any>;
+        unityInstance: any;
+    }
+}
+
 export default function WebGLPage() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const router = useRouter();
@@ -27,10 +35,10 @@ export default function WebGLPage() {
 
                 window.createUnityInstance(canvasRef.current, config, (progress: number) => {
                     console.log('Unity loading progress:', Math.round(progress * 100) + '%');
-                }).then((unityInstance) => {
+                }).then((unityInstance: any) => {
                     window.unityInstance = unityInstance;
                     console.log('Unity WebGL loaded successfully');
-                }).catch((error) => {
+                }).catch((error: any) => {
                     console.error('Unity WebGL loading failed:', error);
                 });
             }
