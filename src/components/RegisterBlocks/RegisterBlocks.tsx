@@ -15,7 +15,7 @@ const RegisterBlocks: React.FC = () => {
           <div className="RegisterBlocks-inner mx-2 flex h-44 flex-col justify-center rounded-lg border border-graydark p-4 text-center">
             <div className="flex justify-center">
               <Image
-                src="https://cdn-cms.razed.com/Logo/razed-logo-2x.png"
+                src="/images/logo/Razed_Logo.png"
                 alt="Razed Logo"
                 className=""
                 width={240}
@@ -48,8 +48,8 @@ const RegisterBlocks: React.FC = () => {
                 src="/images/logo/Icon colored.png"
                 alt="Luxdrop Logo"
                 className=""
-                width={120}
-                height={120}
+                width={80}
+                height={80}
               />
             </div>
             <p className="mb-4 mt-4 text-sm">

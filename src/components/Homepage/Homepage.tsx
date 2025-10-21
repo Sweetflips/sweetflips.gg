@@ -345,7 +345,7 @@ const Homepage: React.FC = () => {
                 </b>
                 <div className="mt-4 flex flex-col items-center justify-center sm:flex-row sm:space-x-4">
                   <Image
-                    src="https://cdn-cms.razed.com/Logo/razed-logo-2x.png"
+                    src="/images/logo/Razed_Logo.png"
                     alt="Razed Logo"
                     className="mb-3 transition-all duration-300 sm:mb-0 sm:w-[150px] md:w-[200px] lg:w-[250px] xl:w-[250px]"
                     width={200}

@@ -312,8 +312,8 @@ const LuxdropLeaderboard: React.FC = () => {
             <Image
               src="/images/logo/Icon colored.png" // Verified path
               alt="Luxdrop Logo"
-              width={120} // Adjusted for crown logo aspect ratio
-              height={120} // Adjusted for crown logo aspect ratio
+              width={80} // Adjusted for crown logo aspect ratio
+              height={80} // Adjusted for crown logo aspect ratio
               className="mb-3 transition-all duration-300 sm:mb-0"
             />
             <b className="text-4xl text-white sm:text-2xl md:text-3xl lg:mt-4 lg:text-3xl">
