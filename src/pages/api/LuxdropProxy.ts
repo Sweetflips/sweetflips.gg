@@ -63,7 +63,7 @@ export default async function handler(
   const startDateISO = startDate.toFormat('yyyy-MM-dd');
   const endDateISO = endDate.toFormat('yyyy-MM-dd');
 
-  // First, try to get cached data
+  // First, try to get cached data (only if table exists)
   try {
     const cachedData = await prisma.luxdropCache.findUnique({
       where: {
@@ -224,7 +224,7 @@ export default async function handler(
       }
     };
 
-    // Save fresh data to database cache
+    // Try to save fresh data to database cache
     try {
       await prisma.luxdropCache.upsert({
         where: {
