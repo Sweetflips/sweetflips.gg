@@ -1,5 +1,5 @@
 import { readFile } from 'fs/promises';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { join } from 'path';
 
 export async function GET(request: NextRequest) {
@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
         const fileContent = await readFile(filePath, 'utf-8');
 
         // Return the HTML content with proper headers
-        return new NextResponse(fileContent, {
+        return new Response(fileContent, {
             status: 200,
             headers: {
                 'Content-Type': 'text/html',
@@ -18,6 +18,6 @@ export async function GET(request: NextRequest) {
         });
     } catch (error) {
         console.error('Error serving WebGL content:', error);
-        return new NextResponse('WebGL content not found', { status: 404 });
+        return new Response('WebGL content not found', { status: 404 });
     }
 }
