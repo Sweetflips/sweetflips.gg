@@ -1,6 +1,8 @@
 import StreamScheduleTabsClient from "@/components/StreamScheduleTabsClient/StreamScheduleTabsClient";
+import { getBaseUrl } from "@/lib/getBaseUrl";
 
-const scheduleData = [
+// Fallback data in case API fails
+const fallbackScheduleData = [
   {
     day: "Monday",
     name: "Dennylo / Mack",
@@ -21,7 +23,7 @@ const scheduleData = [
   },
   {
     day: "Thursday",
-    name: "Boston / Mack",
+    name: "Mack",
     titel: "LuxDrop / Raw Gambling",
     time: "11:00 AM UTC (7:00 AM EST)",
   },
@@ -33,7 +35,7 @@ const scheduleData = [
   },
   {
     day: "Saturday",
-    name: "Boston / Ciera",
+    name: "Ciera",
     titel: "LuxDrop / Raw Gambling",
     time: "11:00 AM UTC (7:00 AM EST)",
   },
@@ -45,6 +47,23 @@ const scheduleData = [
   },
 ];
 
-export default function StreamScheduleTabs() {
-  return <StreamScheduleTabsClient schedule={scheduleData} />;
+export default async function StreamScheduleTabs() {
+  try {
+    // Fetch schedule data from database
+    const response = await fetch(`${getBaseUrl()}/api/admin/schedule`, {
+      cache: 'no-store' // Always get fresh data
+    });
+
+    if (response.ok) {
+      const scheduleData = await response.json();
+      // If database has data, use it; otherwise fall back to hardcoded data
+      const dataToUse = scheduleData.length > 0 ? scheduleData : fallbackScheduleData;
+      return <StreamScheduleTabsClient schedule={dataToUse} />;
+    }
+  } catch (error) {
+    console.error('Failed to fetch schedule data:', error);
+  }
+
+  // Fallback to hardcoded data if API fails
+  return <StreamScheduleTabsClient schedule={fallbackScheduleData} />;
 }
