@@ -248,7 +248,12 @@ export default async function handler(
 
       console.log(`💾 Successfully cached ${leaderboard.length} entries to database`);
     } catch (cacheError: any) {
-      console.error("❌ Failed to save to database cache:", cacheError.message);
+      // Check if it's a table not found error
+      if (cacheError.code === 'P2021' && cacheError.meta?.table === 'public.LuxdropCache') {
+        console.log("⚠️ LuxdropCache table not found - skipping database cache");
+      } else {
+        console.error("❌ Failed to save to database cache:", cacheError.message);
+      }
       // Continue serving the response even if caching fails
     }
 
