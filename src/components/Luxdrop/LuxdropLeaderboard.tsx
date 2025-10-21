@@ -236,13 +236,13 @@ const LuxdropLeaderboard: React.FC = () => {
 
   const { targetDate, periodStart, periodLabel } = (() => {
     const now = DateTime.utc();
-    const periodStartDate = DateTime.utc(2025, 10, 16, 0, 0, 0);
-    const periodEndDate = DateTime.utc(2025, 10, 31, 23, 59, 59);
+    const periodStartDate = now.startOf('month');
+    const periodEndDate = now.endOf('month');
 
     return {
       targetDate: periodEndDate,
       periodStart: periodStartDate,
-      periodLabel: "October 16-31, 2025",
+      periodLabel: `${periodStartDate.toFormat('MMMM dd')} - ${periodEndDate.toFormat('dd, yyyy')}`,
     };
   })();
 
