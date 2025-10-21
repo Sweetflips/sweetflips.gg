@@ -119,7 +119,7 @@ const ProfilePage = () => {
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [user]);
+  }, [user, checkUserAvatar]);
 
   const checkUserAvatar = useCallback(async (userId: number) => {
     try {

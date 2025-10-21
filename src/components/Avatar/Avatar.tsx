@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import { motion } from "framer-motion";
+import Image from "next/image";
+import React, { useCallback, useEffect, useState } from "react";
 
 interface AvatarData {
   base64Image?: string | null;
@@ -73,17 +74,17 @@ export default function Avatar({
       }
 
       const response = await fetch(`/api/avatar/${userId}`, { headers });
-      
+
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.avatar) {
           const avatar = data.avatar || data;
           const hasValidAvatar = !!(
-            avatar.Base64Image || 
+            avatar.Base64Image ||
             avatar.base64Image ||
             avatar.thumbnailUrl
           );
-          
+
           setAvatarData({
             base64Image: avatar.Base64Image || avatar.base64Image,
             avatarId: avatar.avatarId,
@@ -91,7 +92,7 @@ export default function Avatar({
             avatarUrl: avatar.avatarUrl,
             thumbnailUrl: avatar.thumbnailUrl
           });
-          
+
           onAvatarLoad?.(hasValidAvatar);
           setError(!hasValidAvatar);
         } else {
@@ -135,17 +136,17 @@ export default function Avatar({
       return (
         <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-purple-600/20 to-pink-600/20">
           {fallbackIcon || (
-            <svg 
-              className="w-1/2 h-1/2 text-purple-300/50" 
-              fill="none" 
-              stroke="currentColor" 
+            <svg
+              className="w-1/2 h-1/2 text-purple-300/50"
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" 
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
               />
             </svg>
           )}
@@ -154,11 +155,13 @@ export default function Avatar({
     }
 
     return (
-      <img
+      <Image
         src={avatarData.base64Image}
         alt="Avatar"
-        className="w-full h-full object-cover"
+        fill
+        className="object-cover"
         onError={() => setError(true)}
+        unoptimized
       />
     );
   };
@@ -166,11 +169,11 @@ export default function Avatar({
   const content = (
     <div className={containerClasses}>
       {renderContent()}
-      
+
       {showStatus && !loading && (
         <div className="absolute bottom-0 right-0 w-1/4 h-1/4 rounded-full border-2 border-[#1b1324] bg-green-500"></div>
       )}
-      
+
       {showBorder && !loading && !error && avatarData?.base64Image && (
         <div className="absolute inset-0 rounded-full border border-purple-400/20 pointer-events-none"></div>
       )}

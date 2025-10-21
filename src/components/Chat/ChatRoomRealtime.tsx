@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useRealtimeChat } from "@/hooks/useRealtimeChat";
+import { AnimatePresence, motion } from "framer-motion";
+import Image from "next/image";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 interface ChatRoomProps {
   roomId: string;
@@ -11,18 +12,18 @@ interface ChatRoomProps {
   onOpenSidebar?: () => void;
 }
 
-export default function ChatRoomRealtime({ 
-  roomId, 
-  roomName, 
-  currentUserId, 
-  onOpenSidebar 
+export default function ChatRoomRealtime({
+  roomId,
+  roomName,
+  currentUserId,
+  onOpenSidebar
 }: ChatRoomProps) {
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const previousMessageCountRef = useRef(0);
-  
+
   // Use the realtime hook
   const {
     messages,
@@ -37,7 +38,7 @@ export default function ChatRoomRealtime({
       // Auto-scroll on new message if user is near bottom
       const container = messagesEndRef.current?.parentElement;
       if (container) {
-        const isNearBottom = 
+        const isNearBottom =
           container.scrollHeight - container.scrollTop - container.clientHeight < 100;
         if (isNearBottom) {
           scrollToBottom();
@@ -63,7 +64,7 @@ export default function ChatRoomRealtime({
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!newMessage.trim() || isSending) return;
 
     const messageContent = newMessage;
@@ -180,7 +181,7 @@ export default function ChatRoomRealtime({
               </p>
             </div>
           </div>
-          
+
           {/* Connection status */}
           <div className="flex items-center space-x-2">
             <div className={`w-2 h-2 ${getConnectionStatusColor()} rounded-full ${connectionStatus === 'connected' ? 'animate-pulse' : ''}`}></div>
@@ -214,7 +215,7 @@ export default function ChatRoomRealtime({
             {messages.map((message, index) => {
               const isCurrentUser = message.userId === currentUserId;
               const showAvatar = index === 0 || messages[index - 1].userId !== message.userId;
-              const showTime = showAvatar || 
+              const showTime = showAvatar ||
                 (index > 0 && new Date(message.createdAt).getTime() - new Date(messages[index - 1].createdAt).getTime() > 60000);
 
               return (
@@ -230,35 +231,42 @@ export default function ChatRoomRealtime({
                     <div className="flex-shrink-0 relative group">
                       {message.user.avatar?.base64Image ? (
                         <>
-                          <img
-                            src={message.user.avatar.base64Image}
-                            alt={message.user.username}
-                            className="w-10 h-10 rounded-full object-cover border-2 border-purple-500/30 transition-transform group-hover:scale-110 cursor-pointer"
-                            onError={(e) => {
-                              // Fallback to initial if image fails
-                              e.currentTarget.style.display = 'none';
-                              e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                            }}
-                          />
-                          
+                          <div className="relative w-10 h-10 rounded-full border-2 border-purple-500/30 transition-transform group-hover:scale-110 cursor-pointer overflow-hidden">
+                            <Image
+                              src={message.user.avatar.base64Image}
+                              alt={message.user.username}
+                              fill
+                              className="object-cover"
+                              onError={(e) => {
+                                // Fallback to initial if image fails
+                                e.currentTarget.style.display = 'none';
+                                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                              }}
+                              unoptimized
+                            />
+                          </div>
+
                           {/* Avatar preview on hover - desktop only */}
                           <div className="absolute z-50 hidden sm:group-hover:block bottom-12 left-0 p-2 bg-[#0d0816] rounded-lg shadow-xl border border-purple-500/30">
-                            <img
-                              src={message.user.avatar.base64Image}
-                              alt={`${message.user.username}'s avatar`}
-                              className="w-32 h-32 rounded-lg object-cover"
-                            />
+                            <div className="relative w-32 h-32 rounded-lg overflow-hidden">
+                              <Image
+                                src={message.user.avatar.base64Image}
+                                alt={`${message.user.username}'s avatar`}
+                                fill
+                                className="object-cover"
+                                unoptimized
+                              />
+                            </div>
                             <div className="mt-2 text-xs text-center text-gray-400">
                               {message.user.username}
                             </div>
                           </div>
                         </>
                       ) : null}
-                      
+
                       {/* Fallback avatar */}
-                      <div className={`w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-semibold shadow-lg shadow-purple-500/20 ${
-                        message.user.avatar?.base64Image ? 'hidden' : ''
-                      }`}>
+                      <div className={`w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-semibold shadow-lg shadow-purple-500/20 ${message.user.avatar?.base64Image ? 'hidden' : ''
+                        }`}>
                         {message.user.username[0]?.toUpperCase() || '?'}
                       </div>
                     </div>
@@ -269,9 +277,8 @@ export default function ChatRoomRealtime({
                   <div className={`flex flex-col ${isCurrentUser ? "items-end" : "items-start"} max-w-[85%] sm:max-w-[70%]`}>
                     {showAvatar && (
                       <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-sm font-semibold ${
-                          isCurrentUser ? "text-purple-400" : "text-purple-300"
-                        }`}>
+                        <span className={`text-sm font-semibold ${isCurrentUser ? "text-purple-400" : "text-purple-300"
+                          }`}>
                           {message.user.username}
                         </span>
                         {showTime && (
@@ -282,11 +289,10 @@ export default function ChatRoomRealtime({
                       </div>
                     )}
 
-                    <div className={`px-3 sm:px-4 py-2 sm:py-3 rounded-xl sm:rounded-2xl ${
-                      isCurrentUser
+                    <div className={`px-3 sm:px-4 py-2 sm:py-3 rounded-xl sm:rounded-2xl ${isCurrentUser
                         ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/20"
                         : "bg-[#2a1b3d] text-gray-100 border border-purple-700/30"
-                    }`}>
+                      }`}>
                       <p className="text-sm break-words whitespace-pre-wrap">{message.content}</p>
                       {message.editedAt && (
                         <p className="text-xs opacity-60 mt-1">(edited)</p>

@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import Image from "next/image";
+import React, { useEffect, useRef, useState } from "react";
 // Avatar will be loaded from the new avatar system
 import { useAuthHeaders } from "@/hooks/useAuthHeaders";
 
@@ -41,7 +42,7 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
   const errorCountRef = useRef(0);
   const { getAuthHeaders, getAuthHeadersWithContentType } = useAuthHeaders();
   const getAuthHeadersRef = useRef(getAuthHeaders);
-  
+
   // Update ref when function changes
   useEffect(() => {
     getAuthHeadersRef.current = getAuthHeaders;
@@ -57,7 +58,7 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
       scrollToBottom();
     }
     previousMessageCount.current = messages.length;
-    
+
     // After initial load, allow auto-scrolling
     if (isInitialLoad.current && messages.length > 0) {
       isInitialLoad.current = false;
@@ -76,13 +77,13 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
   useEffect(() => {
     // Prevent rapid re-initialization
     if (!roomId) return;
-    
+
     // Create abort controller for this effect
     const abortController = new AbortController();
     let localPollingInterval: NodeJS.Timeout | null = null;
     let localErrorCount = 0;
     let isMounted = true;
-    
+
     // Define fetchMessages inside the effect to avoid dependency issues
     const fetchMessages = async () => {
       // Prevent concurrent fetches
@@ -90,20 +91,20 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
         console.log("Skipping fetch - aborted or unmounted");
         return;
       }
-      
+
       try {
         console.log(`Fetching messages for room: ${roomId}`);
         const headers = await getAuthHeadersRef.current();
-        const response = await fetch(`/api/chat/rooms/${roomId}/messages`, { 
+        const response = await fetch(`/api/chat/rooms/${roomId}/messages`, {
           headers,
-          signal: abortController.signal 
+          signal: abortController.signal
         });
-        
+
         if (abortController.signal.aborted || !isMounted) {
           console.log("Response received but component unmounted");
           return;
         }
-        
+
         if (response.ok) {
           const data = await response.json();
           console.log(`Received ${data.messages?.length || 0} messages`);
@@ -120,7 +121,7 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
       } catch (error: any) {
         // Ignore abort errors
         if (error?.name === 'AbortError' || !isMounted) return;
-        
+
         console.error("Error fetching messages:", error);
         if (isMounted) {
           setIsLoading(false);
@@ -128,7 +129,7 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
           localErrorCount++;
           errorCountRef.current = localErrorCount;
         }
-        
+
         // Stop polling after 5 consecutive errors
         if (localErrorCount >= 5 && localPollingInterval) {
           console.log("Too many errors, stopping message polling");
@@ -141,7 +142,7 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
         }
       }
     };
-    
+
     // Reset state when room changes
     console.log(`ChatRoom mounting/updating for room: ${roomId}`);
     setIsLoading(true);
@@ -151,13 +152,13 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
     isInitialLoad.current = true;
     previousMessageCount.current = 0;
     errorCountRef.current = 0;
-    
+
     // Clear any existing polling interval
     if (pollingIntervalRef.current) {
       clearInterval(pollingIntervalRef.current);
       pollingIntervalRef.current = null;
     }
-    
+
     // Add a small delay to prevent rapid re-fetching
     const initTimeout = setTimeout(() => {
       if (isMounted) {
@@ -165,16 +166,16 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
         fetchMessages();
       }
     }, 100);
-    
+
     // Set up polling for new messages with a longer interval
     localPollingInterval = setInterval(() => {
       if (!abortController.signal.aborted) {
         fetchMessages();
       }
     }, 5000); // Poll every 5 seconds
-    
+
     pollingIntervalRef.current = localPollingInterval;
-    
+
     // Cleanup function
     return () => {
       console.log(`ChatRoom cleanup for room: ${roomId}`);
@@ -327,32 +328,39 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.2 }}
-                className={`flex items-start gap-3 ${
-                  isCurrentUser ? "flex-row-reverse" : ""
-                }`}
+                className={`flex items-start gap-3 ${isCurrentUser ? "flex-row-reverse" : ""
+                  }`}
               >
                 {showAvatar ? (
                   <div className="flex-shrink-0 relative group">
                     {(message.user.avatar?.base64Image) ? (
                       <>
-                        <img
-                          src={message.user.avatar.base64Image}
-                          alt={message.user.username}
-                          className="w-10 h-10 rounded-full object-cover border-2 border-purple-500/30 transition-transform group-hover:scale-110 cursor-pointer"
-                          onError={(e) => {
-                            // Fallback to initial if image fails to load
-                            e.currentTarget.style.display = 'none';
-                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                          }}
-                        />
+                        <div className="relative w-10 h-10 rounded-full border-2 border-purple-500/30 transition-transform group-hover:scale-110 cursor-pointer overflow-hidden">
+                          <Image
+                            src={message.user.avatar.base64Image}
+                            alt={message.user.username}
+                            fill
+                            className="object-cover"
+                            onError={(e) => {
+                              // Fallback to initial if image fails to load
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                            }}
+                            unoptimized
+                          />
+                        </div>
                         {/* Hover preview of full avatar - desktop only */}
                         {message.user.avatar?.base64Image && (
                           <div className="absolute z-50 hidden sm:group-hover:block bottom-12 left-0 p-2 bg-[#0d0816] rounded-lg shadow-xl border border-purple-500/30">
-                            <img
-                              src={message.user.avatar.base64Image}
-                              alt={`${message.user.username}'s avatar`}
-                              className="w-32 h-32 rounded-lg object-cover"
-                            />
+                            <div className="relative w-32 h-32 rounded-lg overflow-hidden">
+                              <Image
+                                src={message.user.avatar.base64Image}
+                                alt={`${message.user.username}'s avatar`}
+                                fill
+                                className="object-cover"
+                                unoptimized
+                              />
+                            </div>
                             <div className="mt-2 text-xs text-center text-gray-400">
                               {message.user.username}
                             </div>
@@ -367,9 +375,8 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
                         )}
                       </>
                     ) : null}
-                    <div className={`w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-semibold shadow-lg shadow-purple-500/20 ${
-                      message.user.avatar?.base64Image ? 'hidden' : ''
-                    }`}>
+                    <div className={`w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-semibold shadow-lg shadow-purple-500/20 ${message.user.avatar?.base64Image ? 'hidden' : ''
+                      }`}>
                       {message.user.username[0].toUpperCase()}
                     </div>
                   </div>
@@ -378,15 +385,13 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
                 )}
 
                 <div
-                  className={`flex flex-col ${
-                    isCurrentUser ? "items-end" : "items-start"
-                  } max-w-[85%] sm:max-w-[70%]`}
+                  className={`flex flex-col ${isCurrentUser ? "items-end" : "items-start"
+                    } max-w-[85%] sm:max-w-[70%]`}
                 >
                   {showAvatar && (
                     <div className="flex items-center gap-2 mb-1">
-                      <span className={`text-sm font-semibold ${
-                        isCurrentUser ? "text-purple-400" : "text-purple-300"
-                      }`}>
+                      <span className={`text-sm font-semibold ${isCurrentUser ? "text-purple-400" : "text-purple-300"
+                        }`}>
                         {message.user.username}
                       </span>
                       <span className="text-xs text-gray-500">
@@ -396,11 +401,10 @@ export default function ChatRoom({ roomId, roomName, currentUserId, onOpenSideba
                   )}
 
                   <div
-                    className={`px-3 sm:px-4 py-2 sm:py-3 rounded-xl sm:rounded-2xl ${
-                      isCurrentUser
+                    className={`px-3 sm:px-4 py-2 sm:py-3 rounded-xl sm:rounded-2xl ${isCurrentUser
                         ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/20"
                         : "bg-[#2a1b3d] text-gray-100 border border-purple-700/30"
-                    }`}
+                      }`}
                   >
                     <p className="text-sm break-words">{message.content}</p>
                   </div>

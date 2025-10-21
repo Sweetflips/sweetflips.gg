@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
-import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import { useSupabaseRealtimeChat } from "@/hooks/useSupabaseRealtimeChat";
+import { AnimatePresence, motion } from "framer-motion";
+import Image from "next/image";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 interface PureChatRoomProps {
   roomId: string;
@@ -15,10 +16,10 @@ interface PureChatRoomProps {
   onAuthRequired?: () => void;
 }
 
-export default function PureChatRoom({ 
-  roomId, 
-  roomName, 
-  currentUserId, 
+export default function PureChatRoom({
+  roomId,
+  roomName,
+  currentUserId,
   onOpenSidebar,
   hideRoomHeader = false,
   isAuthenticated = true,
@@ -34,7 +35,7 @@ export default function PureChatRoom({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const tooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   const {
     messages,
     isLoading,
@@ -66,7 +67,7 @@ export default function PureChatRoom({
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
@@ -103,7 +104,7 @@ export default function PureChatRoom({
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // If not authenticated, redirect to signin
     if (!isAuthenticated) {
       if (onAuthRequired) {
@@ -111,7 +112,7 @@ export default function PureChatRoom({
       }
       return;
     }
-    
+
     if (!newMessage.trim() || isSending) return;
 
     // Check if user has avatar
@@ -151,12 +152,12 @@ export default function PureChatRoom({
     const tooltipWidth = 250; // Approximate tooltip width
     const tooltipHeight = 100; // Approximate tooltip height
     const padding = 10; // Padding from screen edges
-    
+
     let x = rect.left + rect.width / 2 + scrollX;
     let y = rect.top - 10 + scrollY;
     let adjustX = 'translate(-50%, 0)';
     let adjustY = 'translate(0, -100%)';
-    
+
     // Check horizontal boundaries
     if (x - tooltipWidth / 2 < padding) {
       // Too far left, align to left edge
@@ -167,23 +168,23 @@ export default function PureChatRoom({
       x = rect.right + scrollX;
       adjustX = 'translate(-100%, 0)';
     }
-    
+
     // Check vertical boundaries
     if (y - tooltipHeight < padding + scrollY) {
       // Too high, show below avatar instead
       y = rect.bottom + 10 + scrollY;
       adjustY = 'translate(0, 0)';
     }
-    
+
     return { x, y, adjustX, adjustY };
   };
 
   const handleAvatarHover = (user: any, event: React.MouseEvent) => {
     if (isMobile) return; // On mobile, use click instead
-    
+
     const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
     const position = calculateTooltipPosition(rect);
-    
+
     setTooltipPosition(position);
     setTooltipUser(user);
 
@@ -196,7 +197,7 @@ export default function PureChatRoom({
 
   const handleAvatarLeave = () => {
     if (isMobile) return;
-    
+
     // Add a small delay before hiding to prevent flicker
     tooltipTimeoutRef.current = setTimeout(() => {
       setTooltipUser(null);
@@ -206,12 +207,12 @@ export default function PureChatRoom({
 
   const handleAvatarClick = (user: any, event: React.MouseEvent) => {
     event.stopPropagation();
-    
+
     if (!isMobile) return; // On desktop, use hover instead
-    
+
     const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
     const position = calculateTooltipPosition(rect);
-    
+
     // Toggle tooltip
     if (tooltipUser?.id === user.id) {
       setTooltipUser(null);
@@ -280,17 +281,16 @@ export default function PureChatRoom({
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-2">
-              <div className={`w-2 h-2 ${
-                connectionStatus === 'connected' ? 'bg-[#53FC18] animate-pulse' :
-                connectionStatus === 'connecting' ? 'bg-yellow-500' :
-                'bg-red-500'
-              } rounded-full`}></div>
+              <div className={`w-2 h-2 ${connectionStatus === 'connected' ? 'bg-[#53FC18] animate-pulse' :
+                  connectionStatus === 'connecting' ? 'bg-yellow-500' :
+                    'bg-red-500'
+                } rounded-full`}></div>
               <span className="text-xs sm:text-sm text-gray-400">
                 {connectionStatus === 'connected' ? 'Live' :
-                 connectionStatus === 'connecting' ? 'Connecting...' :
-                 'Disconnected'}
+                  connectionStatus === 'connecting' ? 'Connecting...' :
+                    'Disconnected'}
               </span>
             </div>
           </div>
@@ -324,18 +324,22 @@ export default function PureChatRoom({
                   className={`flex items-start gap-3 ${isCurrentUser ? "flex-row-reverse" : ""}`}
                 >
                   {showAvatar ? (
-                    <div 
+                    <div
                       className="flex-shrink-0 avatar-container cursor-pointer"
                       onMouseEnter={(e) => handleAvatarHover(message.user, e)}
                       onMouseLeave={handleAvatarLeave}
                       onClick={(e) => handleAvatarClick(message.user, e)}
                     >
                       {message.user?.avatar?.base64Image ? (
-                        <img
-                          src={message.user.avatar.base64Image}
-                          alt={message.user.username}
-                          className="w-10 h-10 rounded-full object-cover border-2 border-purple-500/30 hover:border-purple-400 transition-colors"
-                        />
+                        <div className="relative w-10 h-10 rounded-full border-2 border-purple-500/30 hover:border-purple-400 transition-colors overflow-hidden">
+                          <Image
+                            src={message.user.avatar.base64Image}
+                            alt={message.user.username}
+                            fill
+                            className="object-cover"
+                            unoptimized
+                          />
+                        </div>
                       ) : (
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-semibold hover:from-purple-500 hover:to-pink-600 transition-all">
                           {message.user?.username?.[0]?.toUpperCase() || '?'}
@@ -349,9 +353,8 @@ export default function PureChatRoom({
                   <div className={`flex flex-col ${isCurrentUser ? "items-end" : "items-start"} max-w-[70%]`}>
                     {showAvatar && (
                       <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-sm font-semibold ${
-                          isCurrentUser ? "text-purple-400" : "text-purple-300"
-                        }`}>
+                        <span className={`text-sm font-semibold ${isCurrentUser ? "text-purple-400" : "text-purple-300"
+                          }`}>
                           {message.user?.username || `User ${message.userId}`}
                         </span>
                         <span className="text-xs text-gray-500">
@@ -360,11 +363,10 @@ export default function PureChatRoom({
                       </div>
                     )}
 
-                    <div className={`px-4 py-3 rounded-2xl ${
-                      isCurrentUser
+                    <div className={`px-4 py-3 rounded-2xl ${isCurrentUser
                         ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
                         : "bg-[#2a1b3d] text-gray-100 border border-purple-700/30"
-                    }`}>
+                      }`}>
                       <p className="text-sm break-words whitespace-pre-wrap">{message.content}</p>
                       {message.editedAt && (
                         <p className="text-xs opacity-60 mt-1">(edited)</p>
@@ -432,48 +434,52 @@ export default function PureChatRoom({
                 zIndex: 99999,
               }}
             >
-            <div className="bg-[#0d0816] border border-purple-500/50 rounded-xl p-3 shadow-2xl mb-2">
-              <div className="flex items-center gap-3">
-                {/* Avatar */}
-                <div className="flex-shrink-0">
-                  {tooltipUser.avatar?.base64Image ? (
-                    <img
-                      src={tooltipUser.avatar.base64Image}
-                      alt={tooltipUser.username}
-                      className="w-16 h-16 rounded-full object-cover border-2 border-purple-500/50"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white text-xl font-bold">
-                      {tooltipUser.username?.[0]?.toUpperCase() || '?'}
-                    </div>
-                  )}
+              <div className="bg-[#0d0816] border border-purple-500/50 rounded-xl p-3 shadow-2xl mb-2">
+                <div className="flex items-center gap-3">
+                  {/* Avatar */}
+                  <div className="flex-shrink-0">
+                    {tooltipUser.avatar?.base64Image ? (
+                      <div className="relative w-16 h-16 rounded-full border-2 border-purple-500/50 overflow-hidden">
+                        <Image
+                          src={tooltipUser.avatar.base64Image}
+                          alt={tooltipUser.username}
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white text-xl font-bold">
+                        {tooltipUser.username?.[0]?.toUpperCase() || '?'}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Username */}
+                  <div className="pr-2">
+                    <p className="text-white font-semibold text-base">
+                      {tooltipUser.username || `User ${tooltipUser.id}`}
+                    </p>
+                    <p className="text-purple-400 text-xs">
+                      ID: {tooltipUser.id}
+                    </p>
+                  </div>
                 </div>
-                
-                {/* Username */}
-                <div className="pr-2">
-                  <p className="text-white font-semibold text-base">
-                    {tooltipUser.username || `User ${tooltipUser.id}`}
-                  </p>
-                  <p className="text-purple-400 text-xs">
-                    ID: {tooltipUser.id}
-                  </p>
-                </div>
+
+                {/* Arrow pointing down or up based on position */}
+                {tooltipPosition.adjustY === 'translate(0, 0)' ? (
+                  // Arrow pointing up (tooltip is below avatar)
+                  <div className="absolute left-1/2 -top-2 transform -translate-x-1/2">
+                    <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px] border-b-[#0d0816]"></div>
+                  </div>
+                ) : (
+                  // Arrow pointing down (tooltip is above avatar)
+                  <div className="absolute left-1/2 -bottom-2 transform -translate-x-1/2">
+                    <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[8px] border-t-[#0d0816]"></div>
+                  </div>
+                )}
               </div>
-              
-              {/* Arrow pointing down or up based on position */}
-              {tooltipPosition.adjustY === 'translate(0, 0)' ? (
-                // Arrow pointing up (tooltip is below avatar)
-                <div className="absolute left-1/2 -top-2 transform -translate-x-1/2">
-                  <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px] border-b-[#0d0816]"></div>
-                </div>
-              ) : (
-                // Arrow pointing down (tooltip is above avatar)
-                <div className="absolute left-1/2 -bottom-2 transform -translate-x-1/2">
-                  <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[8px] border-t-[#0d0816]"></div>
-                </div>
-              )}
-            </div>
-          </motion.div>
+            </motion.div>
           )}
         </AnimatePresence>,
         document.body
@@ -502,12 +508,12 @@ export default function PureChatRoom({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
-              
+
               <h3 className="text-xl font-bold text-white mb-2">Set Up Your Avatar</h3>
               <p className="text-gray-400 mb-6">
                 You need an avatar to send messages in the chat. Create your unique avatar to start chatting!
               </p>
-              
+
               <div className="flex gap-3">
                 <button
                   onClick={() => {

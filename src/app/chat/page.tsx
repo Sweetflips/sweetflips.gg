@@ -30,7 +30,7 @@ export default function ChatPage() {
     if (isLoggedIn) {
       fetchCurrentUser();
     }
-  }, [isLoggedIn, loading, router]);
+  }, [isLoggedIn, loading, router, fetchCurrentUser]);
 
   const fetchCurrentUser = useCallback(async () => {
     try {
