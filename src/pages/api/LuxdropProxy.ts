@@ -60,8 +60,13 @@ export default async function handler(
 
       return res.status(200).json(cachedData.data);
     }
-  } catch (error) {
-    console.warn("⚠️ Failed to fetch cached data:", error);
+  } catch (error: any) {
+    // Check if it's a table not found error
+    if (error.code === 'P2021' && error.meta?.table === 'public.LuxdropCache') {
+      console.log("⚠️ LuxdropCache table not found - skipping cache lookup");
+    } else {
+      console.warn("⚠️ Failed to fetch cached data:", error);
+    }
   }
 
   console.log("🔄 No cached data found, fetching from API...");
@@ -231,8 +236,13 @@ export default async function handler(
 
           return res.status(200).json(staleCachedData.data);
         }
-      } catch (cacheError) {
-        console.warn("⚠️ Failed to fetch stale cached data:", cacheError);
+      } catch (cacheError: any) {
+        // Check if it's a table not found error
+        if (cacheError.code === 'P2021' && cacheError.meta?.table === 'public.LuxdropCache') {
+          console.log("⚠️ LuxdropCache table not found - skipping stale cache lookup");
+        } else {
+          console.warn("⚠️ Failed to fetch stale cached data:", cacheError);
+        }
       }
     }
 

@@ -134,56 +134,73 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         };
 
         // Store in database - both cache and individual leaderboard entries
-        await prisma.luxdropCache.upsert({
-            where: {
-                period_startDate_endDate: {
+        try {
+            await prisma.luxdropCache.upsert({
+                where: {
+                    period_startDate_endDate: {
+                        period: periodLabel,
+                        startDate: startDateISO,
+                        endDate: endDateISO,
+                    },
+                },
+                update: {
+                    data: responseData as any,
+                    updatedAt: new Date(),
+                },
+                create: {
+                    data: responseData as any,
                     period: periodLabel,
                     startDate: startDateISO,
                     endDate: endDateISO,
                 },
-            },
-            update: {
-                data: responseData as any,
-                updatedAt: new Date(),
-            },
-            create: {
-                data: responseData as any,
-                period: periodLabel,
-                startDate: startDateISO,
-                endDate: endDateISO,
-            },
-        });
+            });
+            console.log(`✅ Successfully cached API response`);
+        } catch (cacheError: any) {
+            if (cacheError.code === 'P2021' && cacheError.meta?.table === 'public.LuxdropCache') {
+                console.log("⚠️ LuxdropCache table not found - skipping cache storage");
+            } else {
+                console.error("❌ Failed to cache API response:", cacheError);
+            }
+        }
 
         // Store individual leaderboard entries
         console.log(`💾 Storing ${leaderboard.length} leaderboard entries...`);
 
-        // Delete existing entries for this period
-        const deletedCount = await prisma.leaderboard.deleteMany({
-            where: {
+        try {
+            // Delete existing entries for this period
+            const deletedCount = await prisma.leaderboard.deleteMany({
+                where: {
+                    period: periodLabel,
+                    startDate: startDateISO,
+                    endDate: endDateISO,
+                },
+            });
+            console.log(`🗑️ Deleted ${deletedCount.count} existing entries`);
+
+            // Insert new entries
+            const leaderboardEntries = leaderboard.map((entry, index) => ({
+                username: entry.username,
+                wagered: entry.wagered,
+                reward: entry.reward,
+                rank: index + 1, // 1-based ranking
                 period: periodLabel,
                 startDate: startDateISO,
                 endDate: endDateISO,
-            },
-        });
-        console.log(`🗑️ Deleted ${deletedCount.count} existing entries`);
+            }));
 
-        // Insert new entries
-        const leaderboardEntries = leaderboard.map((entry, index) => ({
-            username: entry.username,
-            wagered: entry.wagered,
-            reward: entry.reward,
-            rank: index + 1, // 1-based ranking
-            period: periodLabel,
-            startDate: startDateISO,
-            endDate: endDateISO,
-        }));
+            console.log(`📝 Sample entry to insert:`, leaderboardEntries[0]);
 
-        console.log(`📝 Sample entry to insert:`, leaderboardEntries[0]);
-
-        const insertResult = await prisma.leaderboard.createMany({
-            data: leaderboardEntries,
-        });
-        console.log(`✅ Inserted ${insertResult.count} leaderboard entries`);
+            const insertResult = await prisma.leaderboard.createMany({
+                data: leaderboardEntries,
+            });
+            console.log(`✅ Inserted ${insertResult.count} leaderboard entries`);
+        } catch (leaderboardError: any) {
+            if (leaderboardError.code === 'P2021' && leaderboardError.meta?.table === 'public.Leaderboard') {
+                console.log("⚠️ Leaderboard table not found - skipping leaderboard storage");
+            } else {
+                console.error("❌ Failed to store leaderboard entries:", leaderboardError);
+            }
+        }
 
         console.log(`💾 Successfully cached Luxdrop data: ${leaderboard.length} entries, $${totalWagered.toFixed(2)} total wagered`);
 
