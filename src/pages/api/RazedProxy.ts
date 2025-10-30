@@ -1,13 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getUserFromRequest } from "@/lib/getUserFromRequest";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Require authentication
-  const user = await getUserFromRequest(req, res);
-  if (!user) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
   try {
     const API_URL = process.env.BASE_RAZED_API_URL as string;
     const REFERRAL_KEY = process.env.AUTH_RAZED as string;
