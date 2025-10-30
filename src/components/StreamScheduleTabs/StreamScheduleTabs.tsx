@@ -3,7 +3,7 @@ import StreamScheduleTabsClient from "@/components/StreamScheduleTabsClient/Stre
 const scheduleData = [
   {
     day: "Monday",
-    name: "Nick / Mack",
+    name: "Nick / Cierra",
     titel: "LuxDrop & Razed / Raw Gambling",
     time: "08:00 AM UTC / 06:00 PM UTC",
   },
@@ -41,7 +41,7 @@ const scheduleData = [
     day: "Sunday",
     name: "Nick / Ciera",
     titel: "LuxDrop & Razed / Raw Gambling",
-    time: "08:00 AM UTC / 06:00 PM UTC",
+    time: "09:00 AM UTC / 06:00 PM UTC",
   },
 ];
 
