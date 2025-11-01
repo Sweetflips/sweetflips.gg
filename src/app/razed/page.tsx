@@ -4,8 +4,8 @@ import { createMetadata } from "@/../lib/metadata";
 import RazedLeaderboard from "@/components/Razed/RazedLeaderboard";
 
 export const metadata: Metadata = createMetadata({
-  title: "Razed Leaderboard",
-  description: "Razed Leaderboard",
+  title: "50k Razed Leaderboard",
+  description: "50k Razed Leaderboard - Compete for $50,000 in monthly prizes",
   path: "/razed",
   image: "/images/cover/Razed_Leaderboard.png",
 });
