@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const imageUrl = `/images/cover/Razed_Leaderboard.png?v=50k-v2`;
+  const imageUrl = `/images/cover/Razed_Leaderboard_50k.png`;
   
   return createMetadata({
     title: "$50,000 Razed Leaderboard | Sweetflips",
