@@ -54,10 +54,29 @@ export default async function handler(
   }
 
   const currentTime = DateTime.utc();
-
-  const startDate = DateTime.utc(2025, 10, 16, 0, 0, 0);
-  const endDate = DateTime.utc(2025, 10, 31, 23, 59, 59);
-  const periodLabel = "October 16-31, 2025";
+  const currentDay = currentTime.day;
+  const currentMonth = currentTime.month;
+  const currentYear = currentTime.year;
+  
+  let startDate: DateTime;
+  let endDate: DateTime;
+  let periodLabel: string;
+  
+  if (currentMonth === 11 && currentYear === 2025) {
+    if (currentDay >= 1 && currentDay <= 15) {
+      startDate = DateTime.utc(2025, 11, 1, 0, 0, 0);
+      endDate = DateTime.utc(2025, 11, 16, 23, 59, 59);
+      periodLabel = "November 1-16, 2025";
+    } else {
+      startDate = DateTime.utc(2025, 11, 16, 0, 0, 0);
+      endDate = DateTime.utc(2025, 11, 30, 23, 59, 59);
+      periodLabel = "November 16-30, 2025";
+    }
+  } else {
+    startDate = DateTime.utc(2025, 11, 1, 0, 0, 0);
+    endDate = DateTime.utc(2025, 11, 16, 23, 59, 59);
+    periodLabel = "November 1-16, 2025";
+  }
 
   const startDateISO = startDate.toISODate();
   const endDateISO = endDate.toISODate();
@@ -151,7 +170,7 @@ export default async function handler(
     const responseData = {
       data: leaderboard,
       period: {
-        month: "October",
+        month: "November",
         year: 2025,
         period: periodLabel,
         startDate: startDateISO,
