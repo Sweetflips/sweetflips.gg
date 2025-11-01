@@ -3,8 +3,11 @@ import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import { createMetadata } from "@/../lib/metadata";
 import RazedLeaderboard from "@/components/Razed/RazedLeaderboard";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function generateMetadata(): Promise<Metadata> {
-  const imageUrl = "/images/cover/Razed_Leaderboard.png?v=50k";
+  const imageUrl = `/images/cover/Razed_Leaderboard.png?v=50k-v2`;
   
   return createMetadata({
     title: "$50,000 Razed Leaderboard | Sweetflips",
