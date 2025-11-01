@@ -65,8 +65,8 @@ export default async function handler(
   if (currentMonth === 11 && currentYear === 2025) {
     if (currentDay >= 1 && currentDay <= 15) {
       startDate = DateTime.utc(2025, 11, 1, 0, 0, 0);
-      endDate = DateTime.utc(2025, 11, 16, 23, 59, 59);
-      periodLabel = "November 1-16, 2025";
+      endDate = DateTime.utc(2025, 11, 15, 23, 59, 59);
+      periodLabel = "November 1-15, 2025";
     } else {
       startDate = DateTime.utc(2025, 11, 16, 0, 0, 0);
       endDate = DateTime.utc(2025, 11, 30, 23, 59, 59);
@@ -74,8 +74,8 @@ export default async function handler(
     }
   } else {
     startDate = DateTime.utc(2025, 11, 1, 0, 0, 0);
-    endDate = DateTime.utc(2025, 11, 16, 23, 59, 59);
-    periodLabel = "November 1-16, 2025";
+    endDate = DateTime.utc(2025, 11, 15, 23, 59, 59);
+    periodLabel = "November 1-15, 2025";
   }
 
   const startDateISO = startDate.toISODate();
