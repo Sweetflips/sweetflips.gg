@@ -4,11 +4,13 @@ import { createMetadata } from "@/../lib/metadata";
 import RazedLeaderboard from "@/components/Razed/RazedLeaderboard";
 
 export async function generateMetadata(): Promise<Metadata> {
+  const imageUrl = "/images/cover/Razed_Leaderboard.png?v=50k";
+  
   return createMetadata({
-    title: "50k Razed Leaderboard",
-    description: "50k Razed Leaderboard - Compete for $50,000 in monthly prizes",
+    title: "$50,000 Razed Leaderboard | Sweetflips",
+    description: "$50,000 Razed Leaderboard - Compete for $50,000 in monthly prizes. Each month, a total of $50,000 is distributed across 25 users based on their total wagered amount.",
     path: "/razed",
-    image: "/images/cover/Razed_Leaderboard.png",
+    image: imageUrl,
   });
 }
 
