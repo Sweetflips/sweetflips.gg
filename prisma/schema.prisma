@@ -41,9 +41,9 @@ model TokenTransaction {
   ipAddress       String?
   userAgent       String?
   createdAt       DateTime @default(now())
-  
+
   user            User     @relation(fields: [userId], references: [id])
-  
+
   @@index([userId])
   @@index([transactionType])
   @@index([createdAt])
@@ -57,7 +57,7 @@ model RazedLeaderboardCache {
   expiresAt     DateTime // When cache expires and needs refresh
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  
+
   @@index([expiresAt])
 }
 
@@ -71,6 +71,6 @@ model LuxdropLeaderboardCache {
   expiresAt     DateTime // When cache expires and needs refresh
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  
+
   @@index([expiresAt])
 }

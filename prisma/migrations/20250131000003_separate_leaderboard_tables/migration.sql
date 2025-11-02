@@ -51,4 +51,3 @@ ON CONFLICT DO NOTHING;
 
 -- Drop old LeaderboardCache table
 DROP TABLE IF EXISTS "LeaderboardCache" CASCADE;
-
