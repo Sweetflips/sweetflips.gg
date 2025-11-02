@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { Menu as MenuIcon } from "lucide-react";
+import { Menu as MenuIcon, X } from "lucide-react";
 import React from "react";
 import { HeaderLiveStatus } from "../HeaderLiveStatus/HeaderLiveStatus";
 import { menuGroups } from "@/data/menuData";
@@ -12,74 +12,33 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
 
-
   return (
-    <header className="sticky top-0 z-999 flex w-full bg-[#130C1A] shadow-md">
-      <div className="flex flex-grow items-center justify-between px-4 py-4 md:px-6 2xl:px-11">
-        <div className="flex items-center gap-2 sm:gap-4 lg:mr-6">
-          {/* Hamburger button for sidebar (now removed)
-          <button
-            aria-controls="sidebar"
-            onClick={(e) => {
-              e.stopPropagation();
-              // props.setSidebarOpen(!props.sidebarOpen); // This logic is no longer needed
-            }}
-            className="z-99999 block rounded-xl bg-[#9925FE] p-3.5 lg:hidden"
-          >
-            <span className="relative block h-5.5 w-5.5 cursor-pointer">
-              <span className="du-block absolute right-0 h-full w-full">
-                <span
-                  // className={`relative left-0 top-0 my-1 block h-0.5 w-0 rounded-sm bg-white delay-[0] duration-200 ease-in-out dark:bg-white ${
-                  //   !props.sidebarOpen && "!w-full delay-300"
-                  // }`}
-                ></span>
-                <span
-                  // className={`relative left-0 top-0 my-1 block h-0.5 w-0 rounded-sm bg-white delay-150 duration-200 ease-in-out dark:bg-white ${
-                  //   !props.sidebarOpen && "delay-400 !w-full"
-                  // }`}
-                ></span>
-                <span
-                  // className={`relative left-0 top-0 my-1 block h-0.5 w-0 rounded-sm bg-white delay-200 duration-200 ease-in-out dark:bg-white ${
-                  //   !props.sidebarOpen && "!w-full delay-500"
-                  // }`}
-                ></span>
-              </span>
-              <span className="absolute right-0 h-full w-full rotate-45">
-                <span
-                  // className={`absolute left-2.5 top-0 block h-full w-0.5 rounded-sm bg-white delay-300 duration-200 ease-in-out dark:bg-white ${
-                  //   !props.sidebarOpen && "!h-0 !delay-[0]"
-                  // }`}
-                ></span>
-                <span
-                  // className={`delay-400 absolute left-0 top-2.5 block h-0.5 w-full rounded-sm bg-white duration-200 ease-in-out dark:bg-white ${
-                  //   !props.sidebarOpen && "!h-0 !delay-200"
-                  // }`}
-                ></span>
-              </span>
-            </span>
-          </button>
-          */}
-
-          <Link className="block flex-shrink-0" href="/">
+    <header className="sticky top-0 z-999 w-full bg-[#130C1A] border-b border-white/5 backdrop-blur-sm">
+      <div className="mx-auto flex h-20 items-center justify-between px-4 sm:px-6 lg:px-8">
+        {/* Logo */}
+        <div className="flex items-center">
+          <Link href="/" className="flex items-center">
             <Image
-              width={32} // Smaller logo for mobile to fit hamburger
+              width={32}
               height={32}
-              src="/images/logo/sweet_flips_logo_white.png" // Assuming this is the small square logo
-              alt="Logo"
-              className="lg:hidden" // Show only on small screens
+              src="/images/logo/sweet_flips (2).svg"
+              alt="SweetFlips Logo"
+              className="lg:hidden"
+              priority
             />
             <Image
-              width={160} // Full logo for larger screens
+              width={144}
               height={32}
-              src="/images/logo/site_logo.png"
-              alt="Logo"
-              className="hidden lg:block" // Show only on large screens
+              src="/images/logo/sweet_flips (2).svg"
+              alt="SweetFlips Logo"
+              className="hidden lg:block"
+              priority
             />
           </Link>
         </div>
 
-        {/* <!-- Desktop Header Navigation --> */}
-        <nav className="hidden lg:flex items-center flex-grow justify-center mx-auto gap-1 xl:gap-2 px-2 sm:px-4"> {/* Removed justify-around */}
+        {/* Desktop Navigation */}
+        <nav className="hidden lg:flex items-center gap-2">
           {menuGroups[0]?.menuItems.map((item, index) => (
             <HeaderNavItem
               key={index}
@@ -87,9 +46,7 @@ const Header = () => {
               route={item.route}
               external={item.external}
               icon={item.icon}
-              // Removed children prop
             >
-              {/* Nested children */}
               {item.children && item.children.map((childItem, childIndex) => {
                 if (childItem.external) {
                   return (
@@ -98,8 +55,6 @@ const Header = () => {
                       href={childItem.route}
                       target="_blank"
                       rel="noopener noreferrer"
-                      // className and onClick will be added by HeaderNavItem
-                      // HeaderNavItem will use href for active checks
                     >
                       {childItem.label}
                     </a>
@@ -107,10 +62,7 @@ const Header = () => {
                 }
                 return (
                   <Link key={childIndex} href={childItem.route} legacyBehavior passHref>
-                    {/* The <a> tag will receive href from Link, and HeaderNavItem can access it */}
-                    <a>
-                      {childItem.label}
-                    </a>
+                    <a>{childItem.label}</a>
                   </Link>
                 );
               })}
@@ -118,43 +70,47 @@ const Header = () => {
           ))}
         </nav>
 
-        <div className="flex items-center gap-3 2xsm:gap-7">
-          {/* Container for HeaderLiveStatus with fixed dimensions */}
-          <div className="hidden md:block h-8 w-28">
+        {/* Right Side Actions */}
+        <div className="flex items-center gap-4">
+          <div className="hidden md:block">
             <HeaderLiveStatus />
           </div>
 
-          {/* Mobile Menu Button for Header Items (visible on small screens) */}
+          {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden text-white p-2 rounded-md hover:bg-opacity-90"
-            aria-label="Open mobile menu"
+            className="lg:hidden text-white p-2 rounded-lg hover:bg-white/10 transition-colors"
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileMenuOpen}
           >
-            <MenuIcon size={24} />
+            {mobileMenuOpen ? <X size={24} /> : <MenuIcon size={24} />}
           </button>
         </div>
       </div>
 
-      {/* <!-- Mobile Menu Dropdown --> */}
+      {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden absolute top-full left-0 w-full bg-[#1A1123] shadow-xl py-3"> {/* Slightly different bg for dropdown, increased padding */}
-          <nav className="flex flex-col px-3 space-y-1"> {/* Adjusted padding and spacing */}
+        <div className="lg:hidden border-t border-white/5 bg-[#1A1123]">
+          <nav className="px-4 py-3 space-y-1">
             {menuGroups[0]?.menuItems.map((item, index) => (
               <React.Fragment key={index}>
                 <HeaderNavItem
                   label={item.label}
-                  route={item.route} // Parent might be non-interactive if route is '#'
+                  route={item.route}
                   external={item.external}
                   icon={item.icon}
                   isMobile={true}
                 />
-                {/* Render children directly underneath if they exist */}
                 {item.children && item.children.length > 0 && (
-                  <div className="ml-6 pl-3 py-1 space-y-1 border-l border-gray-500 dark:border-gray-700"> {/* Indentation and styling for submenu block */}
+                  <div className="ml-8 mt-1 space-y-0.5 border-l border-white/10 pl-4">
                     {item.children.map((childItem, childIndex) => {
                       const childKey = `${index}-${childIndex}-child`;
                       const isActive = pathname === childItem.route;
-                      const subItemClasses = `block px-3 py-1.5 rounded-md text-xs font-medium ${isActive ? 'text-primary bg-gray-700 dark:bg-gray-600' : 'text-gray-300 dark:text-gray-400 hover:text-primary hover:bg-gray-700 dark:hover:bg-gray-600'} transition-colors duration-150 ease-in-out`;
+                      const subItemClasses = `block px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        isActive
+                          ? 'text-primary bg-white/10'
+                          : 'text-gray-300 hover:text-white hover:bg-white/5'
+                      }`;
 
                       if (childItem.external) {
                         return (
@@ -164,6 +120,7 @@ const Header = () => {
                             target="_blank"
                             rel="noopener noreferrer"
                             className={subItemClasses}
+                            onClick={() => setMobileMenuOpen(false)}
                           >
                             {childItem.label}
                           </a>
@@ -176,7 +133,7 @@ const Header = () => {
                           passHref
                           legacyBehavior
                         >
-                          <a className={subItemClasses}>
+                          <a className={subItemClasses} onClick={() => setMobileMenuOpen(false)}>
                             {childItem.label}
                           </a>
                         </Link>

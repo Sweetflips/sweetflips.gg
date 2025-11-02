@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 export const HomeIcon: React.FC<{ fill?: string; width?: string; height?: string; className?: string }> = ({ fill = "white", width = "24", height = "24", className }) => (
   <svg
@@ -72,23 +73,15 @@ export const ShopIcon: React.FC<{ fill?: string; width?: string; height?: string
   </svg>
 );
 
-export const StreamIcon: React.FC<{ fill?: string; width?: string; height?: string; className?: string }> = ({ fill = "white", width = "24", height = "24", className }) => (
-  <svg
-    width={width}
-    height={height}
-    viewBox="0 0 512 512"
-    fillRule="evenodd"
-    clipRule="evenodd"
-    strokeLinejoin="round"
-    strokeMiterlimit="2"
-    xmlns="http://www.w3.org/2000/svg"
-    className={className}
-  >
-    <path
-      d="M37 .036h164.448v113.621h54.71v-56.82h54.731V.036h164.448v170.777h-54.73v56.82h-54.711v56.8h54.71v56.82h54.73V512.03H310.89v-56.82h-54.73v-56.8h-54.711v113.62H37V.036z"
-      fill={fill}
-    />
-  </svg>
+export const StreamIcon: React.FC<{ fill?: string; width?: string; height?: string; className?: string }> = ({ width = "24", height = "24", className }) => (
+  <Image
+    src="/images/logo/imgi_144_kick-streaming-platform-logo-icon.svg"
+    alt="Kick"
+    width={parseInt(width)}
+    height={parseInt(height)}
+    className={`rounded ${className || ''}`}
+    style={{ objectFit: 'contain' }}
+  />
 );
 
 export const GamesIcon: React.FC<{ fill?: string; width?: string; height?: string; className?: string }> = ({ fill = "white", width = "26", height = "26", className }) => (
@@ -167,6 +160,39 @@ export const AvatarIcon: React.FC<{ fill?: string; width?: string; height?: stri
   </svg>
 );
 
+export const RazedIcon: React.FC<{ fill?: string; width?: string; height?: string; className?: string }> = ({ width = "24", height = "24", className }) => (
+  <Image
+    src="/images/logo/Razed icon.jpg"
+    alt="Razed"
+    width={parseInt(width)}
+    height={parseInt(height)}
+    className={`rounded ${className || ''}`}
+    style={{ objectFit: 'contain' }}
+  />
+);
+
+export const LuxdropIcon: React.FC<{ fill?: string; width?: string; height?: string; className?: string }> = ({ width = "24", height = "24", className }) => (
+  <Image
+    src="/images/icon/luxdrop_fav.png"
+    alt="Luxdrop"
+    width={parseInt(width)}
+    height={parseInt(height)}
+    className={`rounded ${className || ''}`}
+    style={{ objectFit: 'contain' }}
+  />
+);
+
+export const RewardsIcon: React.FC<{ fill?: string; width?: string; height?: string; className?: string }> = ({ width = "24", height = "24", className }) => (
+  <Image
+    src="/images/logo/dba2b372-f45c-4210-a19d-ca05b4536051.png"
+    alt="SweetFlips Rewards"
+    width={parseInt(width)}
+    height={parseInt(height)}
+    className={`rounded ${className || ''}`}
+    style={{ objectFit: 'contain' }}
+  />
+);
+
 export const iconMap: { [key: string]: React.FC<any> } = {
   home: HomeIcon,
   leaderboards: LeaderboardsIcon,
@@ -175,4 +201,7 @@ export const iconMap: { [key: string]: React.FC<any> } = {
   games: GamesIcon,
   chat: ChatIcon,
   avatar: AvatarIcon,
+  razed: RazedIcon,
+  luxdrop: LuxdropIcon,
+  rewards: RewardsIcon,
 };

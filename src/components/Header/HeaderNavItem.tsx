@@ -9,8 +9,7 @@ interface HeaderNavItemProps {
   route: string;
   external?: boolean;
   icon?: string;
-  // children prop removed
-  isMobile?: boolean; // Added isMobile prop
+  isMobile?: boolean;
 }
 
 const HeaderNavItem: React.FC<React.PropsWithChildren<HeaderNavItemProps>> = ({
@@ -22,13 +21,11 @@ const HeaderNavItem: React.FC<React.PropsWithChildren<HeaderNavItemProps>> = ({
   isMobile,
 }) => {
   const pathname = usePathname();
-  // Use React.Children to count and iterate over children
   const childrenArray = React.Children.toArray(propChildren);
   const isActive =
     pathname === route ||
     (childrenArray &&
       childrenArray.some((child) => {
-        // Children are expected to be <Link> or <a> tags, so check href
         return (
           React.isValidElement(child) &&
           child.props.href &&
@@ -53,22 +50,8 @@ const HeaderNavItem: React.FC<React.PropsWithChildren<HeaderNavItemProps>> = ({
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [dropdownRef]);
+  }, []);
 
-  const alignmentClass = isMobile ? "justify-start" : "justify-center";
-  let linkClasses = `relative group flex items-center ${alignmentClass} text-[rgb(222,228,238)] px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ease-in-out`;
-
-  if (isMobile) {
-    linkClasses += " w-full"; // Ensure full width for mobile items' clickable area
-  }
-
-  if (isActive) {
-    linkClasses += " text-primary";
-  } else {
-    // Text color does not change on hover for non-active items
-  }
-
-  const iconClasses = `mr-2 h-5 w-5 flex-shrink-0 ${isActive ? "text-primary" : "text-[rgb(222,228,238)]"}`;
   const IconComponent = icon ? iconMap[icon] : null;
 
   const handleToggleDropdown = (e: React.MouseEvent) => {
@@ -78,119 +61,122 @@ const HeaderNavItem: React.FC<React.PropsWithChildren<HeaderNavItemProps>> = ({
     }
   };
 
-  const itemContent = (
-    <>
-      {IconComponent ? (
-        <IconComponent className={iconClasses} />
-      ) : (
-        <span className="mr-2 h-5 w-5"></span>
-      )}
-      <div className="relative">
-        <span className="invisible block font-semibold" aria-hidden="true">
-          {label}
-        </span>
-        <span
-          className={`absolute left-0 top-0 ${isMobile ? "" : "w-full"} ${isActive ? "font-semibold" : ""}`}
-        >
-          {label}
-        </span>
-        {/* On mobile, let natural width dictate for left-align; desktop needs w-full for absolute overlay */}
-      </div>
-      {hasChildren &&
-        !isMobile && ( // Chevron only for desktop dropdowns
+  // Desktop navigation item
+  if (!isMobile) {
+    const baseClasses = `relative flex items-center gap-3 px-6 py-3 text-base font-medium transition-all duration-200 rounded-lg ${
+      isActive
+        ? "text-primary"
+        : "text-gray-300 hover:text-white"
+    }`;
+
+    const itemContent = (
+      <>
+        {IconComponent && (
+          <IconComponent className={`h-6 w-6 flex-shrink-0 ${isActive ? "text-primary" : "text-gray-400"}`} />
+        )}
+        <span>{label}</span>
+        {hasChildren && (
           <ChevronDown
-            className={`ml-auto h-4 w-4 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""} ${isActive ? "text-primary" : "text-[rgb(222,228,238)]"}`}
+            className={`h-4 w-4 ml-1 transition-transform duration-200 ${
+              isDropdownOpen ? "rotate-180" : ""
+            } ${isActive ? "text-primary" : "text-gray-400"}`}
           />
         )}
-    </>
-  );
+      </>
+    );
 
-  const underlineDiv = (
-    <div
-      className={`absolute bottom-0 left-1/2 h-0.5 w-[calc(100%-1.5rem)] -translate-x-1/2 scale-x-0
-                 transform bg-primary transition-transform
-                 duration-200 ease-out group-hover:scale-x-100`}
-    ></div>
-  );
+    if (hasChildren) {
+      return (
+        <div className="relative" ref={dropdownRef}>
+          <button
+            type="button"
+            className={baseClasses}
+            onClick={handleToggleDropdown}
+            aria-expanded={isDropdownOpen}
+            aria-haspopup="true"
+          >
+            {itemContent}
+          </button>
+          {isDropdownOpen && (
+            <div className="absolute left-1/2 top-full mt-2 -translate-x-1/2 w-40 rounded-lg bg-[#1A1123] border border-white/10 py-1.5 shadow-xl backdrop-blur-sm">
+              {childrenArray.map((child, index) => {
+                if (!React.isValidElement(child)) return null;
 
-  // For mobile, children are not handled as a dropdown by this component
-  // They are expected to be rendered as a flat list in the mobile menu itself if needed
-  if (hasChildren && !isMobile) {
-    // Desktop dropdown logic
-    return (
-      <div className="relative flex-1" ref={dropdownRef}>
-        <button
-          type="button"
-          className={`${linkClasses} w-full`}
-          onClick={handleToggleDropdown}
-          aria-expanded={isDropdownOpen}
-          aria-haspopup="true"
+                const childProps = child.props as any;
+                const childIsActive = pathname === childProps.href;
+                const childLinkClasses = `block px-4 py-2 text-sm text-center transition-colors ${
+                  childIsActive
+                    ? "text-primary bg-white/10"
+                    : "text-gray-300 hover:text-white hover:bg-white/5"
+                }`;
+
+                return React.cloneElement(child as React.ReactElement<any>, {
+                  key: index,
+                  className: childLinkClasses,
+                  onClick: () => setIsDropdownOpen(false),
+                });
+              })}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    if (external) {
+      return (
+        <a
+          href={route}
+          className={baseClasses}
+          target="_blank"
+          rel="noopener noreferrer"
         >
-          {itemContent}
-          {!isMobile && underlineDiv} {/* Underline for desktop parent items */}
-        </button>
-        {isDropdownOpen && (
-          <div className="absolute left-0 z-50 mt-2 flex w-full origin-top-left flex-col rounded-md bg-[#1A1123] py-1 text-center text-[rgb(222,228,238)] shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-            {" "}
-            {/* Changed background color */}
-            {/* Iterate over React children */}
-            {childrenArray.map((child, index) => {
-              if (!React.isValidElement(child)) return null; // Skip invalid elements
+          {IconComponent && (
+            <IconComponent className={`h-6 w-6 flex-shrink-0 ${isActive ? "text-primary" : "text-gray-400"}`} />
+          )}
+          <span>{label}</span>
+        </a>
+      );
+    }
 
-              // Assuming children are <Link> or <a> tags. Access href for active check.
-              // This might need adjustment based on how children are structured in Header/index.tsx
-              const childProps = child.props as any; // Type assertion, be cautious
-              const childIsActive = pathname === childProps.href;
-              // Base classes for all submenu items
-              let childLinkClasses =
-                "block py-2 text-sm w-full text-center text-[rgb(222,228,238)] transition-colors duration-150 ease-in-out"; // px-4 removed
-
-              if (childIsActive) {
-                // Active state: bg-purple-600. Text color is inherited from base.
-                childLinkClasses += " bg-purple-600";
-              } else {
-                // Inactive state: Text color inherited from base.
-                // On hover: bg-purple-700. Text color inherited from base.
-                childLinkClasses += " hover:bg-purple-700";
-              }
-
-              // We need to clone the element to add/modify props like className and onClick
-              return React.cloneElement(child as React.ReactElement<any>, {
-                key: index,
-                className: childLinkClasses,
-                onClick: () => setIsDropdownOpen(false), // Close dropdown on click
-                // Ensure any existing onClick on the child is also called if necessary
-              });
-            })}
-          </div>
-        )}
-      </div>
+    return (
+      <Link href={route} legacyBehavior passHref>
+        <a className={baseClasses}>
+          {IconComponent && (
+            <IconComponent className={`h-6 w-6 flex-shrink-0 ${isActive ? "text-primary" : "text-gray-400"}`} />
+          )}
+          <span>{label}</span>
+        </a>
+      </Link>
     );
   }
 
-  // Common rendering for non-dropdown items (desktop) and all mobile items
-  const rootElementClasses = isMobile ? "" : "flex-1"; // flex-1 only for desktop non-dropdown items
+  // Mobile navigation item
+  const mobileBaseClasses = `flex items-center gap-4 w-full px-4 py-3 rounded-lg text-base font-medium transition-colors ${
+    isActive
+      ? "text-primary bg-white/10"
+      : "text-gray-300 hover:text-white hover:bg-white/5"
+  }`;
+
+  const mobileItemContent = (
+    <>
+      {IconComponent && (
+        <IconComponent className={`h-6 w-6 flex-shrink-0 ${isActive ? "text-primary" : "text-gray-400"}`} />
+      )}
+      <span className="flex-1 text-left">{label}</span>
+    </>
+  );
 
   if (external) {
     return (
-      <a
-        href={route}
-        className={`${linkClasses} ${rootElementClasses}`}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        {itemContent}
-        {underlineDiv}
+      <a href={route} className={mobileBaseClasses} target="_blank" rel="noopener noreferrer">
+        {mobileItemContent}
       </a>
     );
   }
 
   return (
     <Link href={route} legacyBehavior passHref>
-      <a className={`${linkClasses} ${rootElementClasses}`}>
-        {itemContent}
-        {underlineDiv}
-      </a>
+      <a className={mobileBaseClasses}>{mobileItemContent}</a>
     </Link>
   );
 };

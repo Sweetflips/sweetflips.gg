@@ -24,13 +24,14 @@ export const menuGroups: MenuGroup[] = [
         route: "/",
       },
       {
-        icon: "leaderboards",
-        label: "Leaderboards",
-        route: "#",
-        children: [
-          { label: "Razed", route: "/razed" },
-          { label: "Luxdrop", route: "/luxdrop" },
-        ],
+        icon: "razed",
+        label: "Razed",
+        route: "/razed",
+      },
+      {
+        icon: "luxdrop",
+        label: "Luxdrop",
+        route: "/luxdrop",
       },
       {
         icon: "stream",
@@ -38,7 +39,7 @@ export const menuGroups: MenuGroup[] = [
         route: "/stream",
       },
       {
-        icon: "shop",
+        icon: "rewards",
         label: "SweetFlipsRewards",
         route: "/sweetflipsrewards",
       },

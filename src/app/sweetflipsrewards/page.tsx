@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
-import { createMetadata } from "@/../lib/metadata";
+import { createMetadata } from "@/lib/metadata";
 import Link from "next/link";
 
 export const metadata: Metadata = createMetadata({
@@ -14,14 +14,14 @@ export default function SweetFlipsRewardsPage() {
     <>
       <DefaultLayout>
         <div className="max-w-7xl mx-auto px-4 py-6 text-white">
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
             <h1 className="text-4xl font-bold mb-4">SweetFlipsRewards</h1>
             <p className="text-xl text-gray-300">
               Your gateway to exclusive rewards and benefits
             </p>
           </div>
 
-          <div className="bg-[radial-gradient(at_top_center,_#350c4a_0%,_#130C1A_60%)] border border-graydark rounded-xl p-8 shadow-card mb-8">
+          <div className="bg-[radial-gradient(at_top_center,_#350c4a_0%,_#130C1A_60%)] border border-graydark rounded-xl p-8 shadow-card mb-8 relative">
             <div className="space-y-6">
               <div>
                 <h2 className="text-2xl font-semibold mb-4">About SweetFlipsRewards</h2>
@@ -47,7 +47,7 @@ export default function SweetFlipsRewardsPage() {
                   Visit SweetFlipsRewards to learn more and start earning rewards today!
                 </p>
                 <Link
-                  href="https://sweetflipsrewards.com"
+                  href="https://www.sweetflipsrewards.com/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/30"
@@ -67,6 +67,23 @@ export default function SweetFlipsRewardsPage() {
                     />
                   </svg>
                 </Link>
+              </div>
+            </div>
+
+            {/* Video Section - Bottom Right */}
+            <div className="absolute bottom-4 right-4">
+              <div className="w-64 rounded-xl overflow-hidden shadow-lg">
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-auto"
+                  controls
+                >
+                  <source src="/images/logo/IMG_3904.MP4" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
               </div>
             </div>
           </div>
