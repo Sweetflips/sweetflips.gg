@@ -26,13 +26,8 @@ export default async function handler(
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 
-  console.log("=== LUXDROP API CALLED ===");
-
   // --- Read API and Leaderboard Config from Environment ---
   const API_KEY = process.env.LUXDROP_API_KEY;
-
-  console.log("Environment check:");
-  console.log("LUXDROP_API_KEY:", API_KEY ? "SET" : "MISSING");
 
   if (!API_KEY) {
     console.error("Server configuration error: Missing Luxdrop API key.");
@@ -57,45 +52,50 @@ export default async function handler(
   const currentDay = currentTime.day;
   const currentMonth = currentTime.month;
   const currentYear = currentTime.year;
-  
+
   let startDate: DateTime;
   let endDate: DateTime;
   let periodLabel: string;
-  
-  if (currentMonth === 11 && currentYear === 2025) {
+
+  // Luxdrop period configuration - configurable via environment variables
+  // Format: YYYY-MM-DD (e.g., "2025-11-01")
+  const luxdropPeriodYearEnv = process.env.LUXDROP_PERIOD_YEAR;
+  const luxdropPeriodMonthEnv = process.env.LUXDROP_PERIOD_MONTH;
+
+  const periodYear = luxdropPeriodYearEnv ? parseInt(luxdropPeriodYearEnv, 10) : currentYear;
+  const periodMonth = luxdropPeriodMonthEnv ? parseInt(luxdropPeriodMonthEnv, 10) : currentMonth;
+
+  if (currentMonth === periodMonth && currentYear === periodYear) {
     if (currentDay >= 1 && currentDay <= 15) {
-      startDate = DateTime.utc(2025, 11, 1, 0, 0, 0);
-      endDate = DateTime.utc(2025, 11, 15, 23, 59, 59);
-      periodLabel = "November 1-15, 2025";
+      startDate = DateTime.utc(periodYear, periodMonth, 1, 0, 0, 0);
+      endDate = DateTime.utc(periodYear, periodMonth, 15, 23, 59, 59);
+      periodLabel = `${DateTime.fromObject({ month: periodMonth, year: periodYear }).toFormat('MMMM')} 1-15, ${periodYear}`;
     } else {
-      startDate = DateTime.utc(2025, 11, 16, 0, 0, 0);
-      endDate = DateTime.utc(2025, 11, 30, 23, 59, 59);
-      periodLabel = "November 16-30, 2025";
+      startDate = DateTime.utc(periodYear, periodMonth, 16, 0, 0, 0);
+      endDate = DateTime.utc(periodYear, periodMonth, 30, 23, 59, 59);
+      periodLabel = `${DateTime.fromObject({ month: periodMonth, year: periodYear }).toFormat('MMMM')} 16-30, ${periodYear}`;
     }
   } else {
-    startDate = DateTime.utc(2025, 11, 1, 0, 0, 0);
-    endDate = DateTime.utc(2025, 11, 15, 23, 59, 59);
-    periodLabel = "November 1-15, 2025";
+    // Default to first half of configured period month
+    startDate = DateTime.utc(periodYear, periodMonth, 1, 0, 0, 0);
+    endDate = DateTime.utc(periodYear, periodMonth, 15, 23, 59, 59);
+    periodLabel = `${DateTime.fromObject({ month: periodMonth, year: periodYear }).toFormat('MMMM')} 1-15, ${periodYear}`;
   }
 
   const startDateISO = startDate.toISODate();
   const endDateISO = endDate.toISODate();
 
-  console.log("=== DATE DEBUG (FIXED PERIOD) ===");
-  console.log("Current time:", currentTime.toISO());
-  console.log("Fixed period:", periodLabel);
-  console.log("Period start UTC:", startDate.toISO());
-  console.log("Period end UTC:", endDate.toISO());
-  console.log("Fetching data for period:", startDateISO, "to", endDateISO);
-
   // Create proxy agent if configured
-  let proxyAgent: any = null;
-  if (proxyHost && proxyPort && proxyUsername && proxyPassword) {
-    const proxyUrl = `http://${proxyUsername}:${proxyPassword}@${proxyHost}:${proxyPort}`;
+  let proxyAgent: HttpsProxyAgent | null = null;
+  if (proxyHost && proxyPort) {
+    // Support proxy with or without authentication
+    let proxyUrl: string;
+    if (proxyUsername && proxyPassword) {
+      proxyUrl = `http://${proxyUsername}:${proxyPassword}@${proxyHost}:${proxyPort}`;
+    } else {
+      proxyUrl = `http://${proxyHost}:${proxyPort}`;
+    }
     proxyAgent = new HttpsProxyAgent(proxyUrl);
-    console.log("Using proxy:", `${proxyHost}:${proxyPort}`);
-  } else {
-    console.log("No proxy configured");
   }
 
   try {
@@ -123,15 +123,8 @@ export default async function handler(
       config.httpAgent = proxyAgent;
     }
 
-    console.log("=== API REQUEST ===");
-    console.log("URL:", config.url);
-    console.log("Params:", JSON.stringify(params, null, 2));
-
     const response = await axios(config);
     const monthlyData: AffiliateEntry[] = response.data;
-
-    console.log("✅ Successfully received data from Luxdrop API!");
-    console.log("Entries for current period:", Array.isArray(monthlyData) ? monthlyData.length : 'N/A');
 
     if (!Array.isArray(monthlyData)) {
       throw new Error("API response is not an array");
@@ -143,14 +136,6 @@ export default async function handler(
       return wagered > 0;
     });
 
-    console.log("Active wagerers in current period:", activeWagerers.length);
-
-    const totalWagered = activeWagerers.reduce((sum: number, entry: AffiliateEntry) => {
-      return sum + (Number(entry.wagered) || 0);
-    }, 0);
-
-    console.log("Total wagered in current period:", "$" + totalWagered.toFixed(2));
-
     // Process the bi-weekly data - sort by wagered amount descending
     const leaderboard: LeaderboardEntry[] = activeWagerers
       .map((entry: AffiliateEntry) => ({
@@ -161,17 +146,11 @@ export default async function handler(
       .sort((a, b) => b.wagered - a.wagered)
       .slice(0, 100); // Top 100
 
-    console.log(`${periodLabel} leaderboard generated:`);
-    console.log("- Total active wagerers:", leaderboard.length);
-    if (leaderboard.length > 0) {
-      console.log("- Top wagerer:", leaderboard[0].username, "$" + leaderboard[0].wagered);
-    }
-
     const responseData = {
       data: leaderboard,
       period: {
-        month: "November",
-        year: 2025,
+        month: DateTime.fromObject({ month: periodMonth, year: periodYear }).toFormat('MMMM'),
+        year: periodYear,
         period: periodLabel,
         startDate: startDateISO,
         endDate: endDateISO,
@@ -183,18 +162,24 @@ export default async function handler(
     res.status(200).json(responseData);
 
   } catch (error: any) {
-    console.error("❌ API request failed:", error.message);
-    console.error("Status:", error.response?.status);
-
-    if (error.response?.data) {
-      console.error("API Error Response:", JSON.stringify(error.response.data, null, 2));
+    console.error("Luxdrop API request failed:", error.message);
+    if (error.response?.status) {
+      console.error("Status:", error.response.status);
+      console.error("Response data:", error.response.data);
+    }
+    if (error.request) {
+      console.error("Request made but no response received:", error.request);
     }
 
-    // DO NOT return fallback data - return the actual error
-    res.status(500).json({
+    // Return more detailed error information
+    const errorMessage = error.response?.data?.message || error.message || "Unknown error";
+    const statusCode = error.response?.status || 500;
+
+    res.status(statusCode).json({
       error: "Failed to fetch leaderboard data",
-      message: error.message,
-      details: error.response?.data || null
+      message: errorMessage,
+      details: error.response?.data || null,
+      timestamp: new Date().toISOString()
     });
   }
 }

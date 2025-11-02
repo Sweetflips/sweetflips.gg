@@ -8,7 +8,6 @@ const bigWins = [
   { game: "SIXSIXSIX", name: "Denny, Des & Nick", amount: 176435.0 },
   { game: "Juicy Fruits", name: "Peter", amount: 96724.72 },
   { game: "Bonanza", name: "Peter", amount: 95605.0 },
-  { game: "Plinko", name: "Amor", amount: 76315.0 },
 ];
 
 const BigWins: React.FC = () => {
@@ -26,7 +25,7 @@ const BigWins: React.FC = () => {
                 className="rounded"
                 width={40}
                 height={40}
-                src="/images/icon/Razed_icon.png"
+                src="/images/logo/Razed icon.jpg"
                 alt="Razed"
                 priority
               />

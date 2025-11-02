@@ -5,12 +5,6 @@ import "@/css/satoshi.css";
 import "@/css/style.css";
 import React, { useEffect, useState } from "react";
 import Loader from "@/components/common/Loader";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { TokenProvider } from "@/contexts/TokenContext"; // ✅ Import your new TokenProvider
-import { LinkAccountProvider } from "@/components/LinkAccountProvider/LinkAccountProvider";
-import ChatBubbleWrapper from "@/components/Chat/ChatBubbleWrapper";
-import ChatBubbleTest from "@/components/Chat/ChatBubbleTest";
-import SimpleChatBubble from "@/components/Chat/SimpleChatBubble";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
@@ -19,7 +13,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -28,22 +21,8 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <body suppressHydrationWarning={true} className="flex flex-col min-h-screen dark:text-bodydark SidebarBg"> {/* Moved classes here */}
-      <AuthProvider>
-        <TokenProvider>
-          <LinkAccountProvider>
-            {/* Removed intermediate div */}
-            {loading ? <Loader /> : (
-              <>
-                {children}
-                <SimpleChatBubble />
-                {/* <ChatBubbleTest /> */}
-                {/* <ChatBubbleWrapper /> */}
-              </>
-            )}
-          </LinkAccountProvider>
-        </TokenProvider>
-      </AuthProvider>
+      <body suppressHydrationWarning={true} className="flex flex-col min-h-screen dark:text-bodydark SidebarBg">
+        {loading ? <Loader /> : children}
       </body>
     </html>
   );

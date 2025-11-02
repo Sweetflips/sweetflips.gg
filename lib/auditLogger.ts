@@ -1,7 +1,10 @@
 import { NextApiRequest } from 'next';
 
+// Type for Prisma Decimal - can be string, number, or Decimal instance
+type DecimalLike = string | number | { toString(): string; toNumber(): number; equals(other: DecimalLike): boolean };
+
 // Dynamic import for Decimal to handle build-time issues
-let Decimal: any;
+let Decimal: new (value: string | number) => DecimalLike;
 try {
   // Try to import from Prisma client runtime
   const runtime = require('@prisma/client/runtime/library');
@@ -15,8 +18,11 @@ try {
     }
     toString() { return this.value; }
     toNumber() { return parseFloat(this.value); }
-    equals(other: any) { return this.toNumber() === (typeof other === 'number' ? other : other.toNumber()); }
-  };
+    equals(other: DecimalLike) {
+      const otherNum = typeof other === 'number' ? other : typeof other === 'string' ? parseFloat(other) : other.toNumber();
+      return this.toNumber() === otherNum;
+    }
+  } as any;
 }
 
 export type TransactionType = 'convert' | 'spend' | 'payout' | 'admin_adjustment' | 'purchase';
@@ -24,19 +30,33 @@ export type TransactionType = 'convert' | 'spend' | 'payout' | 'admin_adjustment
 export interface AuditLogOptions {
   userId: number;
   transactionType: TransactionType;
-  amount: any; // Using any to be flexible with Decimal type
-  balanceBefore: any;
-  balanceAfter: any;
-  metadata?: Record<string, any>;
+  amount: DecimalLike;
+  balanceBefore: DecimalLike;
+  balanceAfter: DecimalLike;
+  metadata?: Record<string, unknown>;
   req?: NextApiRequest;
 }
 
 // Type that works with both PrismaClient and transaction context
 type PrismaTransactionClient = {
   tokenTransaction: {
-    create: (args: any) => Promise<any>;
-    findMany: (args: any) => Promise<any>;
-    count: (args: any) => Promise<number>;
+    create: (args: { data: {
+      userId: number;
+      transactionType: TransactionType;
+      amount: DecimalLike;
+      balanceBefore: DecimalLike;
+      balanceAfter: DecimalLike;
+      metadata?: Record<string, unknown>;
+      ipAddress?: string | null;
+      userAgent?: string | null;
+    } }) => Promise<unknown>;
+    findMany: (args: {
+      where: { userId: number; createdAt?: { gte: Date } };
+      orderBy: { createdAt: 'desc' };
+      take: number;
+      include?: { user: { select: { username: true; email: true } } };
+    }) => Promise<Array<{ transactionType: TransactionType; amount: DecimalLike }>>;
+    count: (args: { where: { userId: number; createdAt: { gte: Date } } }) => Promise<number>;
   };
 };
 
@@ -60,8 +80,8 @@ export async function createAuditLog(
 
   if (req) {
     const forwardedFor = req.headers['x-forwarded-for'];
-    ipAddress = typeof forwardedFor === 'string' 
-      ? forwardedFor.split(',')[0] 
+    ipAddress = typeof forwardedFor === 'string'
+      ? forwardedFor.split(',')[0]
       : req.socket?.remoteAddress || null;
     userAgent = req.headers['user-agent'] || null;
   }
@@ -114,7 +134,7 @@ export async function checkSuspiciousActivity(
   amount: number
 ): Promise<{ suspicious: boolean; reason?: string }> {
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-  
+
   // Get recent transactions
   const recentTransactions = await prisma.tokenTransaction.findMany({
     where: {
@@ -126,30 +146,30 @@ export async function checkSuspiciousActivity(
 
   // Check for rapid transactions (more than 10 in last hour)
   if (recentTransactions.length > 10) {
-    return { 
-      suspicious: true, 
-      reason: 'Too many transactions in the last hour' 
+    return {
+      suspicious: true,
+      reason: 'Too many transactions in the last hour'
     };
   }
 
   // Check for unusual large transactions
   if (transactionType === 'convert' && amount > 10000) {
-    return { 
-      suspicious: true, 
-      reason: 'Unusually large conversion amount' 
+    return {
+      suspicious: true,
+      reason: 'Unusually large conversion amount'
     };
   }
 
   // Check for repeated identical transactions
   const identicalTransactions = recentTransactions.filter(
-    (t: any) => t.transactionType === transactionType && 
-        new Decimal(t.amount).equals(amount)
+    (t) => t.transactionType === transactionType &&
+        new Decimal(t.amount.toString()).equals(amount)
   );
-  
+
   if (identicalTransactions.length > 3) {
-    return { 
-      suspicious: true, 
-      reason: 'Multiple identical transactions detected' 
+    return {
+      suspicious: true,
+      reason: 'Multiple identical transactions detected'
     };
   }
 

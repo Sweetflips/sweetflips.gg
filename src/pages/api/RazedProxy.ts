@@ -11,16 +11,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const now = new Date(); // Current date in UTC
 
-    // Define the specific start and end dates for the special weekly event
-    const SPECIAL_PERIOD_START_DATE = new Date(Date.UTC(2025, 5, 23, 0, 0, 0, 0)); // June 23, 2025, 00:00:00.000 UTC (month is 0-indexed)
-    const SPECIAL_PERIOD_END_DATE = new Date(Date.UTC(2025, 5, 30, 23, 59, 59, 999)); // June 30, 2025, 23:59:59.999 UTC
+    // Special weekly event dates - configurable via environment variables
+    // Format: YYYY-MM-DD (e.g., "2025-06-23")
+    const specialStartEnv = process.env.SPECIAL_PERIOD_START_DATE;
+    const specialEndEnv = process.env.SPECIAL_PERIOD_END_DATE;
+
+    let SPECIAL_PERIOD_START_DATE: Date | null = null;
+    let SPECIAL_PERIOD_END_DATE: Date | null = null;
+
+    if (specialStartEnv && specialEndEnv) {
+      const [startYear, startMonth, startDay] = specialStartEnv.split('-').map(Number);
+      const [endYear, endMonth, endDay] = specialEndEnv.split('-').map(Number);
+      SPECIAL_PERIOD_START_DATE = new Date(Date.UTC(startYear, startMonth - 1, startDay, 0, 0, 0, 0));
+      SPECIAL_PERIOD_END_DATE = new Date(Date.UTC(endYear, endMonth - 1, endDay, 23, 59, 59, 999));
+    }
 
     let fromDate: Date;
     let toDate: Date;
 
-    // Check if 'now' is within the special weekly event period
-    if (now >= SPECIAL_PERIOD_START_DATE && now <= SPECIAL_PERIOD_END_DATE) {
-      // Special Weekly Event Logic (June 23-30, 2025)
+    // Check if special period is configured and active
+    if (SPECIAL_PERIOD_START_DATE && SPECIAL_PERIOD_END_DATE &&
+        now >= SPECIAL_PERIOD_START_DATE && now <= SPECIAL_PERIOD_END_DATE) {
       fromDate = SPECIAL_PERIOD_START_DATE;
       toDate = SPECIAL_PERIOD_END_DATE;
     } else {
@@ -44,6 +55,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       method: "GET",
       headers: {
         "X-Referral-Key": REFERRAL_KEY,
+        "Cache-Control": "no-cache",
       },
     });
 
@@ -75,6 +87,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(500).json({ error: "Invalid JSON response from API" });
     }
   } catch (error) {
-    return res.status(500).json({ error: "Failed to fetch API data" });
+    console.error("RazedProxy error:", error);
+    return res.status(500).json({
+      error: "Failed to fetch API data",
+      message: error instanceof Error ? error.message : "Unknown error",
+      timestamp: new Date().toISOString()
+    });
   }
 }

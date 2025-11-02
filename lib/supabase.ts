@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // Initialize Supabase client with your URL and anon key
 const supabase = createClient(
@@ -7,9 +7,9 @@ const supabase = createClient(
 );
 
 // Singleton client for authentication - only create once
-let authClientInstance: any = null;
+let authClientInstance: SupabaseClient | null = null;
 
-export const createClientForAuth = () => {
+export const createClientForAuth = (): SupabaseClient => {
   if (!authClientInstance && typeof window !== 'undefined') {
     authClientInstance = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL as string,

@@ -71,7 +71,7 @@ const GiveAwayCounter: React.FC = () => {
             <div className="flex items-center space-x-4">
               <a href="/razed" rel="noopener noreferrer">
                 <Image
-                  src="/images/icon/Razed_icon.png"
+                  src="/images/logo/Razed icon.jpg"
                   alt="razed"
                   width={50}
                   height={50}

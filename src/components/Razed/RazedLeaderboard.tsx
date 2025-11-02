@@ -1,6 +1,5 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
-// import confetti from "canvas-confetti";
 import Loader from "@/components/common/Loader";
 import { Timer } from "@/app/ui/timer/Timer";
 import Footer from "@/components/Footer/Footer";
@@ -80,8 +79,8 @@ const RazedLeaderboard: React.FC = () => {
   // --- Date Logic ---
   const now = new Date(); // Current date in UTC
 
-  // Define the specific start and end dates for the special weekly event (from coworker)
   const SPECIAL_PERIOD_START_DATE = new Date(Date.UTC(2025, 5, 23, 0, 0, 0, 0)); // June 23, 2025, 00:00:00.000 UTC
+
   const SPECIAL_PERIOD_END_DATE = new Date(
     Date.UTC(2025, 5, 30, 23, 59, 59, 999),
   ); // June 30, 2025, 23:59:59.999 UTC
@@ -96,20 +95,16 @@ const RazedLeaderboard: React.FC = () => {
   let leaderboardDescription: string;
 
   if (isSpecialWeekActive) {
-    // Special Weekly Event Logic (June 23-30, 2025)
     prizePoolAmount = 10000;
     leaderboardTitle = `$${prizePoolAmount.toLocaleString()}`;
     leaderboardDescription = `Weekly leaderboard with $10,000 distributed across 20 users based on their total wagered amount until June 30th.`;
     currentRewardMapping = weeklyRewardMapping;
     targetDateForTimer = SPECIAL_PERIOD_END_DATE;
   } else {
-    // Standard Monthly Logic (all other times)
-    const totalRewards = Object.values(monthlyRewardMapping).reduce((sum, reward) => sum + reward, 0);
     prizePoolAmount = 50000;
     leaderboardTitle = `$${prizePoolAmount.toLocaleString()}`;
-    leaderboardDescription = `Each month, a total of $${prizePoolAmount.toLocaleString()} is distributed across 25 users based on their total wagered amount.`;
+    leaderboardDescription = `Each month, a total of $50,000 is distributed across 25 users based on their total wagered amount.`;
     currentRewardMapping = monthlyRewardMapping;
-    // Target end of the current actual month (last day, 23:59:59 UTC)
     targetDateForTimer = new Date(
       Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999),
     );
@@ -128,7 +123,18 @@ const RazedLeaderboard: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(API_PROXY_URL, { method: "GET" });
+        const response = await fetch(API_PROXY_URL, {
+          method: "GET",
+          headers: {
+            'Cache-Control': 'no-cache',
+          },
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(`API request failed with status ${response.status}: ${errorData.message || errorData.error || response.statusText}`);
+        }
+
         const result = await response.json();
         if (!Array.isArray(result.data)) {
           throw new Error("Invalid data format: expected 'data' array");

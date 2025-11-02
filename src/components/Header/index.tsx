@@ -1,59 +1,17 @@
 import Link from "next/link";
-// Removed DarkModeSwitcher, DropdownMessage, DropdownNotification, DropdownUser as they are not used in the provided snippet
 import Image from "next/image";
-import { useState, useEffect } from 'react'; // useEffect might still be needed for other things if any
-import Cookies from 'js-cookie';
+import { useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { User, Shield, Menu as MenuIcon, Sparkles } from "lucide-react"; // Renamed Menu to MenuIcon to avoid conflict
-import ShopTokenBar from '@/components/ShopTokenBar/ShopTokenBar';
+import { Menu as MenuIcon } from "lucide-react";
 import React from "react";
 import { HeaderLiveStatus } from "../HeaderLiveStatus/HeaderLiveStatus";
-import { menuGroups } from "@/data/menuData"; // Import menuGroups
-import HeaderNavItem from "./HeaderNavItem"; // Import HeaderNavItem
-import { useAuth } from "@/contexts/AuthContext"; // Import useAuth
+import { menuGroups } from "@/data/menuData";
+import HeaderNavItem from "./HeaderNavItem";
 
-// Removed sidebarOpen and setSidebarOpen from props
 const Header = () => {
-  const { isLoggedIn, userRole } = useAuth(); // Use AuthContext
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // State for mobile menu
-  const pathname = usePathname(); // Add this line
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
 
-  // Removed local useEffect for checkAuth as it's now handled by AuthContext
-  // useEffect(() => {
-  //   const checkAuth = async () => {
-  //     try {
-  //       const res = await fetch('/api/user');
-  //       if (res.ok) {
-  //         const data = await res.json();
-  //         setIsLoggedIn(true);
-  //         setUserRole(data.user?.role || null);
-  //       } else {
-  //         setIsLoggedIn(false);
-  //         setUserRole(null);
-  //       }
-  //     } catch (err) {
-  //       setIsLoggedIn(false);
-  //       setUserRole(null);
-  //     }
-  //   };
-  //
-  //   checkAuth();
-  // }, []);
-
-  // Unused useEffect and handleLogout removed for clarity
-  // useEffect(() => {
-  //   const token = Cookies.get('token');
-  //   if (token) {
-  //     // setIsAuthenticated(true); // This state was removed
-  //   } else {
-  //     // setIsAuthenticated(false); // This state was removed
-  //   }
-  // }, []);
-
-  // const handleLogout = () => {
-  //   Cookies.remove('token');
-  //   // setIsAuthenticated(false); // This state was removed
-  // };
 
   return (
     <header className="sticky top-0 z-999 flex w-full bg-[#130C1A] shadow-md">
@@ -166,7 +124,7 @@ const Header = () => {
             <HeaderLiveStatus />
           </div>
 
-          {/* <!-- Mobile Menu Button for Header Items (visible on small screens) --> */}
+          {/* Mobile Menu Button for Header Items (visible on small screens) */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="lg:hidden text-white p-2 rounded-md hover:bg-opacity-90"
@@ -174,69 +132,6 @@ const Header = () => {
           >
             <MenuIcon size={24} />
           </button>
-
-          {/* User-specific items - hidden on small screens, shown on large */}
-          <div className="hidden lg:flex items-center gap-3 2xsm:gap-7 flex-wrap">
-            {isLoggedIn ? (
-              <>
-                <div className="hidden sm:block"> {/* Desktop ShopTokenBar */}
-                  <ShopTokenBar />
-                </div>
-                {/* Create Avatar Button for logged in users */}
-                <Link
-                  href="/webgl/index.html"
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium text-sm transition bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 hover:shadow-lg hover:shadow-purple-500/30"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  <span>Create Avatar</span>
-                </Link>
-              </>
-            ) : (
-              /* Create Avatar Button for non-logged in users - redirects to signin */
-              <Link
-                href="/auth/signin"
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium text-sm transition bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 hover:shadow-lg hover:shadow-purple-500/30"
-              >
-                <Sparkles className="w-4 h-4" />
-                <span>Create Avatar</span>
-              </Link>
-            )}
-            <nav className="flex items-center gap-4">
-              {isLoggedIn ? (
-                <>
-                  <div className="flex gap-2 items-center">
-                    <Link
-                      href="/account"
-                      aria-label="Account"
-                      className="flex items-center justify-center h-11 w-11 rounded-lg text-white transition bg-gradient-to-br from-primary to-sweetflipsPanel hover:shadow-lg hover:shadow-primary/40"
-                    >
-                      <User className="w-5 h-5" fill="currentColor" />
-                    </Link>
-
-                    {userRole === "admin" && (
-                      <Link
-                        href="/admin-panel"
-                        aria-label="Admin Panel"
-                        className="flex items-center justify-center h-11 w-11 rounded-lg text-white transition bg-gradient-to-br from-primary to-sweetflipsPanel hover:shadow-lg hover:shadow-primary/40"
-                      >
-                        <Shield className="w-5 h-5" />
-                      </Link>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <div>
-                  <Link
-                    href="/auth/signin"
-                    aria-label="Login"
-                    className="flex items-center justify-center h-11 w-11 rounded-lg text-white transition bg-gradient-to-br from-primary to-sweetflipsPanel hover:shadow-lg hover:shadow-primary/40"
-                  >
-                    <User className="w-5 h-5" fill="currentColor" />
-                  </Link>
-                </div>
-              )}
-            </nav>
-          </div>
         </div>
       </div>
 
@@ -291,48 +186,6 @@ const Header = () => {
                 )}
               </React.Fragment>
             ))}
-            {/* Mobile Auth Links and ShopTokenBar - styled more like HeaderNavItem */}
-            {isLoggedIn ? (
-              <>
-                <div className="px-3 pt-3 pb-2"> {/* Added padding for ShopTokenBar container */}
-                  <ShopTokenBar />
-                </div>
-                {/* Mobile Create Avatar Button for logged in users */}
-                <Link 
-                  href="/webgl/index.html" 
-                  className="flex items-center mx-3 mt-2 px-4 py-2 rounded-lg text-white font-medium text-sm transition bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Create Your Avatar
-                </Link>
-              </>
-            ) : (
-              /* Mobile Create Avatar Button for non-logged in users - redirects to signin */
-              <Link 
-                href="/auth/signin" 
-                className="flex items-center mx-3 mt-2 px-4 py-2 rounded-lg text-white font-medium text-sm transition bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-              >
-                <Sparkles className="w-4 h-4 mr-2" />
-                Create Your Avatar
-              </Link>
-            )}
-            <div className="border-t border-gray-700 my-2"></div> {/* Divider */}
-            {isLoggedIn ? (
-              <>
-                <Link href="/account" className="flex items-center text-white hover:bg-gray-700 hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ease-in-out">
-                   <User className="w-5 h-5 mr-2 text-gray-400" fill="currentColor" /> Account
-                </Link>
-                {userRole === "admin" && (
-                   <Link href="/admin-panel" className="flex items-center text-white hover:bg-gray-700 hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ease-in-out">
-                     <Shield className="w-5 h-5 mr-2 text-gray-400" /> Admin
-                  </Link>
-                )}
-              </>
-            ) : (
-              <Link href="/auth/signin" className="flex items-center text-white hover:bg-gray-700 hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ease-in-out">
-                <User className="w-5 h-5 mr-2 text-gray-400" fill="currentColor" /> Login
-              </Link>
-            )}
           </nav>
         </div>
       )}

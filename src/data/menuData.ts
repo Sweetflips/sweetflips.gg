@@ -33,23 +33,14 @@ export const menuGroups: MenuGroup[] = [
         ],
       },
       {
-        icon: "shop",
-        label: "Shop",
-        route: "/shop",
-      },
-      {
         icon: "stream",
         label: "Stream",
         route: "/stream",
       },
       {
-        icon: "games",
-        label: "Games(DEV)",
-        route: "#",
-        children: [
-          { label: "Plinko", route: "/plinko" },
-          { label: "Coinflip", route: "/coinflip" },
-        ],
+        icon: "shop",
+        label: "SweetFlipsRewards",
+        route: "/sweetflipsrewards",
       },
     ],
   },

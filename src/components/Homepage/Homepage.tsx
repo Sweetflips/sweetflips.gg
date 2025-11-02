@@ -1,18 +1,13 @@
 "use client";
 import { useSearchParams } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
-// import { withAuth } from '@/components/withAuth'; // Assuming not needed for this specific leaderboard display
-// import TopLeaderboard from "@/components/TopLeaderboard/TopLeaderboard"; // Will be replaced
 import BannerVideo from "@/components/BannerVideo/BannerVideo";
 import HomeBanner from "@/components/HomeBanner/HomeBanner";
 import RegisterBlocks from "@/components/RegisterBlocks/RegisterBlocks";
-// import BannerImage from "@/components/BannerImage/BannerImage";
 import Image from "next/image";
 import GiveAwayCounter from "../GiveAwayCounter/GiveAwayCounter";
-// import confetti from "canvas-confetti";
 import { Timer } from "@/app/ui/timer/Timer";
 import Loader from "@/components/common/Loader";
-// import Footer from "@/components/Footer/Footer"; // Removed Footer import
 
 const API_PROXY_URL = "/api/RazedProxy";
 
@@ -88,6 +83,7 @@ const Homepage: React.FC = () => {
   const now = new Date(); // Current date in UTC
 
   const SPECIAL_PERIOD_START_DATE = new Date(Date.UTC(2025, 5, 23, 0, 0, 0, 0)); // June 23, 2025, 00:00:00.000 UTC
+
   const SPECIAL_PERIOD_END_DATE = new Date(
     Date.UTC(2025, 5, 30, 23, 59, 59, 999),
   ); // June 30, 2025, 23:59:59.999 UTC
@@ -130,9 +126,15 @@ const Homepage: React.FC = () => {
       setLoading(true); // Start loading
       setError(null); // Reset error
       try {
-        const response = await fetch(API_PROXY_URL, { method: "GET" });
+        const response = await fetch(API_PROXY_URL, {
+          method: "GET",
+          headers: {
+            'Cache-Control': 'no-cache',
+          },
+        });
         if (!response.ok) {
-          throw new Error(`API request failed with status ${response.status}`);
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(`API request failed with status ${response.status}: ${errorData.message || response.statusText}`);
         }
         const result = await response.json();
         if (!Array.isArray(result.data)) {
@@ -164,19 +166,6 @@ const Homepage: React.FC = () => {
   }, [currentRewardMapping]);
 
   const topUsers = data.slice(0, 3);
-
-  // useEffect(() => {
-  //   if (
-  //     topUsers.length > 0 &&
-  //     topUsers[0] &&
-  //     !fireworksLaunched.current &&
-  //     !loading
-  //   ) {
-  //     // check loading state
-  //     fireworksLaunched.current = true;
-  //     confetti({ particleCount: 100, spread: 120, origin: { y: 0.6 } });
-  //   }
-  // }, [topUsers, loading]); // add loading to dependency array
 
   // Handle URL parameters for error/success messages
   useEffect(() => {
@@ -533,14 +522,10 @@ const Homepage: React.FC = () => {
             )}
           </div>
           {/* Razed Leaderboard Section END */}
-          {/* <YoutubeSlider /> */}
-          {/* <div className="mt-4"><Footer /></div> */}{" "}
-          {/* Removed Footer component instance */}
         </div>
       </div>
     </>
   );
 };
 
-// export default withAuth(Homepage); // Assuming withAuth is not needed or handled differently
 export default Homepage;

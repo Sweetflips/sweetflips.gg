@@ -112,9 +112,7 @@ const LuxdropLeaderboard: React.FC = () => {
 
   // Function to mask usernames (copied from RazedLeaderboard)
   const maskUsername = (username: string) => {
-    console.log("~~>> username is: ", username);
     if (!username) {
-      console.log("returning early, username was null or undefined");
       return "";
     }
 
@@ -133,22 +131,40 @@ const LuxdropLeaderboard: React.FC = () => {
 
   useEffect(() => {
     let isMounted = true;
+    let retryCount = 0;
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY = 2000; // 2 seconds
 
-    const fetchData = async (showLoader = false) => {
-      if (showLoader) {
+    const fetchData = async (showLoader = false, isRetry = false) => {
+      if (showLoader && !isRetry) {
         setLoading(true);
       }
       if (isMounted) {
         setError(null);
       }
 
-      const cacheBuster = `?t=${Date.now()}`;
+      const cacheBuster = `?t=${Date.now()}&_r=${Math.random()}`;
       const apiUrl = `${API_PROXY_URL}${cacheBuster}`;
 
       try {
-        const response = await fetch(apiUrl);
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache',
+          },
+        });
+
         if (!response.ok) {
-          throw new Error(`API returned ${response.status}: ${response.statusText}`);
+          let errorData;
+          try {
+            errorData = await response.json();
+          } catch {
+            errorData = { message: response.statusText };
+          }
+          const error = new Error(`API returned ${response.status}: ${errorData.message || response.statusText}`);
+          (error as any).status = response.status;
+          throw error;
         }
 
         const result = await response.json();
@@ -165,16 +181,6 @@ const LuxdropLeaderboard: React.FC = () => {
             const wagered = parseCurrencyAmount(wageredRaw);
             const rewardFromApi = parseCurrencyAmount(rewardRaw);
 
-            if (index === 0) {
-              console.log("Luxdrop raw top user", {
-                username: user.username,
-                wageredRaw,
-                wageredParsed: wagered,
-                rewardRaw,
-                rewardParsed: rewardFromApi,
-              });
-            }
-
             const reward =
               rewardFromApi > 0 ? rewardFromApi : rewardMapping[index + 1] || 0;
 
@@ -186,16 +192,27 @@ const LuxdropLeaderboard: React.FC = () => {
           });
 
         if (isMounted) {
-          console.table(processedData.slice(0, 5), ["username", "wagered", "reward"]);
           setData(processedData);
+          setLoading(false);
+          retryCount = 0; // Reset retry count on success
         }
       } catch (err: any) {
         console.error("Luxdrop API error:", err.message);
+
+        // Retry logic for transient errors (500, 502, 503, 504)
+        if (isMounted && retryCount < MAX_RETRIES && err.status >= 500) {
+          retryCount++;
+          console.log(`Retrying Luxdrop API call (attempt ${retryCount}/${MAX_RETRIES})...`);
+          setTimeout(() => {
+            if (isMounted) {
+              fetchData(false, true);
+            }
+          }, RETRY_DELAY * retryCount);
+          return;
+        }
+
         if (isMounted) {
           setError(`Unable to load leaderboard: ${err.message}`);
-        }
-      } finally {
-        if (showLoader && isMounted) {
           setLoading(false);
         }
       }
@@ -210,9 +227,78 @@ const LuxdropLeaderboard: React.FC = () => {
     };
   }, []);
 
+  const handleRetry = () => {
+    setError(null);
+    setLoading(true);
+    const fetchData = async () => {
+      try {
+        const cacheBuster = `?t=${Date.now()}&_r=${Math.random()}`;
+        const apiUrl = `${API_PROXY_URL}${cacheBuster}`;
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache',
+          },
+        });
+
+        if (!response.ok) {
+          let errorData;
+          try {
+            errorData = await response.json();
+          } catch {
+            errorData = { message: response.statusText };
+          }
+          throw new Error(`API returned ${response.status}: ${errorData.message || response.statusText}`);
+        }
+
+        const result = await response.json();
+        if (!result.data || !Array.isArray(result.data)) {
+          throw new Error("Invalid data format from API");
+        }
+
+        const processedData = result.data
+          .filter((user: any) => user.username)
+          .slice(0, 20)
+          .map((user: any, index: number) => {
+            const wageredRaw = user.wagered;
+            const rewardRaw = user.reward;
+            const wagered = parseCurrencyAmount(wageredRaw);
+            const rewardFromApi = parseCurrencyAmount(rewardRaw);
+
+            const reward =
+              rewardFromApi > 0 ? rewardFromApi : rewardMapping[index + 1] || 0;
+
+            return {
+              username: maskUsername(user.username),
+              wagered,
+              reward,
+            };
+          });
+
+        setData(processedData);
+        setLoading(false);
+      } catch (err: any) {
+        setError(`Unable to load leaderboard: ${err.message}`);
+        setLoading(false);
+      }
+    };
+    fetchData();
+  };
+
   if (loading) return <Loader />;
   if (error)
-    return <p className="text-red-500 p-4 text-center">Error: {error}</p>;
+    return (
+      <div className="text-red-500 p-4 text-center">
+        <p className="mb-4">Error: {error}</p>
+        <button
+          onClick={handleRetry}
+          className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+        >
+          Retry
+        </button>
+      </div>
+    );
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat("en-US", {
@@ -239,25 +325,32 @@ const LuxdropLeaderboard: React.FC = () => {
     const currentDay = now.day;
     const currentMonth = now.month;
     const currentYear = now.year;
-    
+
+    // Luxdrop period configuration - configurable via environment variables
+    const luxdropPeriodYearEnv = process.env.NEXT_PUBLIC_LUXDROP_PERIOD_YEAR;
+    const luxdropPeriodMonthEnv = process.env.NEXT_PUBLIC_LUXDROP_PERIOD_MONTH;
+
+    const periodYear = luxdropPeriodYearEnv ? parseInt(luxdropPeriodYearEnv, 10) : currentYear;
+    const periodMonth = luxdropPeriodMonthEnv ? parseInt(luxdropPeriodMonthEnv, 10) : currentMonth;
+
     let periodStartDate: DateTime;
     let periodEndDate: DateTime;
     let periodLabel: string;
-    
-    if (currentMonth === 11 && currentYear === 2025) {
+
+    if (currentMonth === periodMonth && currentYear === periodYear) {
       if (currentDay >= 1 && currentDay <= 15) {
-        periodStartDate = DateTime.utc(2025, 11, 1, 0, 0, 0);
-        periodEndDate = DateTime.utc(2025, 11, 15, 23, 59, 59);
-        periodLabel = "November 1-15, 2025";
+        periodStartDate = DateTime.utc(periodYear, periodMonth, 1, 0, 0, 0);
+        periodEndDate = DateTime.utc(periodYear, periodMonth, 15, 23, 59, 59);
+        periodLabel = `${DateTime.fromObject({ month: periodMonth, year: periodYear }).toFormat('MMMM')} 1-15, ${periodYear}`;
       } else {
-        periodStartDate = DateTime.utc(2025, 11, 16, 0, 0, 0);
-        periodEndDate = DateTime.utc(2025, 11, 30, 23, 59, 59);
-        periodLabel = "November 16-30, 2025";
+        periodStartDate = DateTime.utc(periodYear, periodMonth, 16, 0, 0, 0);
+        periodEndDate = DateTime.utc(periodYear, periodMonth, 30, 23, 59, 59);
+        periodLabel = `${DateTime.fromObject({ month: periodMonth, year: periodYear }).toFormat('MMMM')} 16-30, ${periodYear}`;
       }
     } else {
-      periodStartDate = DateTime.utc(2025, 11, 1, 0, 0, 0);
-      periodEndDate = DateTime.utc(2025, 11, 15, 23, 59, 59);
-      periodLabel = "November 1-15, 2025";
+      periodStartDate = DateTime.utc(periodYear, periodMonth, 1, 0, 0, 0);
+      periodEndDate = DateTime.utc(periodYear, periodMonth, 15, 23, 59, 59);
+      periodLabel = `${DateTime.fromObject({ month: periodMonth, year: periodYear }).toFormat('MMMM')} 1-15, ${periodYear}`;
     }
 
     return {
@@ -268,17 +361,6 @@ const LuxdropLeaderboard: React.FC = () => {
   })();
 
   const countDownDate = targetDate.toISO();
-
-  console.log("Luxdrop period debug", {
-    nowUtc: DateTime.utc().toISO(),
-    period: periodLabel,
-    periodStartUtc: periodStart.toISO(),
-    periodStartEastern: periodStart.setZone("America/New_York").toISO(),
-    nextResetUtc: countDownDate,
-    nextResetEastern: countDownDate ? DateTime.fromISO(countDownDate, { zone: "utc" })
-      .setZone("America/New_York")
-      .toISO() : null,
-  });
 
   return (
     <div className="mt-4 p-4 text-white">
