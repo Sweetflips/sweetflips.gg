@@ -27,6 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Small cache to reduce load; browsers may cache for 20s; Vercel edge cache for 20s
     res.setHeader("Cache-Control", "public, max-age=20, s-maxage=20, stale-while-revalidate=60");
+    res.setHeader("Cache-Tag", "kick,channel-status");
 
     // Return JSON to the client.
     return res.status(200).json(data);

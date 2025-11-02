@@ -129,6 +129,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=600');
+    res.setHeader('Cache-Tag', 'leaderboard,razed');
     res.setHeader('Last-Modified', new Date().toUTCString());
 
     return res.status(200).json(jsonResponse);

@@ -351,6 +351,7 @@ export default async function handler(
   // Check cache for fresh data
   if (cached && now < cached.expiresAt) {
     res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=900, max-age=60");
+    res.setHeader("Cache-Tag", "leaderboard,luxdrop");
     res.setHeader("ETag", cached.etag);
     res.status(200).json(cached.data);
     return;
