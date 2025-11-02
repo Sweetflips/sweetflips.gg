@@ -2,8 +2,6 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import AvatarDisplay from "../Avatar/AvatarDisplay";
-import { useRouter } from "next/navigation";
 
 interface AccountDetailsProps {
   user: any;
@@ -12,8 +10,6 @@ interface AccountDetailsProps {
 }
 
 export default function AccountDetails({ user, userData, onOpenAvatarCreator }: AccountDetailsProps) {
-  const router = useRouter();
-  
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -25,15 +21,10 @@ export default function AccountDetails({ user, userData, onOpenAvatarCreator }: 
   const formatNumber = (num: number) => {
     return num.toLocaleString();
   };
-  
-  const handleAvatarClick = () => {
-    // Navigate to the webgl avatar creator
-    window.location.href = '/webgl/index.html';
-  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Left Panel - Avatar Section */}
+      {/* Left Panel - User Info */}
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
@@ -41,14 +32,8 @@ export default function AccountDetails({ user, userData, onOpenAvatarCreator }: 
         className="lg:col-span-1"
       >
         <div className="bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-pink-900/20 rounded-2xl border border-purple-500/30 p-6 backdrop-blur-sm">
-          <AvatarDisplay
-            userId={user.id}
-            username={user.username}
-            onEditAvatar={handleAvatarClick}
-          />
-          
           {/* Quick Stats */}
-          <div className="mt-6 space-y-3">
+          <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-purple-500/20">
               <span className="text-gray-400 text-sm">Tokens</span>
               <span className="text-purple-300 font-bold">{formatNumber(parseFloat(user.tokens))}</span>
