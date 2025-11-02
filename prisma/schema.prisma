@@ -49,10 +49,21 @@ model TokenTransaction {
   @@index([createdAt])
 }
 
-model LeaderboardCache {
+model RazedLeaderboardCache {
   id            String   @id @default(uuid())
-  source        String   // 'razed' or 'luxdrop'
-  cacheKey      String   // Unique identifier for this cache entry (e.g., date range or period)
+  cacheKey      String   @unique // Unique identifier for this cache entry (e.g., date range)
+  data          Json     // The leaderboard data
+  fetchedAt     DateTime @default(now()) // When data was fetched from API
+  expiresAt     DateTime // When cache expires and needs refresh
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([expiresAt])
+}
+
+model LuxdropLeaderboardCache {
+  id            String   @id @default(uuid())
+  cacheKey      String   @unique // Unique identifier for this cache entry (e.g., date range or period)
   data          Json     // The leaderboard data
   period        Json?    // Period information (month, year, startDate, endDate, etc.)
   etag          String?  // ETag for cache validation
@@ -61,7 +72,5 @@ model LeaderboardCache {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   
-  @@unique([source, cacheKey])
-  @@index([source])
   @@index([expiresAt])
 }

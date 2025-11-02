@@ -1,9 +1,9 @@
 // src/pages/api/LuxdropProxy.ts
+import { prisma } from "@/lib/prisma";
 import axios, { AxiosRequestConfig } from "axios";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import { DateTime } from "luxon";
 import type { NextApiRequest, NextApiResponse } from "next";
-import { prisma } from "@/lib/prisma";
 
 // Type definitions
 interface AffiliateEntry {
@@ -223,12 +223,9 @@ export default async function handler(
   const now = new Date();
 
   // Check database cache first
-  const cached = await prisma.leaderboardCache.findUnique({
+  const cached = await prisma.luxdropLeaderboardCache.findUnique({
     where: {
-      source_cacheKey: {
-        source: 'luxdrop',
-        cacheKey: cacheKey,
-      },
+      cacheKey: cacheKey,
     },
   });
 
@@ -302,15 +299,11 @@ export default async function handler(
     const expiresAt = new Date(now.getTime() + CACHE_TTL_MS);
     const etag = `W/"${Buffer.from(JSON.stringify(processedData)).toString('base64').substring(0, 16)}"`;
 
-    await prisma.leaderboardCache.upsert({
+    await prisma.luxdropLeaderboardCache.upsert({
       where: {
-        source_cacheKey: {
-          source: 'luxdrop',
-          cacheKey: cacheKey,
-        },
+        cacheKey: cacheKey,
       },
       create: {
-        source: 'luxdrop',
         cacheKey: cacheKey,
         data: processedData as any,
         period: {

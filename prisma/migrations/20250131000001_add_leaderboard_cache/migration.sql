@@ -22,4 +22,3 @@ CREATE INDEX "LeaderboardCache_source_idx" ON "LeaderboardCache"("source");
 
 -- CreateIndex
 CREATE INDEX "LeaderboardCache_expiresAt_idx" ON "LeaderboardCache"("expiresAt");
-

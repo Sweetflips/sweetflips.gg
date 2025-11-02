@@ -1,5 +1,5 @@
-import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma";
+import type { NextApiRequest, NextApiResponse } from "next";
 
 // Cache TTL: 10 minutes
 const CACHE_TTL_MS = 10 * 60 * 1000;
@@ -56,12 +56,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const cacheKey = `${fromParam}|${toParam}`;
 
     // Check database cache first
-    const cached = await prisma.leaderboardCache.findUnique({
+    const cached = await prisma.razedLeaderboardCache.findUnique({
       where: {
-        source_cacheKey: {
-          source: 'razed',
-          cacheKey: cacheKey,
-        },
+        cacheKey: cacheKey,
       },
     });
 
@@ -70,11 +67,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (process.env.NODE_ENV === 'development') {
         console.log(`[RazedProxy] Returning cached data from database (expires in ${Math.round((cached.expiresAt.getTime() - now.getTime()) / 1000 / 60)} minutes)`);
       }
-      
+
       res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=600');
       res.setHeader('Cache-Tag', 'leaderboard,razed');
       res.setHeader('Last-Modified', cached.fetchedAt.toUTCString());
-      
+
       return res.status(200).json(cached.data as any);
     }
 
@@ -140,7 +137,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } catch (err) {
       console.error('[RazedProxy] JSON parse error:', err);
       console.error('[RazedProxy] Response text:', textResponse.substring(0, 500));
-      
+
       // If we have stale cache, return it
       if (cached) {
         res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=600');
@@ -148,7 +145,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         res.setHeader('Last-Modified', cached.fetchedAt.toUTCString());
         return res.status(200).json({ ...(cached.data as any), stale: true });
       }
-      
+
       return res.status(500).json({ error: "Invalid JSON response from API" });
     }
 
@@ -169,15 +166,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Store in database cache
     const expiresAt = new Date(now.getTime() + CACHE_TTL_MS);
-    await prisma.leaderboardCache.upsert({
+    await prisma.razedLeaderboardCache.upsert({
       where: {
-        source_cacheKey: {
-          source: 'razed',
-          cacheKey: cacheKey,
-        },
+        cacheKey: cacheKey,
       },
       create: {
-        source: 'razed',
         cacheKey: cacheKey,
         data: jsonResponse as any,
         expiresAt: expiresAt,
