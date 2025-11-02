@@ -41,10 +41,27 @@ model TokenTransaction {
   ipAddress       String?
   userAgent       String?
   createdAt       DateTime @default(now())
-
+  
   user            User     @relation(fields: [userId], references: [id])
-
+  
   @@index([userId])
   @@index([transactionType])
   @@index([createdAt])
+}
+
+model LeaderboardCache {
+  id            String   @id @default(uuid())
+  source        String   // 'razed' or 'luxdrop'
+  cacheKey      String   // Unique identifier for this cache entry (e.g., date range or period)
+  data          Json     // The leaderboard data
+  period        Json?    // Period information (month, year, startDate, endDate, etc.)
+  etag          String?  // ETag for cache validation
+  fetchedAt     DateTime @default(now()) // When data was fetched from API
+  expiresAt     DateTime // When cache expires and needs refresh
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@unique([source, cacheKey])
+  @@index([source])
+  @@index([expiresAt])
 }

@@ -1,9 +1,9 @@
 // src/pages/api/LuxdropProxy.ts
 import axios, { AxiosRequestConfig } from "axios";
-import crypto from "crypto";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import { DateTime } from "luxon";
 import type { NextApiRequest, NextApiResponse } from "next";
+import { prisma } from "@/lib/prisma";
 
 // Type definitions
 interface AffiliateEntry {
@@ -15,7 +15,7 @@ interface AffiliateEntry {
   wagered_amount?: number | string;
   wager?: number | string;
   amount?: number | string;
-  [key: string]: any; // Allow any additional fields from API
+  [key: string]: any;
 }
 
 interface LeaderboardEntry {
@@ -27,157 +27,7 @@ interface LeaderboardEntry {
   rawReward?: number | string;
 }
 
-interface CachedResponse {
-  data: {
-    data: LeaderboardEntry[];
-    period: {
-      month: string;
-      year: number;
-      period: string;
-      startDate: string;
-      endDate: string;
-      note: string;
-    };
-    stale?: boolean;
-  };
-  etag: string;
-  cachedAt: number;
-  expiresAt: number;
-  staleAt: number;
-}
-
-// In-memory cache: keyed by cacheKey (codes|startDate|endDate)
-const cache = new Map<string, CachedResponse>();
-
-// In-flight promise map to coalesce concurrent requests
-const inFlightRequests = new Map<string, Promise<CachedResponse>>();
-
-// Cache TTL: 5 minutes fresh, 30 minutes stale window
-const FRESH_TTL_MS = 5 * 60 * 1000; // 5 minutes
-const STALE_TTL_MS = 30 * 60 * 1000; // 30 minutes
-
-// Generate cache key from request parameters
-function getCacheKey(codes: string, startDate: string, endDate: string): string {
-  return `${codes}|${startDate}|${endDate}`;
-}
-
-// Generate ETag from response data
-function generateETag(data: any): string {
-  const hash = crypto.createHash("md5").update(JSON.stringify(data)).digest("hex");
-  return `W/"${hash}"`;
-}
-
-// Parse Retry-After header (can be seconds or HTTP date)
-function parseRetryAfter(retryAfter: string | undefined): number {
-  if (!retryAfter) return 60; // Default 60 seconds
-
-  const seconds = parseInt(retryAfter, 10);
-  if (!isNaN(seconds)) return seconds;
-
-  const date = new Date(retryAfter);
-  if (!isNaN(date.getTime())) {
-    return Math.max(1, Math.floor((date.getTime() - Date.now()) / 1000));
-  }
-
-  return 60; // Fallback
-}
-
-// Fetch data from Luxdrop API (with caching and coalescing)
-async function fetchLuxdropData(
-  codes: string,
-  startDateISO: string,
-  endDateISO: string,
-  periodYear: number,
-  periodMonth: number,
-  periodLabel: string,
-  API_KEY: string,
-  proxyAgent: HttpsProxyAgent<string> | null
-): Promise<CachedResponse> {
-  const cacheKey = getCacheKey(codes, startDateISO, endDateISO);
-  const now = Date.now();
-
-  // Check if request is already in flight
-  const inFlight = inFlightRequests.get(cacheKey);
-  if (inFlight) {
-    return inFlight;
-  }
-
-  // Check cache for fresh data
-  const cached = cache.get(cacheKey);
-  if (cached && now < cached.expiresAt) {
-    return cached;
-  }
-
-  // Create promise for this request
-  const fetchPromise = (async (): Promise<CachedResponse> => {
-    try {
-      const params = {
-        codes,
-        startDate: startDateISO,
-        endDate: endDateISO,
-      };
-
-      const LUXDROP_API_BASE_URL = process.env.LUXDROP_API_BASE_URL || "https://api.luxdrop.com/external/affiliates";
-
-      const config: AxiosRequestConfig = {
-        method: "get",
-        url: LUXDROP_API_BASE_URL,
-        params: params,
-        timeout: 30000,
-        headers: {
-          "x-api-key": API_KEY,
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-          "Accept": "application/json",
-        },
-      };
-
-      if (proxyAgent) {
-        config.httpsAgent = proxyAgent;
-        config.httpAgent = proxyAgent;
-      }
-
-      const response = await axios(config);
-
-      // Process response data
-      const processedData = processApiResponse(
-        response.data,
-        periodYear,
-        periodMonth,
-        periodLabel,
-        startDateISO,
-        endDateISO
-      );
-      const etag = generateETag(processedData);
-
-      const cachedResponse: CachedResponse = {
-        data: processedData,
-        etag,
-        cachedAt: now,
-        expiresAt: now + FRESH_TTL_MS,
-        staleAt: now + STALE_TTL_MS,
-      };
-
-      cache.set(cacheKey, cachedResponse);
-      return cachedResponse;
-    } finally {
-      // Remove from in-flight map when done
-      inFlightRequests.delete(cacheKey);
-    }
-  })();
-
-  inFlightRequests.set(cacheKey, fetchPromise);
-  return fetchPromise;
-}
-
-// Process API response into leaderboard format
-function processApiResponse(
-  apiData: any,
-  periodYear: number,
-  periodMonth: number,
-  periodLabel: string,
-  startDateISO: string,
-  endDateISO: string
-): {
+interface LeaderboardData {
   data: LeaderboardEntry[];
   period: {
     month: string;
@@ -188,7 +38,40 @@ function processApiResponse(
     note: string;
   };
   stale?: boolean;
-} {
+}
+
+// Cache TTL: 10 minutes
+const CACHE_TTL_MS = 10 * 60 * 1000;
+
+// Generate cache key from request parameters
+function getCacheKey(codes: string, startDate: string, endDate: string): string {
+  return `${codes}|${startDate}|${endDate}`;
+}
+
+// Parse Retry-After header (can be seconds or HTTP date)
+function parseRetryAfter(retryAfter: string | undefined): number {
+  if (!retryAfter) return 60;
+
+  const seconds = parseInt(retryAfter, 10);
+  if (!isNaN(seconds)) return seconds;
+
+  const date = new Date(retryAfter);
+  if (!isNaN(date.getTime())) {
+    return Math.max(1, Math.floor((date.getTime() - Date.now()) / 1000));
+  }
+
+  return 60;
+}
+
+// Process API response into leaderboard format
+function processApiResponse(
+  apiData: any,
+  periodYear: number,
+  periodMonth: number,
+  periodLabel: string,
+  startDateISO: string,
+  endDateISO: string
+): LeaderboardData {
   let monthlyData: AffiliateEntry[];
 
   if (Array.isArray(apiData)) {
@@ -269,7 +152,6 @@ export default async function handler(
     return res.status(500).json({ error: "Server-side configuration is incomplete." });
   }
 
-  // Ensure affiliate code is always a string
   const affiliateCode: string = AFFILIATE_CODE;
 
   // --- Read Proxy Details from Environment ---
@@ -338,61 +220,158 @@ export default async function handler(
   }
 
   const cacheKey = getCacheKey(affiliateCode, startDateISO, endDateISO);
-  const now = Date.now();
+  const now = new Date();
 
-  // Check ETag for 304 Not Modified
-  const ifNoneMatch = req.headers["if-none-match"];
-  const cached = cache.get(cacheKey);
-  if (cached && ifNoneMatch === cached.etag) {
-    res.status(304).end();
+  // Check database cache first
+  const cached = await prisma.leaderboardCache.findUnique({
+    where: {
+      source_cacheKey: {
+        source: 'luxdrop',
+        cacheKey: cacheKey,
+      },
+    },
+  });
+
+  // If cache exists and is still fresh, return from database
+  if (cached && cached.expiresAt > now) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[LuxdropProxy] Returning cached data from database (expires in ${Math.round((cached.expiresAt.getTime() - now.getTime()) / 1000 / 60)} minutes)`);
+    }
+
+    res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=900, max-age=60");
+    res.setHeader("Cache-Tag", "leaderboard,luxdrop");
+    if (cached.etag) {
+      res.setHeader("ETag", cached.etag);
+    }
+
+    // Check ETag for 304 Not Modified
+    const ifNoneMatch = req.headers["if-none-match"];
+    if (cached.etag && ifNoneMatch === cached.etag) {
+      res.status(304).end();
+      return;
+    }
+
+    res.status(200).json(cached.data as unknown as LeaderboardData);
     return;
   }
 
-  // Check cache for fresh data
-  if (cached && now < cached.expiresAt) {
-    res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=900, max-age=60");
-    res.setHeader("Cache-Tag", "leaderboard,luxdrop");
-    res.setHeader("ETag", cached.etag);
-    res.status(200).json(cached.data);
-    return;
+  // Cache expired or missing - fetch from API
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[LuxdropProxy] Cache expired or missing, fetching from API...`);
   }
 
   try {
-    // Attempt to fetch fresh data
-    const cachedResponse = await fetchLuxdropData(
-      affiliateCode,
-      startDateISO,
-      endDateISO,
+    const params = {
+      codes: affiliateCode,
+      startDate: startDateISO,
+      endDate: endDateISO,
+    };
+
+    const LUXDROP_API_BASE_URL = process.env.LUXDROP_API_BASE_URL || "https://api.luxdrop.com/external/affiliates";
+
+    const config: AxiosRequestConfig = {
+      method: "get",
+      url: LUXDROP_API_BASE_URL,
+      params: params,
+      timeout: 30000,
+      headers: {
+        "x-api-key": API_KEY,
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Accept": "application/json",
+      },
+    };
+
+    if (proxyAgent) {
+      config.httpsAgent = proxyAgent;
+      config.httpAgent = proxyAgent;
+    }
+
+    const response = await axios(config);
+
+    // Process response data
+    const processedData = processApiResponse(
+      response.data,
       periodYear,
       periodMonth,
       periodLabel,
-      API_KEY,
-      proxyAgent
+      startDateISO,
+      endDateISO
     );
 
+    // Store in database cache
+    const expiresAt = new Date(now.getTime() + CACHE_TTL_MS);
+    const etag = `W/"${Buffer.from(JSON.stringify(processedData)).toString('base64').substring(0, 16)}"`;
+
+    await prisma.leaderboardCache.upsert({
+      where: {
+        source_cacheKey: {
+          source: 'luxdrop',
+          cacheKey: cacheKey,
+        },
+      },
+      create: {
+        source: 'luxdrop',
+        cacheKey: cacheKey,
+        data: processedData as any,
+        period: {
+          month: processedData.period.month,
+          year: processedData.period.year,
+          period: processedData.period.period,
+          startDate: processedData.period.startDate,
+          endDate: processedData.period.endDate,
+          note: processedData.period.note,
+        },
+        etag: etag,
+        expiresAt: expiresAt,
+        fetchedAt: now,
+      },
+      update: {
+        data: processedData as any,
+        period: {
+          month: processedData.period.month,
+          year: processedData.period.year,
+          period: processedData.period.period,
+          startDate: processedData.period.startDate,
+          endDate: processedData.period.endDate,
+          note: processedData.period.note,
+        },
+        etag: etag,
+        expiresAt: expiresAt,
+        fetchedAt: now,
+      },
+    });
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[LuxdropProxy] Success: ${processedData.data.length} entries processed and cached`);
+    }
+
     res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=900, max-age=60");
-    res.setHeader("ETag", cachedResponse.etag);
-    res.status(200).json(cachedResponse.data);
+    res.setHeader("Cache-Tag", "leaderboard,luxdrop");
+    res.setHeader("ETag", etag);
+    res.status(200).json(processedData);
 
   } catch (error: any) {
     const statusCode = error.response?.status || 500;
     const errorMessage = error.response?.data?.message || error.message || "Unknown error";
 
-    // Handle 429 Rate Limit with stale-on-error
+    // If API fails but we have stale cache, return stale cache
+    if (cached) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[LuxdropProxy] API error ${statusCode}, returning stale cache`);
+      }
+      const staleData = { ...(cached.data as unknown as LeaderboardData), stale: true };
+      res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=900, max-age=60");
+      res.setHeader("Cache-Tag", "leaderboard,luxdrop");
+      if (cached.etag) {
+        res.setHeader("ETag", cached.etag);
+      }
+      res.status(200).json(staleData);
+      return;
+    }
+
+    // Handle 429 Rate Limit
     if (statusCode === 429) {
       const retryAfter = parseRetryAfter(error.response?.headers["retry-after"]);
-
-      // Check for stale cache
-      if (cached && now < cached.staleAt) {
-        const staleData = { ...cached.data, stale: true };
-        res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=900, max-age=60");
-        res.setHeader("ETag", cached.etag);
-        res.setHeader("Retry-After", retryAfter.toString());
-        res.status(200).json(staleData);
-        return;
-      }
-
-      // No cache available, return 429
       res.setHeader("Retry-After", retryAfter.toString());
       res.status(429).json({
         error: "Rate limit exceeded",
@@ -401,17 +380,6 @@ export default async function handler(
         timestamp: new Date().toISOString()
       });
       return;
-    }
-
-    // Handle 5xx errors with stale-on-error
-    if (statusCode >= 500) {
-      if (cached && now < cached.staleAt) {
-        const staleData = { ...cached.data, stale: true };
-        res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=900, max-age=60");
-        res.setHeader("ETag", cached.etag);
-        res.status(200).json(staleData);
-        return;
-      }
     }
 
     // Log error

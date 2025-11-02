@@ -1,4 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { prisma } from "@/lib/prisma";
+
+// Cache TTL: 10 minutes
+const CACHE_TTL_MS = 10 * 60 * 1000;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -49,6 +53,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const fromParam = formatDate(fromDate);
     const toParam = formatDate(toDate);
+    const cacheKey = `${fromParam}|${toParam}`;
+
+    // Check database cache first
+    const cached = await prisma.leaderboardCache.findUnique({
+      where: {
+        source_cacheKey: {
+          source: 'razed',
+          cacheKey: cacheKey,
+        },
+      },
+    });
+
+    // If cache exists and is still fresh, return from database
+    if (cached && cached.expiresAt > now) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[RazedProxy] Returning cached data from database (expires in ${Math.round((cached.expiresAt.getTime() - now.getTime()) / 1000 / 60)} minutes)`);
+      }
+      
+      res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=600');
+      res.setHeader('Cache-Tag', 'leaderboard,razed');
+      res.setHeader('Last-Modified', cached.fetchedAt.toUTCString());
+      
+      return res.status(200).json(cached.data as any);
+    }
+
+    // Cache expired or missing - fetch from API
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[RazedProxy] Cache expired or missing, fetching from API...`);
+    }
 
     // Construct URL with query parameters (GET request, not POST)
     const baseUrl = API_URL.includes('?') ? API_URL.split('?')[0] : API_URL;
@@ -71,25 +104,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       headers["Cookie"] = cloudflareCookie;
     }
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[RazedProxy] URL: ${urlWithParams.substring(0, 150)}...`);
-      console.log(`[RazedProxy] Cookie present: ${!!cloudflareCookie}`);
-    }
-
     const response = await fetch(urlWithParams, {
       method: "GET",
       headers,
     });
 
     if (!response.ok) {
+      // If API fails but we have stale cache, return stale cache
+      if (cached) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`[RazedProxy] API error ${response.status}, returning stale cache`);
+        }
+        res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=600');
+        res.setHeader('Cache-Tag', 'leaderboard,razed');
+        res.setHeader('Last-Modified', cached.fetchedAt.toUTCString());
+        return res.status(200).json({ ...(cached.data as any), stale: true });
+      }
+
       const errorText = await response.text().catch(() => 'Unable to read error response');
       const isCloudflare = errorText.includes('Just a moment') || errorText.includes('cf-browser-verification');
       console.error(`[RazedProxy] API error ${response.status}: ${isCloudflare ? 'Cloudflare challenge' : errorText.substring(0, 200)}`);
-
-      // Log response headers for debugging
-      if (process.env.NODE_ENV === 'development') {
-        console.error(`[RazedProxy] Response headers:`, Object.fromEntries(response.headers.entries()));
-      }
 
       return res.status(response.status).json({
         error: `Razed API error: ${response.status}`,
@@ -106,6 +140,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } catch (err) {
       console.error('[RazedProxy] JSON parse error:', err);
       console.error('[RazedProxy] Response text:', textResponse.substring(0, 500));
+      
+      // If we have stale cache, return it
+      if (cached) {
+        res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=600');
+        res.setHeader('Cache-Tag', 'leaderboard,razed');
+        res.setHeader('Last-Modified', cached.fetchedAt.toUTCString());
+        return res.status(200).json({ ...(cached.data as any), stale: true });
+      }
+      
       return res.status(500).json({ error: "Invalid JSON response from API" });
     }
 
@@ -122,15 +165,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ...entry,
         username: maskUsername(entry.username),
       }));
+    }
 
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[RazedProxy] Success: ${jsonResponse.data.length} entries processed`);
-      }
+    // Store in database cache
+    const expiresAt = new Date(now.getTime() + CACHE_TTL_MS);
+    await prisma.leaderboardCache.upsert({
+      where: {
+        source_cacheKey: {
+          source: 'razed',
+          cacheKey: cacheKey,
+        },
+      },
+      create: {
+        source: 'razed',
+        cacheKey: cacheKey,
+        data: jsonResponse as any,
+        expiresAt: expiresAt,
+        fetchedAt: now,
+      },
+      update: {
+        data: jsonResponse as any,
+        expiresAt: expiresAt,
+        fetchedAt: now,
+      },
+    });
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[RazedProxy] Success: ${jsonResponse.data?.length || 0} entries processed and cached`);
     }
 
     res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=600');
     res.setHeader('Cache-Tag', 'leaderboard,razed');
-    res.setHeader('Last-Modified', new Date().toUTCString());
+    res.setHeader('Last-Modified', now.toUTCString());
 
     return res.status(200).json(jsonResponse);
   } catch (error) {
