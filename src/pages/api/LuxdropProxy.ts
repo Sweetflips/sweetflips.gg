@@ -70,7 +70,8 @@ function processApiResponse(
   periodMonth: number,
   periodLabel: string,
   startDateISO: string,
-  endDateISO: string
+  endDateISO: string,
+  maskUsernames: boolean = true
 ): LeaderboardData {
   let monthlyData: AffiliateEntry[];
 
@@ -85,8 +86,17 @@ function processApiResponse(
     throw new Error(`API response is not an array or object. Got: ${typeof apiData}`);
   }
 
+  // 🔥 Mask usernames for privacy
+  const maskUsername = (username: string) => {
+    const len = username.length;
+    if (len <= 2) return username;
+    if (len <= 4) return username[0] + '*'.repeat(len - 2) + username[len - 1];
+    return username.slice(0, 2) + '*'.repeat(len - 4) + username.slice(-2);
+  };
+
   const extractUsername = (entry: AffiliateEntry): string => {
-    return entry.username || entry.user || entry.name || entry.id || `User${entry.id || 'Unknown'}`;
+    const rawUsername = entry.username || entry.user || entry.name || entry.id || `User${entry.id || 'Unknown'}`;
+    return maskUsernames ? maskUsername(rawUsername) : rawUsername;
   };
 
   const extractWagered = (entry: AffiliateEntry): number => {
@@ -222,6 +232,14 @@ export default async function handler(
   const cacheKey = getCacheKey(affiliateCode, startDateISO, endDateISO);
   const now = new Date();
 
+  // 🔥 Mask usernames for privacy (used when returning cached data)
+  const maskUsername = (username: string) => {
+    const len = username.length;
+    if (len <= 2) return username;
+    if (len <= 4) return username[0] + '*'.repeat(len - 2) + username[len - 1];
+    return username.slice(0, 2) + '*'.repeat(len - 4) + username.slice(-2);
+  };
+
   // Check database cache first
   const cached = await prisma.luxdropLeaderboardCache.findUnique({
     where: {
@@ -248,7 +266,22 @@ export default async function handler(
       return;
     }
 
-    res.status(200).json(cached.data as unknown as LeaderboardData);
+    // Return cached data (usernames should already be masked from when data was stored)
+    // But mask again to handle any old cached data with unmasked usernames
+    const cachedData = cached.data as unknown as LeaderboardData;
+    const maskedData = {
+      ...cachedData,
+      data: cachedData.data.map(entry => {
+        // Only mask if username doesn't already contain asterisks (to avoid double-masking)
+        const username = entry.username.includes('*') ? entry.username : maskUsername(entry.username);
+        return {
+          ...entry,
+          username,
+        };
+      }),
+    };
+
+    res.status(200).json(maskedData);
     return;
   }
 
@@ -285,14 +318,15 @@ export default async function handler(
 
     const response = await axios(config);
 
-    // Process response data
+    // Process response data (mask usernames before storing)
     const processedData = processApiResponse(
       response.data,
       periodYear,
       periodMonth,
       periodLabel,
       startDateISO,
-      endDateISO
+      endDateISO,
+      true // Always mask usernames before storing in cache
     );
 
     // Store in database cache
@@ -352,13 +386,25 @@ export default async function handler(
       if (process.env.NODE_ENV === 'development') {
         console.log(`[LuxdropProxy] API error ${statusCode}, returning stale cache`);
       }
-      const staleData = { ...(cached.data as unknown as LeaderboardData), stale: true };
+      const staleData = cached.data as unknown as LeaderboardData;
+      const maskedStaleData = {
+        ...staleData,
+        data: staleData.data.map(entry => {
+          // Only mask if username doesn't already contain asterisks (to avoid double-masking)
+          const username = entry.username.includes('*') ? entry.username : maskUsername(entry.username);
+          return {
+            ...entry,
+            username,
+          };
+        }),
+        stale: true,
+      };
       res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=900, max-age=60");
       res.setHeader("Cache-Tag", "leaderboard,luxdrop");
       if (cached.etag) {
         res.setHeader("ETag", cached.etag);
       }
-      res.status(200).json(staleData);
+      res.status(200).json(maskedStaleData);
       return;
     }
 
