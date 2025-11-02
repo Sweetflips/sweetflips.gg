@@ -125,7 +125,7 @@ function processApiResponse(
       };
     })
     .sort((a, b) => b.wagered - a.wagered)
-    .slice(0, 100)
+    .slice(0, 20) // Limit to top 20 users
     .map((entry, index) => ({
       ...entry,
       rank: index + 1,
@@ -271,14 +271,16 @@ export default async function handler(
     const cachedData = cached.data as unknown as LeaderboardData;
     const maskedData = {
       ...cachedData,
-      data: cachedData.data.map(entry => {
-        // Only mask if username doesn't already contain asterisks (to avoid double-masking)
-        const username = entry.username.includes('*') ? entry.username : maskUsername(entry.username);
-        return {
-          ...entry,
-          username,
-        };
-      }),
+      data: cachedData.data
+        .slice(0, 20) // Limit to top 20 users
+        .map(entry => {
+          // Only mask if username doesn't already contain asterisks (to avoid double-masking)
+          const username = entry.username.includes('*') ? entry.username : maskUsername(entry.username);
+          return {
+            ...entry,
+            username,
+          };
+        }),
     };
 
     res.status(200).json(maskedData);
@@ -389,14 +391,16 @@ export default async function handler(
       const staleData = cached.data as unknown as LeaderboardData;
       const maskedStaleData = {
         ...staleData,
-        data: staleData.data.map(entry => {
-          // Only mask if username doesn't already contain asterisks (to avoid double-masking)
-          const username = entry.username.includes('*') ? entry.username : maskUsername(entry.username);
-          return {
-            ...entry,
-            username,
-          };
-        }),
+        data: staleData.data
+          .slice(0, 20) // Limit to top 20 users
+          .map(entry => {
+            // Only mask if username doesn't already contain asterisks (to avoid double-masking)
+            const username = entry.username.includes('*') ? entry.username : maskUsername(entry.username);
+            return {
+              ...entry,
+              username,
+            };
+          }),
         stale: true,
       };
       res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=900, max-age=60");

@@ -68,11 +68,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         console.log(`[RazedProxy] Returning cached data from database (expires in ${Math.round((cached.expiresAt.getTime() - now.getTime()) / 1000 / 60)} minutes)`);
       }
 
+      const cachedData = cached.data as any;
+      // Limit to top 20 users
+      const limitedData = Array.isArray(cachedData.data) 
+        ? { ...cachedData, data: cachedData.data.slice(0, 20) }
+        : cachedData;
+
       res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=600');
       res.setHeader('Cache-Tag', 'leaderboard,razed');
       res.setHeader('Last-Modified', cached.fetchedAt.toUTCString());
 
-      return res.status(200).json(cached.data as any);
+      return res.status(200).json(limitedData);
     }
 
     // Cache expired or missing - fetch from API
@@ -82,7 +88,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Construct URL with query parameters (GET request, not POST)
     const baseUrl = API_URL.includes('?') ? API_URL.split('?')[0] : API_URL;
-    const urlWithParams = `${baseUrl}?referral_code=${encodeURIComponent(REFERRAL_CODE)}&from=${encodeURIComponent(fromParam)}&to=${encodeURIComponent(toParam)}&top=50`;
+    const urlWithParams = `${baseUrl}?referral_code=${encodeURIComponent(REFERRAL_CODE)}&from=${encodeURIComponent(fromParam)}&to=${encodeURIComponent(toParam)}&top=20`;
 
     // Get Cloudflare cookie from env if available
     const cloudflareCookie = process.env.RAZED_CLOUDFLARE_COOKIE;
@@ -112,10 +118,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (process.env.NODE_ENV === 'development') {
           console.log(`[RazedProxy] API error ${response.status}, returning stale cache`);
         }
+        const cachedData = cached.data as any;
+        // Limit to top 20 users
+        const limitedStaleData = Array.isArray(cachedData.data) 
+          ? { ...cachedData, data: cachedData.data.slice(0, 20), stale: true }
+          : { ...cachedData, stale: true };
+        
         res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=600');
         res.setHeader('Cache-Tag', 'leaderboard,razed');
         res.setHeader('Last-Modified', cached.fetchedAt.toUTCString());
-        return res.status(200).json({ ...(cached.data as any), stale: true });
+        return res.status(200).json(limitedStaleData);
       }
 
       const errorText = await response.text().catch(() => 'Unable to read error response');
@@ -140,10 +152,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // If we have stale cache, return it
       if (cached) {
+        const cachedData = cached.data as any;
+        // Limit to top 20 users
+        const limitedStaleData = Array.isArray(cachedData.data) 
+          ? { ...cachedData, data: cachedData.data.slice(0, 20), stale: true }
+          : { ...cachedData, stale: true };
+        
         res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=600');
         res.setHeader('Cache-Tag', 'leaderboard,razed');
         res.setHeader('Last-Modified', cached.fetchedAt.toUTCString());
-        return res.status(200).json({ ...(cached.data as any), stale: true });
+        return res.status(200).json(limitedStaleData);
       }
 
       return res.status(500).json({ error: "Invalid JSON response from API" });
@@ -158,7 +176,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     };
 
     if (Array.isArray(jsonResponse.data)) {
-      jsonResponse.data = jsonResponse.data.map((entry: any) => ({
+      // Limit to top 20 users and mask usernames
+      jsonResponse.data = jsonResponse.data.slice(0, 20).map((entry: any) => ({
         ...entry,
         username: maskUsername(entry.username),
       }));
