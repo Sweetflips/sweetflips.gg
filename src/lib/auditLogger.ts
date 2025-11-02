@@ -165,14 +165,14 @@ export async function checkSuspiciousActivity(
   const identicalTransactions = recentTransactions.filter(
     (t) => {
       if (t.transactionType !== transactionType) return false;
-      
+
       // Convert both amounts to numbers for comparison
-      const tAmount = typeof t.amount === 'number' 
-        ? t.amount 
-        : typeof t.amount === 'string' 
-          ? parseFloat(t.amount) 
+      const tAmount = typeof t.amount === 'number'
+        ? t.amount
+        : typeof t.amount === 'string'
+          ? parseFloat(t.amount)
           : t.amount.toNumber();
-      
+
       return tAmount === amount;
     }
   );
