@@ -9,7 +9,8 @@ export function HeaderLiveStatus() {
   useEffect(() => {
     async function fetchStatus() {
       try {
-        const res = await fetch('/api/kick/channel-status?channel=sweetflips');
+        const channelName = process.env.NEXT_PUBLIC_KICK_CHANNEL_NAME || "sweetflips";
+        const res = await fetch(`/api/kick/channel-status?channel=${encodeURIComponent(channelName)}`);
         const data = await res.json();
         setIsLive(data.livestream?.is_live ?? false);
       } catch (err) {
@@ -25,9 +26,11 @@ export function HeaderLiveStatus() {
 
   if (isLive === null) return null;
 
+  const kickChannelUrl = process.env.NEXT_PUBLIC_KICK_CHANNEL_URL || "https://kick.com/sweetflips";
+
   return (
     <Link
-      href="https://kick.com/sweetflips"
+      href={kickChannelUrl}
       target="_blank"
       rel="noopener noreferrer"
       className="block w-full px-4 mt-1"

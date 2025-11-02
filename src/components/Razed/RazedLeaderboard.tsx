@@ -1,10 +1,8 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
-import Loader from "@/components/common/Loader";
 import { Timer } from "@/app/ui/timer/Timer";
-import Footer from "@/components/Footer/Footer";
-import { DateTime } from "luxon";
+import Loader from "@/components/common/Loader";
 import Image from "next/image";
+import React, { useEffect, useRef, useState } from "react";
 
 const API_PROXY_URL = "/api/RazedProxy";
 

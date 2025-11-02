@@ -12,6 +12,9 @@ type LeaderboardEntry = {
   username: string;
   wagered: number;
   reward: number;
+  rank?: number;
+  rawWagered?: number | string;
+  rawReward?: number | string;
 };
 
 const rewardMapping: { [key: number]: number } = {
@@ -109,6 +112,7 @@ const LuxdropLeaderboard: React.FC = () => {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isStale, setIsStale] = useState<boolean>(false);
 
   // Function to mask usernames (copied from RazedLeaderboard)
   const maskUsername = (username: string) => {
@@ -131,28 +135,23 @@ const LuxdropLeaderboard: React.FC = () => {
 
   useEffect(() => {
     let isMounted = true;
-    let retryCount = 0;
+    const retryCountRef = { current: 0 };
+    const retryTimeoutRef: { current: NodeJS.Timeout | null } = { current: null };
     const MAX_RETRIES = 3;
-    const RETRY_DELAY = 2000; // 2 seconds
+    const RETRY_DELAY = 5000; // 5 seconds
 
     const fetchData = async (showLoader = false, isRetry = false) => {
       if (showLoader && !isRetry) {
         setLoading(true);
       }
-      if (isMounted) {
+      if (!isRetry) {
         setError(null);
+        retryCountRef.current = 0;
       }
 
-      const cacheBuster = `?t=${Date.now()}&_r=${Math.random()}`;
-      const apiUrl = `${API_PROXY_URL}${cacheBuster}`;
-
       try {
-        const response = await fetch(apiUrl, {
+        const response = await fetch(API_PROXY_URL, {
           method: 'GET',
-          headers: {
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache',
-          },
         });
 
         if (!response.ok) {
@@ -164,6 +163,26 @@ const LuxdropLeaderboard: React.FC = () => {
           }
           const error = new Error(`API returned ${response.status}: ${errorData.message || response.statusText}`);
           (error as any).status = response.status;
+
+          // Handle rate limiting (429) and server errors (500+) - retry automatically
+          if ((response.status === 429 || response.status >= 500) && retryCountRef.current < MAX_RETRIES) {
+            retryCountRef.current++;
+            console.log(`[LuxdropLeaderboard] ${response.status === 429 ? 'Rate limited' : 'Server error'}, retrying in ${RETRY_DELAY * retryCountRef.current}ms (attempt ${retryCountRef.current}/${MAX_RETRIES})`);
+
+            if (retryTimeoutRef.current) {
+              clearTimeout(retryTimeoutRef.current);
+            }
+
+            retryTimeoutRef.current = setTimeout(() => {
+              if (isMounted) {
+                fetchData(false, true);
+              }
+            }, RETRY_DELAY * retryCountRef.current);
+
+            // Don't show error during retry, just keep loading
+            return;
+          }
+
           throw error;
         }
 
@@ -172,58 +191,72 @@ const LuxdropLeaderboard: React.FC = () => {
           throw new Error("Invalid data format from API");
         }
 
+        // Check if data is stale (from cache)
+        const stale = result.stale === true;
+
         const processedData = result.data
           .filter((user: any) => user.username)
           .slice(0, 20)
           .map((user: any, index: number) => {
-            const wageredRaw = user.wagered;
-            const rewardRaw = user.reward;
-            const wagered = parseCurrencyAmount(wageredRaw);
-            const rewardFromApi = parseCurrencyAmount(rewardRaw);
+            // Use rank from API if available, otherwise calculate from index
+            const rank = user.rank !== undefined ? user.rank : index + 1;
 
+            // Use rawWagered if available, otherwise use wagered
+            const wageredRaw = user.rawWagered !== undefined ? user.rawWagered : user.wagered;
+            const rewardRaw = user.rawReward !== undefined ? user.rawReward : user.reward;
+
+            // Parse currency amounts - handle both string and number formats
+            const wagered = typeof wageredRaw === 'number' ? wageredRaw : parseCurrencyAmount(wageredRaw);
+            const rewardFromApi = typeof rewardRaw === 'number' ? rewardRaw : parseCurrencyAmount(rewardRaw);
+
+            // Use reward from API if available and > 0, otherwise use reward mapping
             const reward =
-              rewardFromApi > 0 ? rewardFromApi : rewardMapping[index + 1] || 0;
+              rewardFromApi > 0 ? rewardFromApi : rewardMapping[rank] || 0;
 
             return {
               username: maskUsername(user.username),
               wagered,
               reward,
+              rank,
+              rawWagered: wageredRaw,
+              rawReward: rewardRaw,
             };
           });
 
         if (isMounted) {
           setData(processedData);
+          setIsStale(stale);
           setLoading(false);
-          retryCount = 0; // Reset retry count on success
+          setError(null);
+          retryCountRef.current = 0; // Reset retry count on success
         }
       } catch (err: any) {
         console.error("Luxdrop API error:", err.message);
 
-        // Retry logic for transient errors (500, 502, 503, 504)
-        if (isMounted && retryCount < MAX_RETRIES && err.status >= 500) {
-          retryCount++;
-          console.log(`Retrying Luxdrop API call (attempt ${retryCount}/${MAX_RETRIES})...`);
-          setTimeout(() => {
-            if (isMounted) {
-              fetchData(false, true);
-            }
-          }, RETRY_DELAY * retryCount);
-          return;
-        }
-
+        // Only show error if we've exhausted retries
         if (isMounted) {
-          setError(`Unable to load leaderboard: ${err.message}`);
-          setLoading(false);
+          if (retryCountRef.current >= MAX_RETRIES) {
+            setError(`Unable to load leaderboard: ${err.message}`);
+            setLoading(false);
+          } else if (retryCountRef.current === 0) {
+            // Show initial error but will retry
+            setError(`Unable to load leaderboard: ${err.message}`);
+            setLoading(true); // Keep loading during retries
+          }
         }
       }
     };
 
     fetchData(true);
-    const refreshInterval = window.setInterval(() => fetchData(false), 60_000);
+    // Refresh every 5 minutes since server caches for 5 minutes
+    const refreshInterval = window.setInterval(() => fetchData(false), 300_000);
 
     return () => {
       isMounted = false;
       window.clearInterval(refreshInterval);
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -232,14 +265,8 @@ const LuxdropLeaderboard: React.FC = () => {
     setLoading(true);
     const fetchData = async () => {
       try {
-        const cacheBuster = `?t=${Date.now()}&_r=${Math.random()}`;
-        const apiUrl = `${API_PROXY_URL}${cacheBuster}`;
-        const response = await fetch(apiUrl, {
+        const response = await fetch(API_PROXY_URL, {
           method: 'GET',
-          headers: {
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache',
-          },
         });
 
         if (!response.ok) {
@@ -257,26 +284,40 @@ const LuxdropLeaderboard: React.FC = () => {
           throw new Error("Invalid data format from API");
         }
 
+        // Check if data is stale (from cache)
+        const stale = result.stale === true;
+
         const processedData = result.data
           .filter((user: any) => user.username)
           .slice(0, 20)
           .map((user: any, index: number) => {
-            const wageredRaw = user.wagered;
-            const rewardRaw = user.reward;
-            const wagered = parseCurrencyAmount(wageredRaw);
-            const rewardFromApi = parseCurrencyAmount(rewardRaw);
+            // Use rank from API if available, otherwise calculate from index
+            const rank = user.rank !== undefined ? user.rank : index + 1;
 
+            // Use rawWagered if available, otherwise use wagered
+            const wageredRaw = user.rawWagered !== undefined ? user.rawWagered : user.wagered;
+            const rewardRaw = user.rawReward !== undefined ? user.rawReward : user.reward;
+
+            // Parse currency amounts - handle both string and number formats
+            const wagered = typeof wageredRaw === 'number' ? wageredRaw : parseCurrencyAmount(wageredRaw);
+            const rewardFromApi = typeof rewardRaw === 'number' ? rewardRaw : parseCurrencyAmount(rewardRaw);
+
+            // Use reward from API if available and > 0, otherwise use reward mapping
             const reward =
-              rewardFromApi > 0 ? rewardFromApi : rewardMapping[index + 1] || 0;
+              rewardFromApi > 0 ? rewardFromApi : rewardMapping[rank] || 0;
 
             return {
               username: maskUsername(user.username),
               wagered,
               reward,
+              rank,
+              rawWagered: wageredRaw,
+              rawReward: rewardRaw,
             };
           });
 
         setData(processedData);
+        setIsStale(stale);
         setLoading(false);
       } catch (err: any) {
         setError(`Unable to load leaderboard: ${err.message}`);
@@ -287,7 +328,7 @@ const LuxdropLeaderboard: React.FC = () => {
   };
 
   if (loading) return <Loader />;
-  if (error)
+  if (error && data.length === 0)
     return (
       <div className="text-red-500 p-4 text-center">
         <p className="mb-4">Error: {error}</p>
@@ -413,10 +454,10 @@ const LuxdropLeaderboard: React.FC = () => {
           </b>
           <div className="mt-4 flex flex-col items-center justify-center sm:flex-row sm:space-x-4">
             <Image
-              src="/images/logo/luxdrop_logo.png" // Verified path
+              src="/images/logo/luxdrop_logo.svg"
               alt="Luxdrop Logo"
-              width={280} // Adjusted for SVG aspect ratio
-              height={53} // Adjusted for SVG aspect ratio
+              width={280}
+              height={53}
               className="mb-3 transition-all duration-300 sm:mb-0"
             />
             <b className="text-4xl text-white sm:text-2xl md:text-3xl lg:mt-4 lg:text-3xl">
@@ -432,6 +473,13 @@ const LuxdropLeaderboard: React.FC = () => {
       <div className="mb-4 mt-12 flex flex-col items-center text-2xl font-bold">
       Bi-weekly Leaderboard ends in
       </div>
+      {isStale && (
+        <div className="mb-2 flex justify-center">
+          <p className="text-sm text-yellow-400 opacity-75">
+            ⚠️ Data may be slightly delayed due to rate limits
+          </p>
+        </div>
+      )}
       {countDownDate && (
         <div className="relative mb-15 flex justify-center space-x-4">
           <div

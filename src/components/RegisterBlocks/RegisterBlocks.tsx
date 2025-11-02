@@ -1,15 +1,21 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
 import Image from "next/image";
+import React from "react";
 
 const RegisterBlocks: React.FC = () => {
+  const razedReferralCode = process.env.NEXT_PUBLIC_RAZED_REFERRAL_CODE || "SweetFlips";
+  const luxdropAffiliateCode = process.env.NEXT_PUBLIC_LUXDROP_AFFILIATE_CODE || "sweetflips";
+  const kickChannelUrl = process.env.NEXT_PUBLIC_KICK_CHANNEL_URL || "https://kick.com/sweetflips";
+  const razedUrl = `https://www.razed.com/signup/?raf=${encodeURIComponent(razedReferralCode)}`;
+  const luxdropUrl = `https://luxdrop.com/?r=${encodeURIComponent(luxdropAffiliateCode)}`;
+
   return (
     <div className="mt-8 p-4 text-white">
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-center space-y-8 md:flex-row md:space-x-4 md:space-y-0">
         {/* Razed */}
         <a
           target="_blank"
-          href="https://www.razed.com/signup/?raf=SweetFlips"
+          href={razedUrl}
           className="w-full transition-transform duration-200 ease-in hover:scale-105 md:w-1/3"
         >
           <div className="RegisterBlocks-inner mx-2 flex h-44 flex-col justify-center rounded-lg border border-graydark p-4 text-center">
@@ -26,12 +32,12 @@ const RegisterBlocks: React.FC = () => {
               Create an account on{" "}
               <a
                 target="_blank"
-                href="https://www.razed.com/signup/?raf=SweetFlips"
+                href={razedUrl}
                 className="font-extrabold text-[#4D4EE0]"
               >
                 Razed
               </a>
-              , click on register and use code sweetflips
+              , click on register and use code {razedReferralCode.toLowerCase()}
             </p>
           </div>
         </a>
@@ -39,25 +45,25 @@ const RegisterBlocks: React.FC = () => {
         {/* Luxdrop */}
         <a
           target="_blank"
-          href="https://luxdrop.com/?r=sweetflips"
+          href={luxdropUrl}
           className="w-full transition-transform duration-200 ease-in hover:scale-105 md:w-1/3"
         >
           <div className="RegisterBlocks-inner mx-2 flex h-44 flex-col justify-center rounded-lg border border-graydark p-4 text-center">
             <div className="flex justify-center">
               <Image
-                src="/images/logo/luxdrop_logo.png"
+                src="/images/logo/luxdrop_logo.svg"
                 alt="Luxdrop Logo"
-                className=""
+                className="mb-3 transition-all duration-300 sm:mb-0"
                 width={280}
                 height={53}
               />
             </div>
             <p className="mb-4 mt-4 text-sm">
-              Use code sweetflips on every deposit you do on{" "}
+              Use code {luxdropAffiliateCode} on every deposit you do on{" "}
               <a
                 target="_blank"
-                href="https://luxdrop.com/?r=sweetflips"
-                className="font-extrabold text-[rgb(223,86,255)]"
+                href={luxdropUrl}
+                className="font-extrabold text-[#1BB2FF]"
               >
                 Luxdrop
               </a>
@@ -68,7 +74,7 @@ const RegisterBlocks: React.FC = () => {
         {/* Kick */}
         <a
           target="_blank"
-          href="https://kick.com/sweetflips"
+          href={kickChannelUrl}
           className="w-full transition-transform duration-200 ease-in hover:scale-105 md:w-1/3"
         >
           <div className="RegisterBlocks-inner mx-2 flex h-44 flex-col justify-center rounded-lg border border-graydark p-4 text-center">

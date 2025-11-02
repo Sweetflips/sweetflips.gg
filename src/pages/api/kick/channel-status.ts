@@ -6,7 +6,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const channel = (req.query.channel as string) || "sweetflips";
+  const channel = (req.query.channel as string) || process.env.KICK_CHANNEL_NAME || "sweetflips";
 
   try {
     const upstream = await fetch(`https://kick.com/api/v2/channels/${encodeURIComponent(channel)}`, {

@@ -16,9 +16,20 @@ This document lists all required and optional environment variables for the Swee
 #### Razed API
 - `BASE_RAZED_API_URL` - Base URL for Razed API endpoint
 - `AUTH_RAZED` - Authentication/referral key for Razed API
+- `RAZED_REFERRAL_CODE` - Referral code used in API requests (default: "SweetFlips")
+- `NEXT_PUBLIC_RAZED_REFERRAL_CODE` - Referral code for client-side components (default: "SweetFlips")
+- `RAZED_CLOUDFLARE_COOKIE` - Optional Cloudflare cookie for bypassing bot protection
 
 #### Luxdrop API
 - `LUXDROP_API_KEY` - API key for Luxdrop affiliate API
+- `LUXDROP_API_BASE_URL` - Base URL for Luxdrop API (default: "https://api.luxdrop.com/external/affiliates")
+- `LUXDROP_AFFILIATE_CODE` - Affiliate code used in API requests (default: "sweetflips")
+- `NEXT_PUBLIC_LUXDROP_AFFILIATE_CODE` - Affiliate code for client-side components (default: "sweetflips")
+
+#### Kick Streaming
+- `KICK_CHANNEL_NAME` - Kick channel name for API requests (default: "sweetflips")
+- `NEXT_PUBLIC_KICK_CHANNEL_NAME` - Kick channel name for client-side components (default: "sweetflips")
+- `NEXT_PUBLIC_KICK_CHANNEL_URL` - Kick channel URL for links (default: "https://kick.com/sweetflips")
 
 #### Cron Jobs
 - `CRON_SECRET` - Secret token for authenticating cron job requests
@@ -58,6 +69,16 @@ The application validates critical environment variables at runtime:
 - API routes check for `BASE_RAZED_API_URL` and `AUTH_RAZED` before making requests
 - API routes check for `LUXDROP_API_KEY` before making Luxdrop API requests
 - Database connection is validated by Prisma during initialization
+
+## Security Notes
+
+**IMPORTANT:** All sensitive values are now stored in environment variables and never hardcoded in the source code:
+
+- API keys, secrets, and authentication tokens are read from environment variables
+- Referral codes and affiliate codes are configurable via environment variables
+- API endpoints are configurable via environment variables
+- Client-side public values use `NEXT_PUBLIC_` prefix and are safe to expose to the browser
+- Server-side sensitive values should never be prefixed with `NEXT_PUBLIC_`
 
 ## Notes
 

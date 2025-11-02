@@ -4,6 +4,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const API_URL = process.env.BASE_RAZED_API_URL as string;
     const REFERRAL_KEY = process.env.AUTH_RAZED as string;
+    const REFERRAL_CODE = process.env.RAZED_REFERRAL_CODE || "SweetFlips";
 
     if (!API_URL || !REFERRAL_KEY) {
       return res.status(500).json({ error: "Missing BASE_RAZED_API_URL or AUTH_RAZED in environment variables" });
@@ -31,7 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Check if special period is configured and active
     if (SPECIAL_PERIOD_START_DATE && SPECIAL_PERIOD_END_DATE &&
-        now >= SPECIAL_PERIOD_START_DATE && now <= SPECIAL_PERIOD_END_DATE) {
+      now >= SPECIAL_PERIOD_START_DATE && now <= SPECIAL_PERIOD_END_DATE) {
       fromDate = SPECIAL_PERIOD_START_DATE;
       toDate = SPECIAL_PERIOD_END_DATE;
     } else {
@@ -49,43 +50,88 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const fromParam = formatDate(fromDate);
     const toParam = formatDate(toDate);
 
-    const urlWithParams = `${API_URL}&from=${encodeURIComponent(fromParam)}&to=${encodeURIComponent(toParam)}&top=50`;
+    // Construct URL with query parameters (GET request, not POST)
+    const baseUrl = API_URL.includes('?') ? API_URL.split('?')[0] : API_URL;
+    const urlWithParams = `${baseUrl}?referral_code=${encodeURIComponent(REFERRAL_CODE)}&from=${encodeURIComponent(fromParam)}&to=${encodeURIComponent(toParam)}&top=50`;
+
+    // Get Cloudflare cookie from env if available
+    const cloudflareCookie = process.env.RAZED_CLOUDFLARE_COOKIE;
+
+    const headers: Record<string, string> = {
+      "X-Referral-Key": REFERRAL_KEY,
+      "Accept": "application/json",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Accept-Language": "en-US,en;q=0.9",
+      "Accept-Encoding": "gzip, deflate, br",
+      "Referer": "https://razed.com/",
+      "Origin": "https://razed.com",
+    };
+
+    if (cloudflareCookie) {
+      headers["Cookie"] = cloudflareCookie;
+    }
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[RazedProxy] URL: ${urlWithParams.substring(0, 150)}...`);
+      console.log(`[RazedProxy] Cookie present: ${!!cloudflareCookie}`);
+    }
 
     const response = await fetch(urlWithParams, {
       method: "GET",
-      headers: {
-        "X-Referral-Key": REFERRAL_KEY,
-        "Cache-Control": "no-cache",
-      },
+      headers,
     });
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => 'Unable to read error response');
+      const isCloudflare = errorText.includes('Just a moment') || errorText.includes('cf-browser-verification');
+      console.error(`[RazedProxy] API error ${response.status}: ${isCloudflare ? 'Cloudflare challenge' : errorText.substring(0, 200)}`);
+
+      // Log response headers for debugging
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`[RazedProxy] Response headers:`, Object.fromEntries(response.headers.entries()));
+      }
+
+      return res.status(response.status).json({
+        error: `Razed API error: ${response.status}`,
+        message: response.status === 429 || isCloudflare ? "Rate limited by Cloudflare. Please try again later." : errorText.substring(0, 200),
+        isCloudflare
+      });
+    }
 
     const textResponse = await response.text();
 
+    let jsonResponse;
     try {
-      const jsonResponse = JSON.parse(textResponse);
-
-      // 🔥 Mask usernames before sending to client
-      const maskUsername = (username: string) => {
-        const len = username.length;
-        if (len <= 2) return username;
-        if (len <= 4) return username[0] + '*'.repeat(len - 2) + username[len - 1];
-        return username.slice(0, 2) + '*'.repeat(len - 4) + username.slice(-2);
-      };
-
-      if (Array.isArray(jsonResponse.data)) {
-        jsonResponse.data = jsonResponse.data.map((entry: any) => ({
-          ...entry,
-          username: maskUsername(entry.username),
-        }));
-      }
-
-      res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=600');
-      res.setHeader('Last-Modified', new Date().toUTCString());
-
-      return res.status(200).json(jsonResponse);
+      jsonResponse = JSON.parse(textResponse);
     } catch (err) {
+      console.error('[RazedProxy] JSON parse error:', err);
+      console.error('[RazedProxy] Response text:', textResponse.substring(0, 500));
       return res.status(500).json({ error: "Invalid JSON response from API" });
     }
+
+    // 🔥 Mask usernames before sending to client
+    const maskUsername = (username: string) => {
+      const len = username.length;
+      if (len <= 2) return username;
+      if (len <= 4) return username[0] + '*'.repeat(len - 2) + username[len - 1];
+      return username.slice(0, 2) + '*'.repeat(len - 4) + username.slice(-2);
+    };
+
+    if (Array.isArray(jsonResponse.data)) {
+      jsonResponse.data = jsonResponse.data.map((entry: any) => ({
+        ...entry,
+        username: maskUsername(entry.username),
+      }));
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[RazedProxy] Success: ${jsonResponse.data.length} entries processed`);
+      }
+    }
+
+    res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=600');
+    res.setHeader('Last-Modified', new Date().toUTCString());
+
+    return res.status(200).json(jsonResponse);
   } catch (error) {
     console.error("RazedProxy error:", error);
     return res.status(500).json({

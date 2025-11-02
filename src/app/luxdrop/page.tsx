@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
-import { createMetadata } from "@/../lib/metadata";
+import { createMetadata } from "@/lib/metadata";
 import LuxdropLeaderboard from "@/components/Luxdrop/LuxdropLeaderboard"; // Corrected import
 
 export const metadata: Metadata = createMetadata({

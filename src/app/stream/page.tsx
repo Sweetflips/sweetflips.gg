@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import Image from "next/image";
 import BigWins from "@/components/BigWins/BigWins";
-import { createMetadata } from "@/../lib/metadata";
+import { createMetadata } from "@/lib/metadata";
 import StreamScheduleTabs from "@/components/StreamScheduleTabs/StreamScheduleTabs";
 
 export const metadata: Metadata = createMetadata({
