@@ -112,7 +112,6 @@ const LuxdropLeaderboard: React.FC = () => {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [isStale, setIsStale] = useState<boolean>(false);
 
   // Function to mask usernames (copied from RazedLeaderboard)
   const maskUsername = (username: string) => {
@@ -191,9 +190,6 @@ const LuxdropLeaderboard: React.FC = () => {
           throw new Error("Invalid data format from API");
         }
 
-        // Check if data is stale (from cache)
-        const stale = result.stale === true;
-
         const processedData = result.data
           .filter((user: any) => user.username)
           .slice(0, 20)
@@ -225,7 +221,6 @@ const LuxdropLeaderboard: React.FC = () => {
 
         if (isMounted) {
           setData(processedData);
-          setIsStale(stale);
           setLoading(false);
           setError(null);
           retryCountRef.current = 0; // Reset retry count on success
@@ -284,9 +279,6 @@ const LuxdropLeaderboard: React.FC = () => {
           throw new Error("Invalid data format from API");
         }
 
-        // Check if data is stale (from cache)
-        const stale = result.stale === true;
-
         const processedData = result.data
           .filter((user: any) => user.username)
           .slice(0, 20)
@@ -317,7 +309,6 @@ const LuxdropLeaderboard: React.FC = () => {
           });
 
         setData(processedData);
-        setIsStale(stale);
         setLoading(false);
       } catch (err: any) {
         setError(`Unable to load leaderboard: ${err.message}`);
@@ -473,13 +464,6 @@ const LuxdropLeaderboard: React.FC = () => {
       <div className="mb-4 mt-12 flex flex-col items-center text-2xl font-bold">
       Bi-weekly Leaderboard ends in
       </div>
-      {isStale && (
-        <div className="mb-2 flex justify-center">
-          <p className="text-sm text-yellow-400 opacity-75">
-            ⚠️ Data may be slightly delayed due to rate limits
-          </p>
-        </div>
-      )}
       {countDownDate && (
         <div className="relative mb-15 flex justify-center space-x-4">
           <div

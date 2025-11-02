@@ -70,7 +70,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const cachedData = cached.data as any;
       // Limit to top 20 users
-      const limitedData = Array.isArray(cachedData.data) 
+      const limitedData = Array.isArray(cachedData.data)
         ? { ...cachedData, data: cachedData.data.slice(0, 20) }
         : cachedData;
 
@@ -120,10 +120,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
         const cachedData = cached.data as any;
         // Limit to top 20 users
-        const limitedStaleData = Array.isArray(cachedData.data) 
+        const limitedStaleData = Array.isArray(cachedData.data)
           ? { ...cachedData, data: cachedData.data.slice(0, 20), stale: true }
           : { ...cachedData, stale: true };
-        
+
         res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=600');
         res.setHeader('Cache-Tag', 'leaderboard,razed');
         res.setHeader('Last-Modified', cached.fetchedAt.toUTCString());
@@ -154,10 +154,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (cached) {
         const cachedData = cached.data as any;
         // Limit to top 20 users
-        const limitedStaleData = Array.isArray(cachedData.data) 
+        const limitedStaleData = Array.isArray(cachedData.data)
           ? { ...cachedData, data: cachedData.data.slice(0, 20), stale: true }
           : { ...cachedData, stale: true };
-        
+
         res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=600');
         res.setHeader('Cache-Tag', 'leaderboard,razed');
         res.setHeader('Last-Modified', cached.fetchedAt.toUTCString());
