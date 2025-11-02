@@ -163,8 +163,18 @@ export async function checkSuspiciousActivity(
 
   // Check for repeated identical transactions
   const identicalTransactions = recentTransactions.filter(
-    (t) => t.transactionType === transactionType &&
-        new Decimal(t.amount.toString()).equals(amount)
+    (t) => {
+      if (t.transactionType !== transactionType) return false;
+      
+      // Convert both amounts to numbers for comparison
+      const tAmount = typeof t.amount === 'number' 
+        ? t.amount 
+        : typeof t.amount === 'string' 
+          ? parseFloat(t.amount) 
+          : t.amount.toNumber();
+      
+      return tAmount === amount;
+    }
   );
 
   if (identicalTransactions.length > 3) {
