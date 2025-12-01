@@ -63,11 +63,31 @@ function parseRetryAfter(retryAfter: string | undefined): number {
   return 60;
 }
 
+// Calculate bi-weekly (14-day) period from anchor date
+function getBiWeeklyPeriod(anchorDate: DateTime, now: DateTime): { periodStart: DateTime; periodEnd: DateTime; periodLabel: string } {
+  // Calculate days since anchor (using start of day for both to ensure consistent calculation)
+  const anchorStart = anchorDate.startOf('day');
+  const nowStart = now.startOf('day');
+  const daysSinceAnchor = Math.floor(nowStart.diff(anchorStart, 'days').days);
+
+  // Calculate which period we're in (0-indexed)
+  const periodNumber = Math.floor(daysSinceAnchor / 14);
+
+  // Calculate period start and end dates
+  const periodStart = anchorStart.plus({ days: periodNumber * 14 });
+  const periodEnd = periodStart.plus({ days: 13, hours: 23, minutes: 59, seconds: 59 });
+
+  // Format period label: "Dec 1, 2025 – Dec 14, 2025 UTC"
+  const startFormatted = periodStart.toFormat('MMM d, yyyy');
+  const endFormatted = periodEnd.toFormat('MMM d, yyyy');
+  const periodLabel = `${startFormatted} – ${endFormatted} UTC`;
+
+  return { periodStart, periodEnd, periodLabel };
+}
+
 // Process API response into leaderboard format
 function processApiResponse(
   apiData: any,
-  periodYear: number,
-  periodMonth: number,
   periodLabel: string,
   startDateISO: string,
   endDateISO: string,
@@ -131,10 +151,15 @@ function processApiResponse(
       rank: index + 1,
     }));
 
+  // Extract year and month from start date for display
+  const startDate = DateTime.fromISO(startDateISO);
+  const periodYear = startDate.year;
+  const periodMonth = startDate.month;
+
   return {
     data: leaderboard,
     period: {
-      month: DateTime.fromObject({ month: periodMonth, year: periodYear }).toFormat('MMMM'),
+      month: startDate.toFormat('MMMM'),
       year: periodYear,
       period: periodLabel,
       startDate: startDateISO,
@@ -179,36 +204,15 @@ export default async function handler(
   }
 
   const currentTime = DateTime.utc();
-  const currentDay = currentTime.day;
-  const currentMonth = currentTime.month;
-  const currentYear = currentTime.year;
 
-  let startDate: DateTime;
-  let endDate: DateTime;
-  let periodLabel: string;
+  // Luxdrop bi-weekly period configuration - hardcoded anchor date for rolling 14-day periods
+  const anchorDate = DateTime.utc(2025, 12, 1, 0, 0, 0);
 
-  // Luxdrop period configuration - configurable via environment variables
-  const luxdropPeriodYearEnv = process.env.LUXDROP_PERIOD_YEAR;
-  const luxdropPeriodMonthEnv = process.env.LUXDROP_PERIOD_MONTH;
+  // Calculate current bi-weekly period
+  const { periodStart, periodEnd, periodLabel } = getBiWeeklyPeriod(anchorDate, currentTime);
 
-  const periodYear = luxdropPeriodYearEnv ? parseInt(luxdropPeriodYearEnv, 10) : currentYear;
-  const periodMonth = luxdropPeriodMonthEnv ? parseInt(luxdropPeriodMonthEnv, 10) : currentMonth;
-
-  if (currentMonth === periodMonth && currentYear === periodYear) {
-    if (currentDay >= 1 && currentDay <= 15) {
-      startDate = DateTime.utc(periodYear, periodMonth, 1, 0, 0, 0);
-      endDate = DateTime.utc(periodYear, periodMonth, 15, 23, 59, 59);
-      periodLabel = `${DateTime.fromObject({ month: periodMonth, year: periodYear }).toFormat('MMMM')} 1-15, ${periodYear}`;
-    } else {
-      startDate = DateTime.utc(periodYear, periodMonth, 16, 0, 0, 0);
-      endDate = DateTime.utc(periodYear, periodMonth, 30, 23, 59, 59);
-      periodLabel = `${DateTime.fromObject({ month: periodMonth, year: periodYear }).toFormat('MMMM')} 16-30, ${periodYear}`;
-    }
-  } else {
-    startDate = DateTime.utc(periodYear, periodMonth, 1, 0, 0, 0);
-    endDate = DateTime.utc(periodYear, periodMonth, 15, 23, 59, 59);
-    periodLabel = `${DateTime.fromObject({ month: periodMonth, year: periodYear }).toFormat('MMMM')} 1-15, ${periodYear}`;
-  }
+  const startDate = periodStart;
+  const endDate = periodEnd;
 
   const startDateISO = startDate.toISODate();
   const endDateISO = endDate.toISODate();
@@ -232,6 +236,9 @@ export default async function handler(
   const cacheKey = getCacheKey(affiliateCode, startDateISO, endDateISO);
   const now = new Date();
 
+  // Check for force refresh query parameter (used by cron job)
+  const forceRefresh = req.query.forceRefresh === 'true';
+
   // 🔥 Mask usernames for privacy (used when returning cached data)
   const maskUsername = (username: string) => {
     const len = username.length;
@@ -240,12 +247,12 @@ export default async function handler(
     return username.slice(0, 2) + '*'.repeat(len - 4) + username.slice(-2);
   };
 
-  // Check database cache first
-  const cached = await prisma.luxdropLeaderboardCache.findUnique({
+  // Check database cache first (unless forcing refresh)
+  const cached = !forceRefresh ? await prisma.luxdropLeaderboardCache.findUnique({
     where: {
       cacheKey: cacheKey,
     },
-  });
+  }) : null;
 
   // If cache exists and is still fresh, return from database
   if (cached && cached.expiresAt > now) {
@@ -323,8 +330,6 @@ export default async function handler(
     // Process response data (mask usernames before storing)
     const processedData = processApiResponse(
       response.data,
-      periodYear,
-      periodMonth,
       periodLabel,
       startDateISO,
       endDateISO,

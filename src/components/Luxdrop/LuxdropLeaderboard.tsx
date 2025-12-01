@@ -352,42 +352,32 @@ const LuxdropLeaderboard: React.FC = () => {
   const topUsers = data.slice(0, 3);
   const restUsers = data.slice(3, 20);
 
+  // Calculate bi-weekly (14-day) period from anchor date (matches backend logic)
+  const getBiWeeklyPeriod = (anchorDate: DateTime, now: DateTime): { periodStart: DateTime; periodEnd: DateTime; periodLabel: string } => {
+    const anchorStart = anchorDate.startOf('day');
+    const nowStart = now.startOf('day');
+    const daysSinceAnchor = Math.floor(nowStart.diff(anchorStart, 'days').days);
+    const periodNumber = Math.floor(daysSinceAnchor / 14);
+    const periodStart = anchorStart.plus({ days: periodNumber * 14 });
+    const periodEnd = periodStart.plus({ days: 13, hours: 23, minutes: 59, seconds: 59 });
+    const startFormatted = periodStart.toFormat('MMM d, yyyy');
+    const endFormatted = periodEnd.toFormat('MMM d, yyyy');
+    const periodLabel = `${startFormatted} – ${endFormatted} UTC`;
+    return { periodStart, periodEnd, periodLabel };
+  };
+
   const { targetDate, periodStart, periodLabel } = (() => {
     const now = DateTime.utc();
-    const currentDay = now.day;
-    const currentMonth = now.month;
-    const currentYear = now.year;
 
-    // Luxdrop period configuration - configurable via environment variables
-    const luxdropPeriodYearEnv = process.env.NEXT_PUBLIC_LUXDROP_PERIOD_YEAR;
-    const luxdropPeriodMonthEnv = process.env.NEXT_PUBLIC_LUXDROP_PERIOD_MONTH;
+    // Luxdrop bi-weekly period configuration - hardcoded anchor date for rolling 14-day periods
+    const anchorDate = DateTime.utc(2025, 12, 1, 0, 0, 0);
 
-    const periodYear = luxdropPeriodYearEnv ? parseInt(luxdropPeriodYearEnv, 10) : currentYear;
-    const periodMonth = luxdropPeriodMonthEnv ? parseInt(luxdropPeriodMonthEnv, 10) : currentMonth;
-
-    let periodStartDate: DateTime;
-    let periodEndDate: DateTime;
-    let periodLabel: string;
-
-    if (currentMonth === periodMonth && currentYear === periodYear) {
-      if (currentDay >= 1 && currentDay <= 15) {
-        periodStartDate = DateTime.utc(periodYear, periodMonth, 1, 0, 0, 0);
-        periodEndDate = DateTime.utc(periodYear, periodMonth, 15, 23, 59, 59);
-        periodLabel = `${DateTime.fromObject({ month: periodMonth, year: periodYear }).toFormat('MMMM')} 1-15, ${periodYear}`;
-      } else {
-        periodStartDate = DateTime.utc(periodYear, periodMonth, 16, 0, 0, 0);
-        periodEndDate = DateTime.utc(periodYear, periodMonth, 30, 23, 59, 59);
-        periodLabel = `${DateTime.fromObject({ month: periodMonth, year: periodYear }).toFormat('MMMM')} 16-30, ${periodYear}`;
-      }
-    } else {
-      periodStartDate = DateTime.utc(periodYear, periodMonth, 1, 0, 0, 0);
-      periodEndDate = DateTime.utc(periodYear, periodMonth, 15, 23, 59, 59);
-      periodLabel = `${DateTime.fromObject({ month: periodMonth, year: periodYear }).toFormat('MMMM')} 1-15, ${periodYear}`;
-    }
+    // Calculate current bi-weekly period
+    const { periodStart, periodEnd, periodLabel } = getBiWeeklyPeriod(anchorDate, now);
 
     return {
-      targetDate: periodEndDate,
-      periodStart: periodStartDate,
+      targetDate: periodEnd,
+      periodStart: periodStart,
       periodLabel,
     };
   })();

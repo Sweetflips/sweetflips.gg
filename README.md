@@ -77,9 +77,9 @@ This document outlines all the cleanup and production readiness work completed o
    - Currently set to November 1-30, 2025
 
 2. **Luxdrop Leaderboard** (`/luxdrop`)
-   - Bi-weekly periods (1-15 and 16-30 of month)
-   - Configurable via `LUXDROP_PERIOD_YEAR` and `LUXDROP_PERIOD_MONTH`
-   - Currently set to November 2025
+   - Bi-weekly (14-day) rolling periods that automatically progress
+   - Anchor date: December 1, 2025 (hardcoded)
+   - Periods cross month boundaries automatically (e.g., Dec 29 - Jan 11)
    - Uses proxy: `104.253.199.227:5506`
 
 3. **Homepage Leaderboard**
@@ -163,10 +163,7 @@ See [ENV_VARIABLES.md](./ENV_VARIABLES.md) for a complete list of required and o
 - `SPECIAL_PERIOD_END_DATE` - Razed special period end (format: YYYY-MM-DD)
 - `NEXT_PUBLIC_SPECIAL_PERIOD_START_DATE` - Client-side Razed period start
 - `NEXT_PUBLIC_SPECIAL_PERIOD_END_DATE` - Client-side Razed period end
-- `LUXDROP_PERIOD_YEAR` - Luxdrop period year
-- `LUXDROP_PERIOD_MONTH` - Luxdrop period month (1-12)
-- `NEXT_PUBLIC_LUXDROP_PERIOD_YEAR` - Client-side Luxdrop year
-- `NEXT_PUBLIC_LUXDROP_PERIOD_MONTH` - Client-side Luxdrop month
+- Luxdrop uses hardcoded bi-weekly periods (anchor date: Dec 1, 2025) - no env vars needed
 
 ## Build for Production
 

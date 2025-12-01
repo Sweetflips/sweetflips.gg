@@ -48,15 +48,15 @@ This document lists all required and optional environment variables for the Swee
 - `SPECIAL_PERIOD_START_DATE` - Start date for special weekly event (format: YYYY-MM-DD, e.g., "2025-06-23")
 - `SPECIAL_PERIOD_END_DATE` - End date for special weekly event (format: YYYY-MM-DD, e.g., "2025-06-30")
 
-#### Luxdrop Period Configuration
-- `LUXDROP_PERIOD_YEAR` - Year for Luxdrop leaderboard period (default: current year)
-- `LUXDROP_PERIOD_MONTH` - Month for Luxdrop leaderboard period (default: current month)
+#### Luxdrop Bi-Weekly Period Configuration
+- Bi-weekly (14-day) rolling periods are automatically calculated from a hardcoded anchor date (December 1, 2025)
+  - The system automatically calculates rolling 14-day periods starting from this anchor date
+  - Periods cross month boundaries automatically (e.g., Dec 29 - Jan 11)
+  - Example periods: Dec 1-14, Dec 15-28, Dec 29 - Jan 11, etc.
 
 #### Client-side Special Period (for Next.js public env vars)
 - `NEXT_PUBLIC_SPECIAL_PERIOD_START_DATE` - Start date for special weekly event (format: YYYY-MM-DD)
 - `NEXT_PUBLIC_SPECIAL_PERIOD_END_DATE` - End date for special weekly event (format: YYYY-MM-DD)
-- `NEXT_PUBLIC_LUXDROP_PERIOD_YEAR` - Year for Luxdrop period (default: current year)
-- `NEXT_PUBLIC_LUXDROP_PERIOD_MONTH` - Month for Luxdrop period (default: current month)
 
 ### Geo-blocking (Edge Middleware)
 - `EDGE_BLOCKED_COUNTRIES` - Comma-separated list of blocked country codes (e.g., "US,GB")
@@ -85,4 +85,5 @@ The application validates critical environment variables at runtime:
 - Variables prefixed with `NEXT_PUBLIC_` are exposed to the browser and should not contain sensitive data
 - All dates should be in UTC format (YYYY-MM-DD)
 - Proxy configuration is optional - if not provided, requests will be made directly
-- Special period dates are optional - if not set, the application defaults to standard monthly logic
+- Special period dates are optional - if not set, the application uses default values
+- Luxdrop uses bi-weekly (14-day) rolling periods that automatically progress and cross month boundaries
