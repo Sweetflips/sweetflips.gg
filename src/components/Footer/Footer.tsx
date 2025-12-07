@@ -9,7 +9,7 @@ const Footer = () => {
         <Link href="/" className="inline-block">
           <Image
             src="/images/logo/sweet_flips_logo_white.png"
-            alt="Sweetflips"
+            alt="SweetFlips"
             width={48}
             height={48}
             className="h-12 w-12"
@@ -18,7 +18,7 @@ const Footer = () => {
 
         {/* 2. Copyright Text (moved up) */}
         <p className="text-xs text-gray-500">
-          &copy; {new Date().getFullYear()} Sweetflips. All Rights Reserved.
+          &copy; {new Date().getFullYear()} SweetFlips. All Rights Reserved.
         </p>
 
         {/* 3. Social Icons (removed my-4) */}

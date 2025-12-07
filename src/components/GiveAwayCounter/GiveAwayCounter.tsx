@@ -31,7 +31,7 @@ const GiveAwayCounter: React.FC = () => {
     <div className="mt-12 px-4 text-white">
       <div className="mx-auto w-full max-w-7xl">
         <h2 className="mb-6 text-center text-4xl font-bold text-white drop-shadow-md">
-          Sweetflips Total Given Away Since 2024
+          Total Rewards Given Away Since 2024
         </h2>
 
         <div className="RegisterBlocks-inner flex flex-col items-center justify-center gap-6 rounded-2xl p-6 shadow-[inset_0_1px_4px_rgba(255,255,255,0.05),_0_10px_30px_rgba(128,0,255,0.2)] lg:flex-row">
@@ -39,7 +39,7 @@ const GiveAwayCounter: React.FC = () => {
           <div className="flex-shrink-0 animate-horizontalBounce">
             <Image
               src="/images/logo/sweetflips_coin.png"
-              alt="Sweetflips Coin"
+              alt="SweetFlips Coin"
               width={100}
               height={150}
               className="w-25 object-contain"
@@ -81,7 +81,7 @@ const GiveAwayCounter: React.FC = () => {
               <a href="/luxdrop" rel="noopener noreferrer">
                 <Image
                   src="/images/icon/luxdrop_fav.png"
-                  alt="Luxdrop"
+                  alt="LuxDrop"
                   width={50}
                   height={50}
                   className="object-contain transition-transform hover:scale-105"

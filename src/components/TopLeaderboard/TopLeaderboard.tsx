@@ -50,34 +50,34 @@ const TopLeaderboard: React.FC = () => {
       try {
         const response = await fetch(API_PROXY_URL, { method: "GET" });
         const result = await response.json();
-  
+
         if (!Array.isArray(result.data)) {
           throw new Error("Invalid data format: expected 'data' array");
         }
-  
+
         const parsedData = result.data.map((user: any): LeaderboardEntry => ({
           username: maskUsername(user.username),
           referred_by_code: user.referred_by_code,
           wagered: parseFloat(user.wagered),
           reward: 0,
         }));
-  
+
         const sortedData: LeaderboardEntry[] = parsedData
           .sort((a: LeaderboardEntry, b: LeaderboardEntry) => b.wagered - a.wagered)
           .map((user: LeaderboardEntry, index: number): LeaderboardEntry => ({
             ...user,
             reward: rewardMapping[index + 1] || 0,
           }));
-  
+
         setData(sortedData);
       } catch (err: any) {
         setError(err.message);
       }
     };
-  
+
     fetchData();
   }, []);
-  
+
 
   const topUsers = data.slice(0, 3);
 
@@ -175,7 +175,7 @@ const TopLeaderboard: React.FC = () => {
                   <div className="TopLeaderboard__card-image">
                     <Image
                                         src="/images/logo/sweet_flips_emblem_silver.png"
-                                        alt="Sweetflips Emblem Silver"
+                                        alt="SweetFlips Emblem Silver"
                                         className="h-24 w-24"
                                         width={96}
                                         height={96}
@@ -212,7 +212,7 @@ const TopLeaderboard: React.FC = () => {
                   <div className="TopLeaderboard__card-image">
                     <Image
                                         src="/images/logo/sweet_flips_emblem_gold.png"
-                                        alt="Sweetflips Emblem Gold"
+                                        alt="SweetFlips Emblem Gold"
                                         className="h-24 w-24"
                                         width={96}
                                         height={96}
@@ -249,7 +249,7 @@ const TopLeaderboard: React.FC = () => {
                   <div className="TopLeaderboard__card-image">
                     <Image
                                         src="/images/logo/sweet_flips_emblem_bronze.png"
-                                        alt="Sweetflips Emblem Bronze"
+                                        alt="SweetFlips Emblem Bronze"
                                         className="h-24 w-24"
                                         width={96}
                                         height={96}

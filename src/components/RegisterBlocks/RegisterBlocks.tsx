@@ -65,7 +65,7 @@ const RegisterBlocks: React.FC = () => {
                 href={luxdropUrl}
                 className="font-extrabold text-[#1BB2FF]"
               >
-                Luxdrop
+                LuxDrop
               </a>
             </p>
           </div>
@@ -87,7 +87,7 @@ const RegisterBlocks: React.FC = () => {
               />
             </div>
             <p className="mt-8 text-sm">
-              Be active in chat earn Sweetflips coins to use in our Webshop!
+              Join the Kick stream, chat, and earn points to qualify for various rewards and special bonuses.
             </p>
           </div>
         </a>

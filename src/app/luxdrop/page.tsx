@@ -4,8 +4,8 @@ import { createMetadata } from "@/lib/metadata";
 import LuxdropLeaderboard from "@/components/Luxdrop/LuxdropLeaderboard"; // Corrected import
 
 export const metadata: Metadata = createMetadata({
-  title: "Luxdrop Leaderboard", // Corrected title
-  description: "Luxdrop Leaderboard", // Corrected description
+  title: "LuxDrop Leaderboard", // Corrected title
+  description: "LuxDrop Leaderboard", // Corrected description
   path: "/luxdrop",
   image: "/images/cover/Luxdrop_Leaderboard.png", // Make sure this image exists
 });

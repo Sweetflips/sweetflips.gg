@@ -101,7 +101,7 @@ const RazedLeaderboard: React.FC = () => {
   } else {
     prizePoolAmount = 50000;
     leaderboardTitle = `$${prizePoolAmount.toLocaleString()}`;
-    leaderboardDescription = `Each month, a total of $50,000 is distributed across 25 users based on their total wagered amount.`;
+    leaderboardDescription = `Each month, $50,000 is distributed among 25 users based on their total wagered amount on Razed.`;
     currentRewardMapping = monthlyRewardMapping;
     targetDateForTimer = new Date(
       Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999),
@@ -310,7 +310,7 @@ const RazedLeaderboard: React.FC = () => {
                 <div className="TopLeaderboard__card-image">
                   <Image
                     src="/images/logo/sweet_flips_emblem_silver.png"
-                    alt="Sweetflips Emblem Silver"
+                    alt="SweetFlips Emblem Silver"
                     className="h-24 w-24"
                     width={96}
                     height={96}
@@ -345,7 +345,7 @@ const RazedLeaderboard: React.FC = () => {
                 <div className="TopLeaderboard__card-image">
                   <Image
                     src="/images/logo/sweet_flips_emblem_gold.png"
-                    alt="Sweetflips Emblem Gold"
+                    alt="SweetFlips Emblem Gold"
                     className="h-24 w-24"
                     width={96}
                     height={96}
@@ -380,7 +380,7 @@ const RazedLeaderboard: React.FC = () => {
                 <div className="TopLeaderboard__card-image">
                   <Image
                     src="/images/logo/sweet_flips_emblem_bronze.png"
-                    alt="Sweetflips Emblem Bronze"
+                    alt="SweetFlips Emblem Bronze"
                     className="h-24 w-24"
                     width={96}
                     height={96}

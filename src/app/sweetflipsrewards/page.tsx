@@ -4,7 +4,7 @@ import { createMetadata } from "@/lib/metadata";
 import Link from "next/link";
 
 export const metadata: Metadata = createMetadata({
-  title: "SweetFlipsRewards | Sweetflips",
+  title: "SweetFlipsRewards | SweetFlips",
   description: "Learn more about SweetFlipsRewards and how to earn rewards",
   path: "/sweetflipsrewards",
 });
@@ -27,7 +27,7 @@ export default function SweetFlipsRewardsPage() {
                 <h2 className="text-2xl font-semibold mb-4">About SweetFlipsRewards</h2>
                 <p className="text-gray-300 leading-relaxed">
                   SweetFlipsRewards is our exclusive rewards program designed to give back to our community.
-                  Earn points, unlock special perks, and enjoy exclusive benefits as you engage with Sweetflips.
+                  Earn points, unlock special perks, and enjoy exclusive benefits as you engage with SweetFlips.
                 </p>
               </div>
 

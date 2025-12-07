@@ -10,8 +10,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const imageUrl = `/images/cover/Razed_Leaderboard_50k.png`;
 
   return createMetadata({
-    title: "$50,000 Razed Leaderboard | Sweetflips",
-    description: "$50,000 Razed Leaderboard - Compete for $50,000 in monthly prizes. Each month, a total of $50,000 is distributed across 25 users based on their total wagered amount.",
+    title: "$50,000 Razed Leaderboard | SweetFlips",
+    description: "$50,000 Razed Leaderboard - Compete for $50,000 in monthly prizes. Each month, $50,000 is distributed among 25 users based on their total wagered amount on Razed.",
     path: "/razed",
     image: imageUrl,
   });

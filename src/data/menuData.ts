@@ -30,7 +30,7 @@ export const menuGroups: MenuGroup[] = [
       },
       {
         icon: "luxdrop",
-        label: "Luxdrop",
+        label: "LuxDrop",
         route: "/luxdrop",
       },
       {

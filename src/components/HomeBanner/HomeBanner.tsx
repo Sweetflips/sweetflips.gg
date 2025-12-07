@@ -12,14 +12,16 @@ const HomeBanner: React.FC = () => {
     >
       <div className="my-auto flex w-full max-w-180 flex-col items-center justify-center p-4">
         <h1 className="text-4xl font-extrabold text-white sm:text-5xl">
-          Welcome to Sweetflips
+          Welcome to SweetFlips
         </h1>
         <p className="mt-6 text-lg font-bold text-white sm:text-xl">
-          Receive <b className="text-blue-400">Rewards</b> &amp;{" "}
-          <b className="text-blue-400">Special</b> Bonuses
-        </p><br />
-        <p className="text-sm text-white sm:text-base">
-          Unlock and claim exclusive bonuses on{" "}
+          The premier online casino community.
+        </p>
+        <p className="mt-4 text-lg font-bold text-white sm:text-xl">
+          Earn money by watching our daily streams.
+        </p>
+        <p className="mt-6 text-sm text-white sm:text-base">
+          Unlock and claim <b className="text-blue-400">exclusive bonuses</b> on{" "}
           <a
             href={razedUrl}
             target="blank"
@@ -35,11 +37,9 @@ const HomeBanner: React.FC = () => {
             className="font-extrabold !text-[#1BB2FF] hover:!text-[#1BB2FF] hover:underline"
             style={{ color: '#1BB2FF' }}
           >
-            Luxdrop.com
+            LuxDrop.com
           </a>{" "}
-          - the world&apos;s most known and trusted online casinos. From VIP
-          perks to leaderboard races, milestones, events and daily giveaways, we&apos;ve got it
-          all.
+          using code SweetFlips. From $70,000 monthly leaderboards to VIP perks, wager milestones, events, and much more, we&apos;ve got it all.
         </p>
       </div>
     </div>

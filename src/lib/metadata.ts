@@ -34,7 +34,7 @@ export const createMetadata = ({
       title,
       description,
       url: fullPageUrl,
-      siteName: "Sweetflips",
+      siteName: "SweetFlips",
       images: [
         {
           url: fullImageUrl,
