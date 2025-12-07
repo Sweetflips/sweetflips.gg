@@ -178,36 +178,41 @@ export default async function handler(
     }
   }
 
-  const currentTime = DateTime.utc();
-  const currentDay = currentTime.day;
-  const currentMonth = currentTime.month;
-  const currentYear = currentTime.year;
-
+  const now = DateTime.utc();
   let startDate: DateTime;
   let endDate: DateTime;
   let periodLabel: string;
+  let periodYear: number;
+  let periodMonth: number;
 
-  // Luxdrop period configuration - configurable via environment variables
-  const luxdropPeriodYearEnv = process.env.LUXDROP_PERIOD_YEAR;
-  const luxdropPeriodMonthEnv = process.env.LUXDROP_PERIOD_MONTH;
+  const queryStartDate = req.query.startDate as string | undefined;
+  const queryEndDate = req.query.endDate as string | undefined;
 
-  const periodYear = luxdropPeriodYearEnv ? parseInt(luxdropPeriodYearEnv, 10) : currentYear;
-  const periodMonth = luxdropPeriodMonthEnv ? parseInt(luxdropPeriodMonthEnv, 10) : currentMonth;
+  if (queryStartDate && queryEndDate) {
+    const parsedStart = DateTime.fromISO(queryStartDate, { zone: 'utc' });
+    const parsedEnd = DateTime.fromISO(queryEndDate, { zone: 'utc' });
 
-  if (currentMonth === periodMonth && currentYear === periodYear) {
-    if (currentDay >= 1 && currentDay <= 15) {
-      startDate = DateTime.utc(periodYear, periodMonth, 1, 0, 0, 0);
-      endDate = DateTime.utc(periodYear, periodMonth, 15, 23, 59, 59);
-      periodLabel = `${DateTime.fromObject({ month: periodMonth, year: periodYear }).toFormat('MMMM')} 1-15, ${periodYear}`;
+    if (parsedStart.isValid && parsedEnd.isValid) {
+      startDate = parsedStart.startOf('day');
+      endDate = parsedEnd.set({ hour: 23, minute: 59, second: 59 });
+      periodYear = endDate.year;
+      periodMonth = endDate.month;
+      periodLabel = `${startDate.toFormat("MMM d")} - ${endDate.toFormat("MMM d, yyyy")}`;
     } else {
-      startDate = DateTime.utc(periodYear, periodMonth, 16, 0, 0, 0);
-      endDate = DateTime.utc(periodYear, periodMonth, 30, 23, 59, 59);
-      periodLabel = `${DateTime.fromObject({ month: periodMonth, year: periodYear }).toFormat('MMMM')} 16-30, ${periodYear}`;
+      return res.status(400).json({ error: "Invalid date format in query parameters" });
     }
   } else {
-    startDate = DateTime.utc(periodYear, periodMonth, 1, 0, 0, 0);
-    endDate = DateTime.utc(periodYear, periodMonth, 15, 23, 59, 59);
-    periodLabel = `${DateTime.fromObject({ month: periodMonth, year: periodYear }).toFormat('MMMM')} 1-15, ${periodYear}`;
+    const baseStartDate = DateTime.utc(2025, 12, 1, 0, 0, 0);
+    const periodLengthDays = 14;
+
+    const daysSinceStart = Math.floor(now.diff(baseStartDate, "days").days);
+    const periodNumber = Math.floor(daysSinceStart / periodLengthDays);
+
+    startDate = baseStartDate.plus({ days: periodNumber * periodLengthDays });
+    endDate = startDate.plus({ days: periodLengthDays - 1 }).set({ hour: 23, minute: 59, second: 59 });
+    periodYear = endDate.year;
+    periodMonth = endDate.month;
+    periodLabel = `${startDate.toFormat("MMM d")} - ${endDate.toFormat("MMM d, yyyy")}`;
   }
 
   const startDateISO = startDate.toISODate();
@@ -230,7 +235,7 @@ export default async function handler(
   }
 
   const cacheKey = getCacheKey(affiliateCode, startDateISO, endDateISO);
-  const now = new Date();
+  const currentTime = new Date();
 
   // 🔥 Mask usernames for privacy (used when returning cached data)
   const maskUsername = (username: string) => {
@@ -248,9 +253,9 @@ export default async function handler(
   });
 
   // If cache exists and is still fresh, return from database
-  if (cached && cached.expiresAt > now) {
+  if (cached && cached.expiresAt > currentTime) {
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[LuxdropProxy] Returning cached data from database (expires in ${Math.round((cached.expiresAt.getTime() - now.getTime()) / 1000 / 60)} minutes)`);
+      console.log(`[LuxdropProxy] Returning cached data from database (expires in ${Math.round((cached.expiresAt.getTime() - currentTime.getTime()) / 1000 / 60)} minutes)`);
     }
 
     res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=900, max-age=60");
@@ -332,7 +337,7 @@ export default async function handler(
     );
 
     // Store in database cache
-    const expiresAt = new Date(now.getTime() + CACHE_TTL_MS);
+    const expiresAt = new Date(currentTime.getTime() + CACHE_TTL_MS);
     const etag = `W/"${Buffer.from(JSON.stringify(processedData)).toString('base64').substring(0, 16)}"`;
 
     await prisma.luxdropLeaderboardCache.upsert({
@@ -352,7 +357,7 @@ export default async function handler(
         },
         etag: etag,
         expiresAt: expiresAt,
-        fetchedAt: now,
+        fetchedAt: currentTime,
       },
       update: {
         data: processedData as any,
@@ -366,7 +371,7 @@ export default async function handler(
         },
         etag: etag,
         expiresAt: expiresAt,
-        fetchedAt: now,
+        fetchedAt: currentTime,
       },
     });
 

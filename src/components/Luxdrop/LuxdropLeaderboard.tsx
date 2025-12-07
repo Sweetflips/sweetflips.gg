@@ -66,7 +66,6 @@ const LuxdropLeaderboard: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Function to mask usernames (copied from RazedLeaderboard)
   const maskUsername = (username: string) => {
     if (!username) return "";
     const len = username.length;
@@ -75,13 +74,35 @@ const LuxdropLeaderboard: React.FC = () => {
     return username.slice(0, 2) + "*".repeat(len - 4) + username.slice(-2);
   };
 
+  const calculatePeriod = () => {
+    const now = DateTime.utc();
+    const baseStartDate = DateTime.utc(2025, 12, 1, 0, 0, 0);
+    const periodLengthDays = 14;
+
+    const daysSinceStart = Math.floor(now.diff(baseStartDate, "days").days);
+    const periodNumber = Math.floor(daysSinceStart / periodLengthDays);
+
+    const periodStartDate = baseStartDate.plus({ days: periodNumber * periodLengthDays });
+    const periodEndDate = periodStartDate.plus({ days: periodLengthDays - 1 }).set({ hour: 23, minute: 59, second: 59 });
+
+    return {
+      startDate: periodStartDate.toISODate(),
+      endDate: periodEndDate.toISODate(),
+      periodStart: periodStartDate,
+      periodEnd: periodEndDate,
+    };
+  };
+
   useEffect(() => {
     let isMounted = true;
     const fetchData = async () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(API_PROXY_URL, { method: "GET" });
+        const period = calculatePeriod();
+        const url = `${API_PROXY_URL}?startDate=${encodeURIComponent(period.startDate || "")}&endDate=${encodeURIComponent(period.endDate || "")}`;
+
+        const response = await fetch(url, { method: "GET" });
         if (!response.ok) {
           let errorData;
           try {
@@ -142,8 +163,10 @@ const LuxdropLeaderboard: React.FC = () => {
   const handleRetry = () => {
     setError(null);
     setLoading(true);
-    // Duplicate of logic above but for retry
-    fetch(API_PROXY_URL, { method: "GET" })
+    const period = calculatePeriod();
+    const url = `${API_PROXY_URL}?startDate=${encodeURIComponent(period.startDate || "")}&endDate=${encodeURIComponent(period.endDate || "")}`;
+
+    fetch(url, { method: "GET" })
       .then(async (response) => {
         if (!response.ok) {
           let errorData;
@@ -226,45 +249,9 @@ const LuxdropLeaderboard: React.FC = () => {
   const topUsers = data.slice(0, 3);
   const restUsers = data.slice(3, 20);
 
-  const { targetDate, periodStart, periodLabel } = (() => {
-    const now = DateTime.utc();
-    const currentDay = now.day;
-    const currentMonth = now.month;
-    const currentYear = now.year;
-
-    // Luxdrop period configuration - configurable via environment variables
-    const luxdropPeriodYearEnv = process.env.NEXT_PUBLIC_LUXDROP_PERIOD_YEAR;
-    const luxdropPeriodMonthEnv = process.env.NEXT_PUBLIC_LUXDROP_PERIOD_MONTH;
-
-    const periodYear = luxdropPeriodYearEnv ? parseInt(luxdropPeriodYearEnv, 10) : currentYear;
-    const periodMonth = luxdropPeriodMonthEnv ? parseInt(luxdropPeriodMonthEnv, 10) : currentMonth;
-
-    let periodStartDate: DateTime;
-    let periodEndDate: DateTime;
-    let periodLabel: string;
-
-    if (currentMonth === periodMonth && currentYear === periodYear) {
-      if (currentDay >= 1 && currentDay <= 15) {
-        periodStartDate = DateTime.utc(periodYear, periodMonth, 1, 0, 0, 0);
-        periodEndDate = DateTime.utc(periodYear, periodMonth, 15, 23, 59, 59);
-        periodLabel = `${DateTime.fromObject({ month: periodMonth, year: periodYear }).toFormat('MMMM')} 1-15, ${periodYear}`;
-      } else {
-        periodStartDate = DateTime.utc(periodYear, periodMonth, 16, 0, 0, 0);
-        periodEndDate = DateTime.utc(periodYear, periodMonth, 30, 23, 59, 59);
-        periodLabel = `${DateTime.fromObject({ month: periodMonth, year: periodYear }).toFormat('MMMM')} 16-30, ${periodYear}`;
-      }
-    } else {
-      periodStartDate = DateTime.utc(periodYear, periodMonth, 1, 0, 0, 0);
-      periodEndDate = DateTime.utc(periodYear, periodMonth, 15, 23, 59, 59);
-      periodLabel = `${DateTime.fromObject({ month: periodMonth, year: periodYear }).toFormat('MMMM')} 1-15, ${periodYear}`;
-    }
-
-    return {
-      targetDate: periodEndDate,
-      periodStart: periodStartDate,
-      periodLabel,
-    };
-  })();
+  const period = calculatePeriod();
+  const targetDate = period.periodEnd;
+  const periodLabel = `${period.periodStart.toFormat("MMM d")} - ${period.periodEnd.toFormat("MMM d, yyyy")}`;
 
   const countDownDate = targetDate.toISO();
 
