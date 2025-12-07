@@ -19,20 +19,7 @@ const RegisterBlocks: React.FC = () => {
         <div className="flex flex-col gap-8 md:flex-row md:gap-6">
           {/* Razed Section */}
           <div className="flex-1">
-            <h2 className="mb-2 text-2xl font-bold text-black dark:text-white">Razed</h2>
-            <p className="mb-4 text-base text-black dark:text-white">
-              <Link
-                href={razedUrl}
-                target="_blank"
-                className="bg-blue-100 dark:bg-blue-900 px-1 py-0.5 rounded hover:underline"
-              >
-                Sign up here on Razed
-              </Link>{" "}
-              or{" "}
-              <span className="bg-blue-100 dark:bg-blue-900 px-1 py-0.5 rounded">
-                use code SweetFlips upon sign-up for a plethora of benefits.
-              </span>
-            </p>
+            <h2 className="mb-4 text-2xl font-bold text-black dark:text-white">Razed</h2>
             <Link
               href={razedUrl}
               target="_blank"
@@ -57,20 +44,7 @@ const RegisterBlocks: React.FC = () => {
 
           {/* LuxDrop Section */}
           <div className="flex-1">
-            <h2 className="mb-2 text-2xl font-bold text-black dark:text-white">LuxDrop</h2>
-            <p className="mb-4 text-base text-black dark:text-white">
-              <Link
-                href={luxdropUrl}
-                target="_blank"
-                className="bg-blue-100 dark:bg-blue-900 px-1 py-0.5 rounded hover:underline"
-              >
-                Sign up here on LuxDrop
-              </Link>{" "}
-              or{" "}
-              <span className="bg-blue-100 dark:bg-blue-900 px-1 py-0.5 rounded">
-                use code SweetFlips upon sign-up for a plethora of benefits.
-              </span>
-            </p>
+            <h2 className="mb-4 text-2xl font-bold text-black dark:text-white">LuxDrop</h2>
             <Link
               href={luxdropUrl}
               target="_blank"
