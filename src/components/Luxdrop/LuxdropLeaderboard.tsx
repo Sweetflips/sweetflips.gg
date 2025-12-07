@@ -401,7 +401,7 @@ const LuxdropLeaderboard: React.FC = () => {
         <div className="hide-on-ipad absolute left-0 hidden sm:block">
           <Image
             src="/images/icon/luxdrop_chest.png"
-            alt="LuxDrop Sneaker Chest"
+            alt="Luxdrop Sneaker Chest"
             className="transform"
             width={540}
             height={378}
@@ -412,7 +412,7 @@ const LuxdropLeaderboard: React.FC = () => {
         <div className="hide-on-ipad absolute right-0 top-[30px] hidden sm:block">
           <Image
             src="/images/icon/luxdrop_car.png"
-            alt="LuxDrop Car"
+            alt="Luxdrop Car"
             className="transform"
             width={540}
             height={378}
@@ -422,7 +422,7 @@ const LuxdropLeaderboard: React.FC = () => {
         {/* <div className="absolute -left-1 top-[-20px] sm:block md:hidden">
           <Image
             src="/images/icon/luxdrop_chest.png"
-            alt="LuxDrop Sneaker Chest"
+            alt="Luxdrop Sneaker Chest"
             className="h-[103px] w-[68.05px] transform"
             width={68.05}
             height={103}
@@ -433,7 +433,7 @@ const LuxdropLeaderboard: React.FC = () => {
         {/* <div className="absolute -right-5 top-[250px] sm:block md:hidden">
           <Image
             src="/images/icon/luxdrop_car.png"
-            alt="LuxDrop Car"
+            alt="Luxdrop Car"
             className="h-[103px] w-[68.05px] transform"
             width={68.05}
             height={103}
@@ -446,7 +446,7 @@ const LuxdropLeaderboard: React.FC = () => {
           <div className="mt-4 flex flex-col items-center justify-center sm:flex-row sm:space-x-4">
             <Image
               src="/images/logo/luxdrop_logo.svg"
-              alt="LuxDrop Logo"
+              alt="Luxdrop Logo"
               width={280}
               height={53}
               className="mb-3 transition-all duration-300 sm:mb-0"
