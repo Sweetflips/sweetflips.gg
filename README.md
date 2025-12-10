@@ -290,4 +290,5 @@ sweetflips.gg-1/
 
 For issues or questions, refer to:
 - [ENV_VARIABLES.md](./ENV_VARIABLES.md) - Environment variables documentation
+- 
 - [package.json](./package.json) - Dependencies and scripts
