@@ -7,7 +7,7 @@ import React, { useEffect, useState } from "react";
 import Loader from "@/components/common/Loader";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-
+import { Analytics } from '@vercel/analytics/next';
 export default function RootLayout({
   children,
 }: Readonly<{
