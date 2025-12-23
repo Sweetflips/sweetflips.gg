@@ -18,7 +18,7 @@ const Header = () => {
         {/* Logo */}
         <div className="flex items-center">
           <Link href="/" className="flex items-center">
-            <div className="lg:hidden animate-spin" style={{ animationDuration: '3s' }}>
+            <div className="lg:hidden">
               <Image
                 width={56}
                 height={56}
@@ -28,7 +28,7 @@ const Header = () => {
                 priority
               />
             </div>
-            <div className="hidden lg:block animate-spin" style={{ animationDuration: '3s' }}>
+            <div className="hidden lg:block">
               <Image
                 width={144}
                 height={32}
