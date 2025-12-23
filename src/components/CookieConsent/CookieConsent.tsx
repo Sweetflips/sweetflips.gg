@@ -66,59 +66,40 @@ export default function CookieConsent() {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[9999] p-4 md:p-6">
-      <div className="mx-auto max-w-4xl rounded-xl bg-[#1a1025] border border-gray-700 shadow-2xl p-4 md:p-6">
-        <div className="flex flex-col gap-4">
+    <div className="fixed bottom-4 right-4 z-[9999] max-w-sm">
+      <div className="rounded-lg bg-[#1a1025] border border-gray-700 shadow-2xl p-4">
+        <div className="flex flex-col gap-3">
           {/* Header */}
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20">
-              <svg className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20">
+              <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-white">Cookie Preferences</h3>
+            <h3 className="text-sm font-semibold text-white">Cookie Preferences</h3>
           </div>
 
           {/* Description */}
-          <p className="text-sm text-gray-300">
-            We use cookies to enhance your browsing experience, analyze site traffic, and personalize content. 
-            By clicking &quot;Accept All&quot;, you consent to our use of cookies. You can manage your preferences 
-            or learn more in our{' '}
+          <p className="text-xs text-gray-300 leading-relaxed">
+            We use cookies to enhance your experience.{' '}
             <Link href="/cookie-policy" className="text-primary hover:underline">
-              Cookie Policy
+              Learn more
             </Link>
-            .
           </p>
 
-          {/* Cookie Categories */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-            <div className="flex items-center gap-2 rounded-lg bg-gray-800/50 p-3">
-              <div className="h-2 w-2 rounded-full bg-green-500"></div>
-              <span className="text-gray-300">Essential (Required)</span>
-            </div>
-            <div className="flex items-center gap-2 rounded-lg bg-gray-800/50 p-3">
-              <div className="h-2 w-2 rounded-full bg-blue-500"></div>
-              <span className="text-gray-300">Analytics</span>
-            </div>
-            <div className="flex items-center gap-2 rounded-lg bg-gray-800/50 p-3">
-              <div className="h-2 w-2 rounded-full bg-purple-500"></div>
-              <span className="text-gray-300">Marketing</span>
-            </div>
-          </div>
-
           {/* Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 mt-2">
+          <div className="flex gap-2">
             <button
               onClick={handleReject}
-              className="flex-1 rounded-lg border border-gray-600 bg-transparent px-6 py-3 text-sm font-medium text-gray-300 transition-colors hover:bg-gray-800 hover:text-white"
+              className="flex-1 rounded-md border border-gray-600 bg-transparent px-3 py-2 text-xs font-medium text-gray-300 transition-colors hover:bg-gray-800 hover:text-white"
             >
-              Reject Non-Essential
+              Reject
             </button>
             <button
               onClick={handleAccept}
-              className="flex-1 rounded-lg bg-primary px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-primary/90"
+              className="flex-1 rounded-md bg-primary px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-primary/90"
             >
-              Accept All Cookies
+              Accept
             </button>
           </div>
         </div>
