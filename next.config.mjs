@@ -1,4 +1,5 @@
-import { withBotId } from 'botid/next/config';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -99,4 +100,14 @@ const nextConfig = {
     },
   };
   
-  export default withBotId(nextConfig);  
+  // BotID integration
+  let config = nextConfig;
+  try {
+    const { withBotId } = require('botid/next/config');
+    config = withBotId(nextConfig);
+  } catch (e) {
+    // BotID not available or error - use config as-is
+    console.warn('BotID integration skipped:', e.message);
+  }
+  
+  export default config;  
