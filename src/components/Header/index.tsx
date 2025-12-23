@@ -22,7 +22,7 @@ const Header = () => {
               <Image
                 width={56}
                 height={56}
-                src="/images/logo/sweet_flips (2).svg"
+                src="/images/logo/sweetflips_logo.svg"
                 alt="SweetFlips Logo"
                 className="block"
                 priority
@@ -32,7 +32,7 @@ const Header = () => {
               <Image
                 width={144}
                 height={32}
-                src="/images/logo/sweet_flips (2).svg"
+                src="/images/logo/sweetflips_logo.svg"
                 alt="SweetFlips Logo"
                 className="block"
                 priority
