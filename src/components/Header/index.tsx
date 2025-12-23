@@ -18,24 +18,26 @@ const Header = () => {
         {/* Logo */}
         <div className="flex items-center">
           <Link href="/" className="flex items-center">
-            <Image
-              width={56}
-              height={56}
-              src="/images/logo/sweet_flips (2).svg"
-              alt="SweetFlips Logo"
-              className="lg:hidden animate-spin"
-              style={{ animationDuration: '3s' }}
-              priority
-            />
-            <Image
-              width={144}
-              height={32}
-              src="/images/logo/sweet_flips (2).svg"
-              alt="SweetFlips Logo"
-              className="hidden lg:block animate-spin"
-              style={{ animationDuration: '3s' }}
-              priority
-            />
+            <div className="lg:hidden animate-spin" style={{ animationDuration: '3s' }}>
+              <Image
+                width={56}
+                height={56}
+                src="/images/logo/sweet_flips (2).svg"
+                alt="SweetFlips Logo"
+                className="block"
+                priority
+              />
+            </div>
+            <div className="hidden lg:block animate-spin" style={{ animationDuration: '3s' }}>
+              <Image
+                width={144}
+                height={32}
+                src="/images/logo/sweet_flips (2).svg"
+                alt="SweetFlips Logo"
+                className="block"
+                priority
+              />
+            </div>
           </Link>
         </div>
 
