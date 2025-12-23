@@ -23,6 +23,7 @@ export default function RootLayout({
     <html lang="en">
       <body suppressHydrationWarning={true} className="flex flex-col min-h-screen dark:text-bodydark SidebarBg">
         {loading ? <Loader /> : children}
+        <Analytics />
       </body>
     </html>
   );
