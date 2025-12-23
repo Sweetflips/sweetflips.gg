@@ -12,17 +12,17 @@ export default function PrivacyPolicyPage() {
       <div className="mx-auto max-w-4xl px-4 py-12">
         <h1 className="mb-8 text-3xl font-bold text-white">Privacy Policy</h1>
         
-        <div className="space-y-8 text-gray-300">
+        <div className="space-y-8 text-gray-200">
           <p className="text-sm text-gray-400">
             Last updated: December 17, 2025
           </p>
 
           <section>
             <h2 className="mb-4 text-xl font-semibold text-white">1. Introduction</h2>
-            <p className="mb-4">
+            <p className="mb-4 text-gray-200">
               Sweetflips Holdings Limited (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;), a company registered in Malta with its registered office at Capital Business Centre, Entrance A, Floor 1, Triq Taz-Zwejt, San Gwann, SGN 3000, Malta, is committed to protecting your privacy.
             </p>
-            <p>
+            <p className="text-gray-200">
               This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website sweetflips.gg (the &quot;Website&quot;). Please read this Privacy Policy carefully. By using our Website, you consent to the practices described in this policy.
             </p>
           </section>

@@ -17,16 +17,16 @@ const Footer = () => {
         </Link>
 
         {/* 2. Legal Links */}
-        <div className="flex flex-wrap justify-center gap-4 text-xs">
-          <Link href="/terms-of-service" className="text-gray-400 hover:text-primary transition-colors duration-200">
+        <div className="flex flex-wrap justify-center gap-4 text-sm font-medium">
+          <Link href="/terms-of-service" className="text-gray-300 hover:text-primary transition-colors duration-200 underline underline-offset-4">
             Terms of Service
           </Link>
           <span className="text-gray-600">|</span>
-          <Link href="/privacy-policy" className="text-gray-400 hover:text-primary transition-colors duration-200">
+          <Link href="/privacy-policy" className="text-gray-300 hover:text-primary transition-colors duration-200 underline underline-offset-4">
             Privacy Policy
           </Link>
           <span className="text-gray-600">|</span>
-          <Link href="/cookie-policy" className="text-gray-400 hover:text-primary transition-colors duration-200">
+          <Link href="/cookie-policy" className="text-gray-300 hover:text-primary transition-colors duration-200 underline underline-offset-4">
             Cookie Policy
           </Link>
         </div>

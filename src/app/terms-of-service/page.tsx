@@ -12,17 +12,17 @@ export default function TermsOfServicePage() {
       <div className="mx-auto max-w-4xl px-4 py-12">
         <h1 className="mb-8 text-3xl font-bold text-white">Terms of Service</h1>
         
-        <div className="space-y-8 text-gray-300">
+        <div className="space-y-8 text-gray-200">
           <p className="text-sm text-gray-400">
             Last updated: December 17, 2025
           </p>
 
           <section>
             <h2 className="mb-4 text-xl font-semibold text-white">1. Introduction</h2>
-            <p className="mb-4">
+            <p className="mb-4 text-gray-200">
               Welcome to SweetFlips. These Terms of Service (&quot;Terms&quot;) govern your access to and use of the SweetFlips website located at sweetflips.gg (the &quot;Website&quot;), operated by Sweetflips Holdings Limited (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;), a company registered in Malta.
             </p>
-            <p>
+            <p className="text-gray-200">
               By accessing or using our Website, you agree to be bound by these Terms. If you do not agree to these Terms, please do not use our Website.
             </p>
           </section>
