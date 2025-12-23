@@ -1,4 +1,30 @@
 {
+  "redirects": [
+    {
+      "source": "/((?!restricted|terms-of-service|privacy-policy|cookie-policy|_next|api|favicon.ico|images|webgl).*)",
+      "destination": "/restricted",
+      "permanent": false,
+      "has": [
+        {
+          "type": "header",
+          "key": "x-vercel-ip-country",
+          "value": "NL"
+        }
+      ]
+    },
+    {
+      "source": "/((?!restricted|terms-of-service|privacy-policy|cookie-policy|_next|api|favicon.ico|images|webgl).*)",
+      "destination": "/restricted",
+      "permanent": false,
+      "has": [
+        {
+          "type": "header",
+          "key": "x-vercel-ip-country",
+          "value": "AE"
+        }
+      ]
+    }
+  ],
   "crons": [
     {
       "path": "/api/cron/giveaway-counter-update",
