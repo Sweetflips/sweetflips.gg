@@ -31,8 +31,7 @@ export function middleware(request: NextRequest) {
                           pathname === '/favicon.ico';
     
     if (!isAllowedPath && !isStaticAsset) {
-      const url = request.nextUrl.clone();
-      url.pathname = '/restricted';
+      const url = new URL('/restricted', request.url);
       return NextResponse.redirect(url);
     }
   }
