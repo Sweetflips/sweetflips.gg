@@ -54,7 +54,28 @@ export default function TermsOfServicePage() {
           </section>
 
           <section>
-            <h2 className="mb-4 text-xl font-semibold text-white">4. Nature of Our Services</h2>
+            <h2 className="mb-4 text-xl font-semibold text-white">4. Restricted Territories</h2>
+            <p className="mb-4">
+              <strong>Important:</strong> Our Website and the content provided herein are not intended for, and do not constitute an offer or invitation to, residents of jurisdictions where online gambling is prohibited, restricted, or requires specific licensing that we do not hold.
+            </p>
+            <p className="mb-4">
+              We explicitly do not promote, market, or provide gambling-related content or affiliate services to residents of the following countries (this list is not exhaustive):
+            </p>
+            <ul className="mb-4 list-disc pl-6 space-y-2">
+              <li><strong>The Netherlands (Nederland)</strong> - Online gambling advertising is strictly regulated under Dutch law (Wet op de kansspelen). We do not target Dutch residents.</li>
+              <li><strong>United Arab Emirates (UAE)</strong> - Gambling is prohibited under UAE law. We do not target UAE residents.</li>
+              <li>Any other jurisdiction where online gambling or gambling advertising is prohibited or restricted by law.</li>
+            </ul>
+            <p className="mb-4">
+              If you are located in any restricted territory, you must not use our Website or access any gambling-related content or links. By using our Website, you confirm that you are not located in a restricted territory and that accessing our content is legal in your jurisdiction.
+            </p>
+            <p>
+              We are committed to full compliance with all applicable gambling laws and regulations. We actively work to ensure our content is not directed at jurisdictions where it would be unlawful.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="mb-4 text-xl font-semibold text-white">5. Nature of Our Services</h2>
             <p className="mb-4">
               SweetFlips is an entertainment and content platform. We provide information about online casinos, gaming, and related entertainment services. We may feature affiliate links to third-party gambling and entertainment websites.
             </p>
@@ -67,7 +88,7 @@ export default function TermsOfServicePage() {
           </section>
 
           <section>
-            <h2 className="mb-4 text-xl font-semibold text-white">5. Disclaimer of Liability</h2>
+            <h2 className="mb-4 text-xl font-semibold text-white">6. Disclaimer of Liability</h2>
             <p className="mb-4">
               To the fullest extent permitted by applicable law:
             </p>
@@ -80,7 +101,7 @@ export default function TermsOfServicePage() {
           </section>
 
           <section>
-            <h2 className="mb-4 text-xl font-semibold text-white">6. Responsible Gambling</h2>
+            <h2 className="mb-4 text-xl font-semibold text-white">7. Responsible Gambling</h2>
             <p className="mb-4">
               We strongly advocate for responsible gambling. If you choose to engage in gambling activities through third-party websites:
             </p>
@@ -97,14 +118,14 @@ export default function TermsOfServicePage() {
           </section>
 
           <section>
-            <h2 className="mb-4 text-xl font-semibold text-white">7. Intellectual Property</h2>
+            <h2 className="mb-4 text-xl font-semibold text-white">8. Intellectual Property</h2>
             <p>
               All content on our Website, including but not limited to text, graphics, logos, images, and software, is the property of Sweetflips Holdings Limited or its licensors and is protected by copyright, trademark, and other intellectual property laws. You may not reproduce, distribute, modify, or create derivative works from any content without our prior written consent.
             </p>
           </section>
 
           <section>
-            <h2 className="mb-4 text-xl font-semibold text-white">8. User Conduct</h2>
+            <h2 className="mb-4 text-xl font-semibold text-white">9. User Conduct</h2>
             <p className="mb-4">
               You agree not to:
             </p>
@@ -118,35 +139,35 @@ export default function TermsOfServicePage() {
           </section>
 
           <section>
-            <h2 className="mb-4 text-xl font-semibold text-white">9. Third-Party Links</h2>
+            <h2 className="mb-4 text-xl font-semibold text-white">10. Third-Party Links</h2>
             <p>
               Our Website may contain links to third-party websites or services that are not owned or controlled by us. We have no control over, and assume no responsibility for, the content, privacy policies, or practices of any third-party websites or services. We strongly advise you to read the terms and conditions and privacy policies of any third-party websites you visit.
             </p>
           </section>
 
           <section>
-            <h2 className="mb-4 text-xl font-semibold text-white">10. Modifications to Terms</h2>
+            <h2 className="mb-4 text-xl font-semibold text-white">11. Modifications to Terms</h2>
             <p>
               We reserve the right to modify these Terms at any time. Any changes will be effective immediately upon posting on our Website. Your continued use of our Website following the posting of changes constitutes your acceptance of such changes. We encourage you to review these Terms periodically.
             </p>
           </section>
 
           <section>
-            <h2 className="mb-4 text-xl font-semibold text-white">11. Governing Law</h2>
+            <h2 className="mb-4 text-xl font-semibold text-white">12. Governing Law</h2>
             <p>
               These Terms shall be governed by and construed in accordance with the laws of Malta, without regard to its conflict of law provisions. Any disputes arising from these Terms or your use of our Website shall be subject to the exclusive jurisdiction of the courts of Malta.
             </p>
           </section>
 
           <section>
-            <h2 className="mb-4 text-xl font-semibold text-white">12. Severability</h2>
+            <h2 className="mb-4 text-xl font-semibold text-white">13. Severability</h2>
             <p>
               If any provision of these Terms is found to be unenforceable or invalid, that provision shall be limited or eliminated to the minimum extent necessary so that these Terms shall otherwise remain in full force and effect.
             </p>
           </section>
 
           <section>
-            <h2 className="mb-4 text-xl font-semibold text-white">13. Contact Us</h2>
+            <h2 className="mb-4 text-xl font-semibold text-white">14. Contact Us</h2>
             <p className="mb-2">
               If you have any questions about these Terms, please contact us at:
             </p>

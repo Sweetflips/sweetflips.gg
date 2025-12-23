@@ -71,12 +71,17 @@ const Footer = () => {
           Sweetflips Holdings Limited | Capital Business Centre, Entrance A, Floor 1, Triq Taz-Zwejt, San Gwann, SGN 3000, Malta
         </p>
 
-        {/* 6. Disclaimer Text */}
+        {/* 6. Restricted Territories Notice */}
+        <p className="text-xs text-gray-500 max-w-xl font-medium">
+          This website does not target residents of the Netherlands, United Arab Emirates (UAE), or any jurisdiction where online gambling is prohibited. We comply with all applicable gambling laws and regulations.
+        </p>
+
+        {/* 7. Disclaimer Text */}
         <p className="text-xs text-gray-500 max-w-xl">
           We do not take responsibility for any losses from gameplay on casinos and entertainment websites promoted on our site. Please bet responsibly and only bet or wager with money you can afford to lose and do not chase your losses. Follow the jurisdictional law in accordance with your location before registering. Gambling can be addictive - please play responsibly.
         </p>
 
-        {/* 7. 18+ Notice */}
+        {/* 8. 18+ Notice */}
         <div className="flex items-center gap-2 text-xs text-gray-500">
           <span className="inline-flex items-center justify-center h-6 w-6 rounded-full border border-gray-500 text-[10px] font-bold">
             18+
