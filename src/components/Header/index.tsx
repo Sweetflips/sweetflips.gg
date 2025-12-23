@@ -19,8 +19,8 @@ const Header = () => {
         <div className="flex items-center">
           <Link href="/" className="flex items-center">
             <Image
-              width={32}
-              height={32}
+              width={56}
+              height={56}
               src="/images/logo/sweet_flips (2).svg"
               alt="SweetFlips Logo"
               className="lg:hidden"
