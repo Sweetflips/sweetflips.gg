@@ -32,7 +32,10 @@ export function middleware(request: NextRequest) {
     
     if (!isAllowedPath && !isStaticAsset) {
       const url = new URL('/restricted', request.url);
-      return NextResponse.redirect(url);
+      return new NextResponse(null, {
+        status: 307,
+        headers: { Location: url.toString() },
+      });
     }
   }
 
