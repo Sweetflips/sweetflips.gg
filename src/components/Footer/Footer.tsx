@@ -16,12 +16,27 @@ const Footer = () => {
           />
         </Link>
 
-        {/* 2. Copyright Text (moved up) */}
+        {/* 2. Legal Links */}
+        <div className="flex flex-wrap justify-center gap-4 text-xs">
+          <Link href="/terms-of-service" className="text-gray-400 hover:text-primary transition-colors duration-200">
+            Terms of Service
+          </Link>
+          <span className="text-gray-600">|</span>
+          <Link href="/privacy-policy" className="text-gray-400 hover:text-primary transition-colors duration-200">
+            Privacy Policy
+          </Link>
+          <span className="text-gray-600">|</span>
+          <Link href="/cookie-policy" className="text-gray-400 hover:text-primary transition-colors duration-200">
+            Cookie Policy
+          </Link>
+        </div>
+
+        {/* 3. Copyright Text */}
         <p className="text-xs text-gray-500">
-          &copy; {new Date().getFullYear()} SweetFlips. All Rights Reserved.
+          &copy; {new Date().getFullYear()} Sweetflips Holdings Limited. All Rights Reserved.
         </p>
 
-        {/* 3. Social Icons (removed my-4) */}
+        {/* 4. Social Icons */}
         <div className="flex justify-center gap-5">
           <a href="https://www.instagram.com/sweetflips" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-primary transition-colors duration-200">
             <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 448 512" xmlns="http://www.w3.org/2000/svg">
@@ -45,17 +60,29 @@ const Footer = () => {
             </svg>
           </a>
           <a href="https://kick.com/sweetflips" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-primary transition-colors duration-200">
-            {/* Corrected Kick logo path and ensured viewBox is set (assuming 0 0 384 512 is appropriate for the K logo) */}
             <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 384 512" xmlns="http://www.w3.org/2000/svg">
               <path d="M147.3 114.4c0-56.2-32.5-82.4-73.4-82.4C26.2 32 0 68.2 0 113.4v283c0 47.3 25.3 83.4 74.9 83.4 39.8 0 72.4-25.6 72.4-83.4v-76.5l112.1 138.3c22.7 27.2 72.1 30.7 103.2 0 27-27.6 27.3-67.4 7.4-92.2l-90.8-114.8 74.9-107.4c17.4-24.7 17.5-63.1-10.4-89.8-30.3-29-82.4-31.6-113.6 12.8L147.3 185v-70.6z"/>
             </svg>
           </a>
         </div>
 
-        {/* 4. Disclaimer Text (removed mt-4) */}
-        <p className="text-xs text-gray-500 max-w-xl">
-          We do not take responsibility for any losses from gameplay on casinos and entertainment websites promoted on our site. Please bet responsibly and only bet or wager with money you can afford to lose and do not chase your losses. Follow the jurisdictional law in accordance with your location before registering.
+        {/* 5. Company Address */}
+        <p className="text-xs text-gray-500">
+          Sweetflips Holdings Limited | Capital Business Centre, Entrance A, Floor 1, Triq Taz-Zwejt, San Gwann, SGN 3000, Malta
         </p>
+
+        {/* 6. Disclaimer Text */}
+        <p className="text-xs text-gray-500 max-w-xl">
+          We do not take responsibility for any losses from gameplay on casinos and entertainment websites promoted on our site. Please bet responsibly and only bet or wager with money you can afford to lose and do not chase your losses. Follow the jurisdictional law in accordance with your location before registering. Gambling can be addictive - please play responsibly.
+        </p>
+
+        {/* 7. 18+ Notice */}
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <span className="inline-flex items-center justify-center h-6 w-6 rounded-full border border-gray-500 text-[10px] font-bold">
+            18+
+          </span>
+          <span>This website is intended for adults only.</span>
+        </div>
       </div>
     </footer>
   );
