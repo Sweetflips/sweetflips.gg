@@ -23,7 +23,8 @@ const Header = () => {
               height={56}
               src="/images/logo/sweet_flips (2).svg"
               alt="SweetFlips Logo"
-              className="lg:hidden"
+              className="lg:hidden animate-spin"
+              style={{ animationDuration: '3s' }}
               priority
             />
             <Image
@@ -31,7 +32,8 @@ const Header = () => {
               height={32}
               src="/images/logo/sweet_flips (2).svg"
               alt="SweetFlips Logo"
-              className="hidden lg:block"
+              className="hidden lg:block animate-spin"
+              style={{ animationDuration: '3s' }}
               priority
             />
           </Link>
