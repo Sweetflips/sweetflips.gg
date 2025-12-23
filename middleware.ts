@@ -3,26 +3,38 @@ import type { NextRequest } from 'next/server';
 
 declare const process: { env: Record<string, string | undefined> };
 
+// Paths that should be accessible from restricted regions
+const ALLOWED_PATHS = [
+  '/restricted',
+  '/terms-of-service',
+  '/privacy-policy',
+  '/cookie-policy',
+];
+
+// Countries where we don't promote gambling content
+const RESTRICTED_COUNTRIES = ['NL', 'AE'];
+
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  const env = ((globalThis as any).process?.env ?? {}) as Record<string, string | undefined>;
+  // Get country from Vercel geo headers
   const country = (request.geo?.country || request.headers.get('x-vercel-ip-country') || '').toUpperCase();
-  const city = (request.geo?.city || request.headers.get('x-vercel-ip-city') || '').toLowerCase();
 
-  const blockedCountries = (env.EDGE_BLOCKED_COUNTRIES || '')
-    .split(',')
-    .map((s) => s.trim().toUpperCase())
-    .filter(Boolean);
-
-  const blockedCities = (env.EDGE_BLOCKED_CITIES || '')
-    .split(',')
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
-
-  if ((blockedCountries.length && country && blockedCountries.includes(country)) ||
-      (blockedCities.length && city && blockedCities.includes(city))) {
-    return new NextResponse('Access from your region is not allowed.', { status: 403 });
+  // Check if user is from a restricted country
+  if (country && RESTRICTED_COUNTRIES.includes(country)) {
+    // Allow access to legal pages and the restricted page itself
+    const isAllowedPath = ALLOWED_PATHS.some(path => pathname === path || pathname.startsWith(path + '/'));
+    const isStaticAsset = pathname.startsWith('/_next') || 
+                          pathname.startsWith('/api') || 
+                          pathname.startsWith('/images') ||
+                          pathname.startsWith('/webgl') ||
+                          pathname === '/favicon.ico';
+    
+    if (!isAllowedPath && !isStaticAsset) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/restricted';
+      return NextResponse.redirect(url);
+    }
   }
 
   if (pathname.includes('/webgl/')) {
