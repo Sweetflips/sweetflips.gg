@@ -36,7 +36,8 @@ export const menuGroups: MenuGroup[] = [
       {
         icon: "stream",
         label: "Stream",
-        route: "/stream",
+        route: "https://kick.com/sweetflips",
+        external: true,
       },
       {
         icon: "rewards",
