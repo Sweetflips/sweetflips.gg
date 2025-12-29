@@ -14,6 +14,11 @@ const nextConfig = {
           destination: 'https://kick.com/sweetflips',
           permanent: true,
         },
+        {
+          source: '/stream/:path*',
+          destination: 'https://kick.com/sweetflips',
+          permanent: true,
+        },
       ];
     },
     // Configure headers for Unity WebGL files
@@ -109,7 +114,7 @@ const nextConfig = {
       ];
     },
   };
-  
+
   // BotID integration
   let config = nextConfig;
   try {
@@ -119,5 +124,5 @@ const nextConfig = {
     // BotID not available or error - use config as-is
     console.warn('BotID integration skipped:', e.message);
   }
-  
-  export default config;  
+
+  export default config;

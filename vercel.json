@@ -9,6 +9,18 @@
       "schedule": "*/10 * * * *"
     }
   ],
+  "redirects": [
+    {
+      "source": "/stream",
+      "destination": "https://kick.com/sweetflips",
+      "permanent": true
+    },
+    {
+      "source": "/stream/:path*",
+      "destination": "https://kick.com/sweetflips",
+      "permanent": true
+    }
+  ],
   "headers": [
     {
       "source": "/webgl/(.*).gz",

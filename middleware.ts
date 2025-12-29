@@ -5,7 +5,7 @@ export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Redirect /stream to Kick channel
-  if (pathname === '/stream') {
+  if (pathname === '/stream' || pathname === '/stream/') {
     return NextResponse.redirect('https://kick.com/sweetflips', 301);
   }
 
