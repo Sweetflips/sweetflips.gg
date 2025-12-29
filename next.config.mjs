@@ -6,6 +6,16 @@ const nextConfig = {
     images: {
       domains: ['qzdxgtegacnkmeninxww.supabase.co', 'uqabipngzjjuwijrvdsh.supabase.co'],
     },
+    // Redirects
+    async redirects() {
+      return [
+        {
+          source: '/stream',
+          destination: 'https://kick.com/sweetflips',
+          permanent: true,
+        },
+      ];
+    },
     // Configure headers for Unity WebGL files
     async headers() {
       return [
