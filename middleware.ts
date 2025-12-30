@@ -4,12 +4,8 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  // Redirect /stream to Kick channel
-  if (pathname === '/stream' || pathname === '/stream/') {
-    return NextResponse.redirect(new URL('https://kick.com/sweetflips'), { status: 301 });
-  }
-
   // Geo-blocking is handled by Vercel Firewall rules
+  // /stream redirect is handled by vercel.json and next.config.mjs
 
   if (pathname.includes('/webgl/')) {
     const response = NextResponse.next();
