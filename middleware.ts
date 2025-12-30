@@ -6,7 +6,7 @@ export function middleware(request: NextRequest) {
 
   // Redirect /stream to Kick channel
   if (pathname === '/stream' || pathname === '/stream/') {
-    return NextResponse.redirect('https://kick.com/sweetflips', 301);
+    return NextResponse.redirect(new URL('https://kick.com/sweetflips'), { status: 301 });
   }
 
   // Geo-blocking is handled by Vercel Firewall rules
