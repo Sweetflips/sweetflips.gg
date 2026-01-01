@@ -70,7 +70,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const cachedData = cached.data as any;
       // Limit to top 20 users
       const limitedData = Array.isArray(cachedData.data)
-        ? { ...cachedData, data: cachedData.data.slice(0, 20) }
+        ? { ...cachedData, data: cachedData.data.slice(0, 25) }
         : cachedData;
 
       res.setHeader("Cache-Control", "public, max-age=600, s-maxage=600");
@@ -88,7 +88,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const baseUrl = API_URL.includes("?") ? API_URL.split("?")[0] : API_URL;
     const urlWithParams = `${baseUrl}?referral_code=${encodeURIComponent(
       REFERRAL_CODE
-    )}&from=${encodeURIComponent(fromParam)}&to=${encodeURIComponent(toParam)}&top=20`;
+    )}&from=${encodeURIComponent(fromParam)}&to=${encodeURIComponent(toParam)}&top=25`;
 
     const cloudflareCookie = process.env.RAZED_CLOUDFLARE_COOKIE;
 
@@ -119,7 +119,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
         const cachedData = cached.data as any;
         const limited = Array.isArray(cachedData.data)
-          ? { ...cachedData, data: cachedData.data.slice(0, 20), stale: true }
+          ? { ...cachedData, data: cachedData.data.slice(0, 25), stale: true }
           : { ...cachedData, stale: true };
 
         res.setHeader("Cache-Control", "public, max-age=600, s-maxage=600");
@@ -164,7 +164,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (cached) {
         const cachedData = cached.data as any;
         const limited = Array.isArray(cachedData.data)
-          ? { ...cachedData, data: cachedData.data.slice(0, 20), stale: true }
+          ? { ...cachedData, data: cachedData.data.slice(0, 25), stale: true }
           : { ...cachedData, stale: true };
 
         res.setHeader("Cache-Control", "public, max-age=600, s-maxage=600");
@@ -186,7 +186,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     };
 
     if (Array.isArray(jsonResponse.data)) {
-      jsonResponse.data = jsonResponse.data.slice(0, 20).map((entry: any) => ({
+      jsonResponse.data = jsonResponse.data.slice(0, 25).map((entry: any) => ({
         ...entry,
         username: maskUsername(entry.username),
       }));
