@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 
 type TimeLeft = {
-  days: number;
   hours: number;
   minutes: number;
   seconds: number;
@@ -15,13 +14,11 @@ const targetTimestamp = Date.UTC(2026, 1, 3, 9, 0, 0);
 const getTimeLeft = (nowMs: number): TimeLeft => {
   const diffMs = Math.max(targetTimestamp - nowMs, 0);
   const totalSeconds = Math.floor(diffMs / 1000);
-  const days = Math.floor(totalSeconds / 86400);
-  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
 
   return {
-    days,
     hours,
     minutes,
     seconds,
@@ -113,9 +110,8 @@ export default function ComingSoon() {
 
           {showCountdown ? (
             <>
-              <div className="mt-6 grid w-full max-w-3xl gap-4 sm:grid-cols-4">
+              <div className="mt-6 grid w-full max-w-3xl gap-4 sm:grid-cols-3">
                 {[
-                  { label: "Days", value: timeLeft.days },
                   { label: "Hours", value: timeLeft.hours },
                   { label: "Minutes", value: timeLeft.minutes },
                   { label: "Seconds", value: timeLeft.seconds },

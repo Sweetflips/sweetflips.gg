@@ -3,6 +3,7 @@
 .next
 .prisma/client
 .env
+.env.local
 
 # testing
 
