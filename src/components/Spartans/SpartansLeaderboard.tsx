@@ -4,7 +4,7 @@ import Loader from "@/components/common/Loader";
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
 
-const API_PROXY_URL = "/api/RazedProxy";
+const API_PROXY_URL = "/api/SpartansProxy";
 
 type LeaderboardEntry = {
   username: string;
@@ -12,33 +12,33 @@ type LeaderboardEntry = {
   reward: number;
 };
 
-// Define the monthly reward mapping for $50,000 total prize pool
+// Define the monthly reward mapping for $75,000 total prize pool
 const monthlyRewardMapping: { [key: number]: number } = {
-  1: 20000,
-  2: 10000,
-  3: 5000,
-  4: 2500,
-  5: 1750,
-  6: 1250,
-  7: 1000,
-  8: 900,
-  9: 850,
-  10: 800,
-  11: 750,
-  12: 700,
-  13: 650,
-  14: 600,
-  15: 500,
-  16: 450,
-  17: 400,
-  18: 350,
-  19: 325,
-  20: 275,
-  21: 250,
-  22: 225,
-  23: 200,
-  24: 150,
-  25: 125,
+  1: 30000,
+  2: 15000,
+  3: 10000,
+  4: 6000,
+  5: 2200,
+  6: 1500,
+  7: 1250,
+  8: 1000,
+  9: 900,
+  10: 850,
+  11: 780,
+  12: 730,
+  13: 670,
+  14: 620,
+  15: 520,
+  16: 470,
+  17: 420,
+  18: 370,
+  19: 345,
+  20: 295,
+  21: 270,
+  22: 245,
+  23: 220,
+  24: 170,
+  25: 165,
 };
 
 // Define the WEEKLY reward mapping ($10,000 total for top 25)
@@ -65,11 +65,10 @@ const weeklyRewardMapping: { [key: number]: number } = {
   20: 30,
 };
 
-const RazedLeaderboard: React.FC = () => {
+const SpartansLeaderboard: React.FC = () => {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  // const [timeLeft, setTimeLeft] = useState<string>(""); // Replaced by Timer component
 
   const fireworksLaunched = useRef(false); // Prevent multiple launches
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -99,9 +98,9 @@ const RazedLeaderboard: React.FC = () => {
     currentRewardMapping = weeklyRewardMapping;
     targetDateForTimer = SPECIAL_PERIOD_END_DATE;
   } else {
-    prizePoolAmount = 50000;
-    leaderboardTitle = `$${prizePoolAmount.toLocaleString()}`;
-    leaderboardDescription = `Each month, $50,000 is distributed among 25 users based on their total wagered amount on Razed.`;
+    prizePoolAmount = 75000;
+    leaderboardTitle = `$75,000 SPARTANS X SWEETFLIPS LEADERBOARD`;
+    leaderboardDescription = `Each month, $75,000 is distributed among 25 users based on their total wagered amount on Spartans.`;
     currentRewardMapping = monthlyRewardMapping;
     targetDateForTimer = new Date(
       Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999),
@@ -150,7 +149,7 @@ const RazedLeaderboard: React.FC = () => {
           )
           .map((user: LeaderboardEntry, index: number) => ({
             ...user,
-            reward: currentRewardMapping[index + 1] || 0, // Use currentRewardMapping
+            reward: currentRewardMapping[index + 1] || 0,
           }));
         setData(sortedData);
       } catch (err: any) {
@@ -160,18 +159,9 @@ const RazedLeaderboard: React.FC = () => {
       }
     };
     fetchData();
-  }, [currentRewardMapping]); // Add currentRewardMapping to dependency array
+  }, [currentRewardMapping]);
 
   const topUsers = data.slice(0, 3);
-
-  // useEffect(() => {
-  //   if (topUsers[0] && !fireworksLaunched.current) {
-  //     fireworksLaunched.current = true;
-  //     confetti({ particleCount: 100, spread: 120, origin: { y: 0.6 } });
-  //   }
-  // }, [topUsers]);
-
-  // Old useEffect for timeLeft is removed as Timer component handles this.
 
   if (loading) return <Loader />;
   if (error) return <p className="text-red-500">Error: {error}</p>;
@@ -195,55 +185,54 @@ const RazedLeaderboard: React.FC = () => {
 
   // Determine the number of users to display based on the event
   const displayLimit = isSpecialWeekActive ? 20 : 25;
-  const restUsers = data.slice(3, displayLimit); // Displays users from rank 4 up to displayLimit
+  const restUsers = data.slice(3, displayLimit);
 
-  // Luxon based countDownDate is replaced by targetDateForTimer.toISOString()
   const countDownDateISO = targetDateForTimer.toISOString();
 
   return (
     <div className="mt-4 p-4 text-white">
       {/* Floating Image */}
       <div className="FooterBg relative mx-auto flex h-80 w-full transform flex-col items-center justify-between overflow-hidden rounded-xl p-4 shadow-[inset_0_0_20px_rgba(0,0,0,0.4)] transition-all sm:w-3/4 sm:flex-row sm:items-start md:w-5/6">
-        {/* Left Image */}
+        {/* Left Image - Temporary decorative image */}
         <div className="hide-on-ipad absolute left-0 hidden sm:block">
           <Image
-            src="/images/icon/Razed_777.png"
-            alt="Razed Slot777"
+            src="/images/logo/sweet_flips_emblem_gold.png"
+            alt="SweetFlips Gold Emblem"
             className="transform"
             width={272}
             height={408}
           />
         </div>
 
-        {/* Right Image */}
-        <div className="hide-on-ipad absolute right-0 top-[30px] hidden sm:block">
+        {/* Right Image - Temporary decorative image */}
+        <div className="hide-on-ipad absolute right-0 top-[30px] hidden pr-4 sm:block">
           <Image
-            src="/images/icon/Razed_cards.png"
-            alt="Razed Cards"
+            src="/images/logo/Spartans icon.svg"
+            alt="Spartans Logo"
             className="transform"
-            width={272}
-            height={408}
+            width={204}
+            height={306}
           />
         </div>
-        {/* Left Image mobile */}
+        {/* Left Image mobile - Temporary decorative image */}
         <div className="absolute -left-1 top-[-20px] sm:block md:hidden">
           <Image
-            src="/images/icon/Razed_777.png"
-            alt="Razed Slot777"
+            src="/images/logo/sweet_flips_emblem_gold.png"
+            alt="SweetFlips Gold Emblem"
             className="h-[103px] w-[68.05px] transform"
             width={68.05}
             height={103}
           />
         </div>
 
-        {/* Right Image mobile*/}
-        <div className="absolute -right-5 top-[250px] sm:block md:hidden">
+        {/* Right Image mobile - Temporary decorative image */}
+        <div className="absolute -right-5 top-[250px] pr-2 sm:block md:hidden">
           <Image
-            src="/images/icon/Razed_cards.png"
-            alt="Razed Cards"
-            className="h-[103px] w-[68.05px] transform"
-            width={68.05}
-            height={103}
+            src="/images/logo/Spartans icon.svg"
+            alt="Spartans Logo"
+            className="h-[77.25px] w-[51.0375px] transform"
+            width={51.0375}
+            height={77.25}
           />
         </div>
 
@@ -255,15 +244,16 @@ const RazedLeaderboard: React.FC = () => {
           </b>
 
           {/* Image and Leaderboard Layout */}
-          <div className="mt-4 flex flex-col items-center justify-center sm:flex-row sm:space-x-4">
-            {/* Razed Logo */}
+          <div className="mt-4 flex flex-col items-end justify-center sm:flex-row sm:items-end sm:space-x-4">
+            {/* Spartans Logo */}
             <Image
-              src="/images/logo/Razed_Logo.png"
-              alt="Razed Logo"
+              src="/images/logo/Spartans wordmark.webp"
+              alt="Spartans Logo"
               className="mb-3 transition-all duration-300 sm:mb-0 sm:w-[150px] md:w-[200px] lg:w-[250px] xl:w-[250px]"
-              width={200} // Default width for the image
-              height={100} // You can adjust the height as per the aspect ratio of the image
-              sizes="(max-width: 640px) 150px, (max-width: 768px) 200px, 250px" // Optional: specifies how the image should scale on different screen sizes
+              style={{ filter: 'grayscale(1)' }}
+              width={200}
+              height={100}
+              sizes="(max-width: 640px) 150px, (max-width: 768px) 200px, 250px"
             />
             {/* Leaderboard Text */}
             <b className="text-4xl text-white sm:text-2xl md:text-3xl lg:text-3xl">
@@ -437,7 +427,6 @@ const RazedLeaderboard: React.FC = () => {
                   </div>
                   <div className="text-red-400 px-3 py-2">
                     {" "}
-                    {/* Ensure existing text color class is maintained if needed */}
                     {formatRewardCurrency(user.reward!)}
                   </div>
                 </div>
@@ -450,4 +439,4 @@ const RazedLeaderboard: React.FC = () => {
   );
 };
 
-export default RazedLeaderboard;
+export default SpartansLeaderboard;

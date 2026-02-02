@@ -21,10 +21,11 @@ const BannerVideo: React.FC = () => {
           WebkitBoxShadow: 'none',
           MozBoxShadow: 'none',
           objectFit: 'cover',
-          objectPosition: 'center'
+          objectPosition: 'center',
+          mixBlendMode: 'lighten'
         }}
       >
-        <source src="/videos/Banner_V6.webm" type="video/webm" />
+        <source src="/videos/Play_to_win_banner.webm" type="video/webm" />
         Your browser does not support the video tag.
       </video>
     </div>

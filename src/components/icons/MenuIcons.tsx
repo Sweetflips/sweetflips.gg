@@ -160,10 +160,10 @@ export const AvatarIcon: React.FC<{ fill?: string; width?: string; height?: stri
   </svg>
 );
 
-export const RazedIcon: React.FC<{ fill?: string; width?: string; height?: string; className?: string }> = ({ width = "24", height = "24", className }) => (
+export const SpartansIcon: React.FC<{ fill?: string; width?: string; height?: string; className?: string }> = ({ width = "24", height = "24", className }) => (
   <Image
-    src="/images/logo/Razed icon.jpg"
-    alt="Razed"
+    src="/images/logo/Spartans icon.svg"
+    alt="Spartans"
     width={parseInt(width)}
     height={parseInt(height)}
     className={`rounded ${className || ''}`}
@@ -201,7 +201,7 @@ export const iconMap: { [key: string]: React.FC<any> } = {
   games: GamesIcon,
   chat: ChatIcon,
   avatar: AvatarIcon,
-  razed: RazedIcon,
+  spartans: SpartansIcon,
   luxdrop: LuxdropIcon,
   rewards: RewardsIcon,
 };

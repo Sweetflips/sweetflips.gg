@@ -16,33 +16,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const baseUrl = getBaseUrl();
 
   const results = {
-    razed: { success: false, error: null as string | null },
+    spartans: { success: false, error: null as string | null },
     luxdrop: { success: false, error: null as string | null },
     timestamp: new Date().toISOString(),
   };
 
   try {
-    // Refresh Razed leaderboard
+    // Refresh Spartans leaderboard
     try {
-      const razedResponse = await fetch(`${baseUrl}/api/RazedProxy`, {
+      const spartansResponse = await fetch(`${baseUrl}/api/SpartansProxy`, {
         method: "GET",
         headers: {
           "Cache-Control": "no-cache",
         },
       });
 
-      if (razedResponse.ok) {
-        const data = await razedResponse.json();
-        results.razed.success = true;
+      if (spartansResponse.ok) {
+        const data = await spartansResponse.json();
+        results.spartans.success = true;
         if (process.env.NODE_ENV === 'development') {
-          console.log(`[Cron] Razed leaderboard refreshed: ${data.data?.length || 0} entries`);
+          console.log(`[Cron] Spartans leaderboard refreshed: ${data.data?.length || 0} entries`);
         }
       } else {
-        results.razed.error = `HTTP ${razedResponse.status}`;
+        results.spartans.error = `HTTP ${spartansResponse.status}`;
       }
     } catch (error: any) {
-      results.razed.error = error.message || "Unknown error";
-      console.error("[Cron] Error refreshing Razed leaderboard:", error);
+      results.spartans.error = error.message || "Unknown error";
+      console.error("[Cron] Error refreshing Spartans leaderboard:", error);
     }
 
     // Refresh Luxdrop leaderboard
@@ -68,7 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.error("[Cron] Error refreshing Luxdrop leaderboard:", error);
     }
 
-    const allSuccess = results.razed.success && results.luxdrop.success;
+    const allSuccess = results.spartans.success && results.luxdrop.success;
     const statusCode = allSuccess ? 200 : 207; // 207 Multi-Status if partial success
 
     return res.status(statusCode).json(results);

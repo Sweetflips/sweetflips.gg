@@ -69,23 +69,41 @@ const GiveAwayCounter: React.FC = () => {
               Leaderboards
             </p>
             <div className="flex items-center space-x-4">
-              <a href="/razed" rel="noopener noreferrer">
-                <Image
-                  src="/images/logo/Razed icon.jpg"
-                  alt="razed"
-                  width={50}
-                  height={50}
-                  className="object-contain transition-transform hover:scale-105"
-                />
+              <a href="/spartans" rel="noopener noreferrer" className="group">
+                <div className="relative">
+                  <Image
+                    src="/images/logo/Spartans icon.svg"
+                    alt="Spartans"
+                    width={50}
+                    height={50}
+                    className="relative z-10 object-contain transition-transform hover:scale-105"
+                  />
+                  <Image
+                    src="/images/logo/Spartans icon.svg"
+                    alt="Spartans Glow"
+                    width={50}
+                    height={50}
+                    className="absolute top-0 left-0 z-0 object-contain opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-40"
+                  />
+                </div>
               </a>
-              <a href="/luxdrop" rel="noopener noreferrer">
-                <Image
-                  src="/images/icon/luxdrop_fav.png"
-                  alt="LuxDrop"
-                  width={50}
-                  height={50}
-                  className="object-contain transition-transform hover:scale-105"
-                />
+              <a href="/luxdrop" rel="noopener noreferrer" className="group">
+                <div className="relative">
+                  <Image
+                    src="/images/icon/luxdrop_fav.png"
+                    alt="LuxDrop"
+                    width={50}
+                    height={50}
+                    className="relative z-10 object-contain transition-transform hover:scale-105"
+                  />
+                  <Image
+                    src="/images/icon/luxdrop_fav.png"
+                    alt="LuxDrop Glow"
+                    width={50}
+                    height={50}
+                    className="absolute top-0 left-0 z-0 object-contain opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-40"
+                  />
+                </div>
               </a>
             </div>
           </div>

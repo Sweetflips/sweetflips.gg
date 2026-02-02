@@ -13,12 +13,12 @@ This document lists all required and optional environment variables for the Swee
 
 ### API Keys
 
-#### Razed API
-- `BASE_RAZED_API_URL` - Base URL for Razed API endpoint
-- `AUTH_RAZED` - Authentication/referral key for Razed API
-- `RAZED_REFERRAL_CODE` - Referral code used in API requests (default: "SweetFlips")
-- `NEXT_PUBLIC_RAZED_REFERRAL_CODE` - Referral code for client-side components (default: "SweetFlips")
-- `RAZED_CLOUDFLARE_COOKIE` - Optional Cloudflare cookie for bypassing bot protection
+#### Spartans API
+- `BASE_SPARTANS_API_URL` - Base URL for Spartans API endpoint (e.g., "https://nexus-campaign-hub-production.up.railway.app/affiliates/524999/campaigns/20499/leaderboards/active")
+- `SPARTANS_API_KEY` - API key for x-api-key header authentication
+- `SPARTANS_REFERRAL_CODE` - Referral code used in API requests (default: "SweetFlips")
+- `NEXT_PUBLIC_SPARTANS_REFERRAL_CODE` - Referral code for client-side components (default: "SweetFlips")
+- `NEXT_PUBLIC_SPARTANS_SIGNUP_URL` - Spartans casino signup URL with referral
 
 #### Luxdrop API
 - `LUXDROP_API_KEY` - API key for Luxdrop affiliate API
@@ -44,7 +44,7 @@ This document lists all required and optional environment variables for the Swee
 
 ### Special Event Periods
 
-#### Razed Special Period
+#### Spartans Special Period
 - `SPECIAL_PERIOD_START_DATE` - Start date for special weekly event (format: YYYY-MM-DD, e.g., "2025-06-23")
 - `SPECIAL_PERIOD_END_DATE` - End date for special weekly event (format: YYYY-MM-DD, e.g., "2025-06-30")
 
@@ -66,7 +66,7 @@ This document lists all required and optional environment variables for the Swee
 
 The application validates critical environment variables at runtime:
 
-- API routes check for `BASE_RAZED_API_URL` and `AUTH_RAZED` before making requests
+- API routes check for `BASE_SPARTANS_API_URL` before making Spartans API requests
 - API routes check for `LUXDROP_API_KEY` before making Luxdrop API requests
 - Database connection is validated by Prisma during initialization
 

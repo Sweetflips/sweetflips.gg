@@ -91,7 +91,7 @@ const nextConfig = {
           ],
         },
         {
-          source: '/razed',
+          source: '/spartans',
           headers: [
             {
               key: 'Cache-Control',

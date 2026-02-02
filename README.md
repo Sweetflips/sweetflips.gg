@@ -61,8 +61,8 @@ This document outlines all the cleanup and production readiness work completed o
 
 #### Configuration Improvements
 - Made hardcoded dates configurable via environment variables:
-  - Razed special period dates (November 2025)
-  - Luxdrop period year/month (November 2025)
+  - Spartans special period dates
+  - Luxdrop period year/month
   - All dates now use environment variables with sensible defaults
 - Updated proxy code to support proxies without authentication
 - Created comprehensive `.env.example` file
@@ -71,20 +71,19 @@ This document outlines all the cleanup and production readiness work completed o
 ### 🎯 Current Features
 
 #### Active Leaderboards
-1. **Razed Leaderboard** (`/razed`)
+1. **Spartans Leaderboard** (`/spartans`)
    - Monthly leaderboard with $50,000 prize pool
    - Configurable via `SPECIAL_PERIOD_START_DATE` and `SPECIAL_PERIOD_END_DATE`
-   - Currently set to November 1-30, 2025
+   - API: `https://nexus-campaign-hub-production.up.railway.app/affiliates/524999/campaigns/20499/leaderboards/active`
 
 2. **Luxdrop Leaderboard** (`/luxdrop`)
    - Bi-weekly periods (1-15 and 16-30 of month)
    - Configurable via `LUXDROP_PERIOD_YEAR` and `LUXDROP_PERIOD_MONTH`
-   - Currently set to November 2025
    - Uses proxy: `104.253.199.227:5506`
 
 3. **Homepage Leaderboard**
-   - Displays Razed leaderboard on homepage
-   - Uses same configuration as Razed page
+   - Displays Spartans leaderboard on homepage
+   - Uses same configuration as Spartans page
 
 #### Other Features
 - Stream schedule page (`/stream`)
@@ -141,8 +140,8 @@ See [ENV_VARIABLES.md](./ENV_VARIABLES.md) for a complete list of required and o
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous key
 
 #### API Keys
-- `BASE_RAZED_API_URL` - Razed API endpoint
-- `AUTH_RAZED` - Razed authentication token
+- `BASE_SPARTANS_API_URL` - Spartans API endpoint
+- `SPARTANS_API_KEY` - Spartans API key (x-api-key header)
 - `LUXDROP_API_KEY` - Luxdrop API key
 - `CRON_SECRET` - Secret for cron job authentication
 
@@ -159,10 +158,10 @@ See [ENV_VARIABLES.md](./ENV_VARIABLES.md) for a complete list of required and o
 - `PROXY_PASSWORD` - Proxy authentication password (optional)
 
 #### Leaderboard Dates
-- `SPECIAL_PERIOD_START_DATE` - Razed special period start (format: YYYY-MM-DD)
-- `SPECIAL_PERIOD_END_DATE` - Razed special period end (format: YYYY-MM-DD)
-- `NEXT_PUBLIC_SPECIAL_PERIOD_START_DATE` - Client-side Razed period start
-- `NEXT_PUBLIC_SPECIAL_PERIOD_END_DATE` - Client-side Razed period end
+- `SPECIAL_PERIOD_START_DATE` - Spartans special period start (format: YYYY-MM-DD)
+- `SPECIAL_PERIOD_END_DATE` - Spartans special period end (format: YYYY-MM-DD)
+- `NEXT_PUBLIC_SPECIAL_PERIOD_START_DATE` - Client-side Spartans period start
+- `NEXT_PUBLIC_SPECIAL_PERIOD_END_DATE` - Client-side Spartans period end
 - `LUXDROP_PERIOD_YEAR` - Luxdrop period year
 - `LUXDROP_PERIOD_MONTH` - Luxdrop period month (1-12)
 - `NEXT_PUBLIC_LUXDROP_PERIOD_YEAR` - Client-side Luxdrop year
@@ -186,18 +185,18 @@ vercel
 sweetflips.gg-1/
 ├── src/
 │   ├── app/              # Next.js App Router pages
-│   │   ├── razed/        # Razed leaderboard page
+│   │   ├── spartans/     # Spartans leaderboard page
 │   │   ├── luxdrop/      # Luxdrop leaderboard page
 │   │   ├── stream/       # Stream schedule page
 │   │   └── ...
 │   ├── components/       # React components
-│   │   ├── Razed/        # Razed leaderboard component
+│   │   ├── Spartans/     # Spartans leaderboard component
 │   │   ├── Luxdrop/      # Luxdrop leaderboard component
 │   │   └── ...
 │   └── pages/
 │       └── api/          # API routes
-│           ├── RazedProxy.ts      # Razed API proxy
-│           └── LuxdropProxy.ts   # Luxdrop API proxy
+│           ├── SpartansProxy.ts   # Spartans API proxy
+│           └── LuxdropProxy.ts    # Luxdrop API proxy
 ├── lib/                  # Shared utilities
 │   ├── prisma.ts         # Prisma client
 │   ├── supabase.ts       # Supabase client
@@ -212,7 +211,7 @@ sweetflips.gg-1/
 ## API Endpoints
 
 ### Leaderboard APIs
-- `GET /api/RazedProxy` - Razed leaderboard data (November 1-30, 2025)
+- `GET /api/SpartansProxy` - Spartans leaderboard data (monthly)
 - `GET /api/LuxdropProxy` - Luxdrop leaderboard data (bi-weekly periods)
 
 ### Cron Jobs
@@ -248,7 +247,7 @@ sweetflips.gg-1/
 3. Open `http://localhost:3000`
 4. Test leaderboards:
    - Homepage: `http://localhost:3000`
-   - Razed: `http://localhost:3000/razed`
+   - Spartans: `http://localhost:3000/spartans`
    - Luxdrop: `http://localhost:3000/luxdrop`
    - Stream: `http://localhost:3000/stream`
 
@@ -284,7 +283,7 @@ sweetflips.gg-1/
 - ✅ Made all dates configurable via environment variables
 - ✅ Created comprehensive environment variable documentation
 - ✅ Updated proxy code to support authentication-optional proxies
-- ✅ All leaderboards configured for November 2025
+- ✅ Migrated from Razed to Spartans casino (February 2026)
 
 ## Support
 

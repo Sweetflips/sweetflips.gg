@@ -1,9 +1,10 @@
 import React from "react";
 
 const HomeBanner: React.FC = () => {
-  const razedReferralCode = process.env.NEXT_PUBLIC_RAZED_REFERRAL_CODE || "SweetFlips";
+  const spartansReferralCode = process.env.NEXT_PUBLIC_SPARTANS_REFERRAL_CODE || "SweetFlips";
   const luxdropAffiliateCode = process.env.NEXT_PUBLIC_LUXDROP_AFFILIATE_CODE || "sweetflips";
-  const razedUrl = `https://www.razed.com/signup/?raf=${encodeURIComponent(razedReferralCode)}`;
+  // REFLINK (promo codes are not available yet)
+  const spartansUrl = process.env.NEXT_PUBLIC_SPARTANS_SIGNUP_URL || "https://go.aff.spartans.com/fqf5mmbm";
   const luxdropUrl = `https://luxdrop.com/?r=${encodeURIComponent(luxdropAffiliateCode)}`;
 
   return (
@@ -12,7 +13,17 @@ const HomeBanner: React.FC = () => {
     >
       <div className="my-auto flex w-full max-w-180 flex-col items-center justify-center p-4">
         <h1 className="text-4xl font-extrabold text-white sm:text-5xl">
-          Welcome to SweetFlips
+          Welcome to <span style={{ 
+            background: 'linear-gradient(to right, #cf171f, #cf171f)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          }}>Sweet</span><span style={{ 
+            background: 'linear-gradient(to right, #976daf, #7d59a5)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          }}>Flips</span>
         </h1>
         <p className="mt-6 text-lg font-bold text-white sm:text-xl">
           The premier online casino community.
@@ -23,12 +34,12 @@ const HomeBanner: React.FC = () => {
         <p className="mt-6 text-sm text-white sm:text-base">
           Unlock and claim <b className="text-blue-400">exclusive bonuses</b> on{" "}
           <a
-            href={razedUrl}
+            href={spartansUrl}
             target="blank"
-            className="font-extrabold !text-[#4D4EE0] hover:!text-[#4D4EE0] hover:underline"
-            style={{ color: '#4D4EE0' }}
+            className="font-extrabold !text-[#f0ff31] hover:!text-[#f0ff31] hover:underline"
+            style={{ color: '#f0ff31' }}
           >
-            Razed.com
+            Spartans
           </a>{" "}
           and{" "}
           <a
@@ -37,9 +48,9 @@ const HomeBanner: React.FC = () => {
             className="font-extrabold !text-[#1BB2FF] hover:!text-[#1BB2FF] hover:underline"
             style={{ color: '#1BB2FF' }}
           >
-            LuxDrop.com
+            LuxDrop
           </a>{" "}
-          using code SweetFlips. From $70,000 monthly leaderboards to VIP perks, wager milestones, events, and much more, we&apos;ve got it all.
+          using code SweetFlips. From $100,000 monthly leaderboards to VIP perks, wager milestones, events, and much more, we&apos;ve got it all.
         </p>
       </div>
     </div>

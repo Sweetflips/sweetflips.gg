@@ -5,7 +5,7 @@ import { Timer } from "@/app/ui/timer/Timer";
 import { DateTime } from "luxon";
 import Image from "next/image";
 
-const API_PROXY_URL = "/api/RazedProxy";
+const API_PROXY_URL = "/api/SpartansProxy";
 
 type LeaderboardEntry = {
   username: string;
@@ -154,14 +154,14 @@ const TopLeaderboard: React.FC = () => {
   return (
     <div className="mt-6 text-white md:mt-12">
       <p className="mb-10 flex-col text-center text-2xl font-bold md:mt-12">
-        <b className="text-[#4D4EE0]">Razed</b> Top Leaderboard
+        <b className="text-[#f0ff31]">Spartans</b> Top Leaderboard
       </p>
       <div className="TopLeaderboard">
         {topUsers && topUsers.length >= 3 && (
           <>
             {/* Left Card */}
             <div className="TopLeaderboard__card TopLeaderboard__card--left duration-200 ease-in hover:scale-110 md:mt-10">
-              <a href="/razed">
+              <a href="/spartans">
                 <div className="TopLeaderboard__card-inner">
                   <div className="TopLeaderboard__number-wrapper">
                     <Image
@@ -198,7 +198,7 @@ const TopLeaderboard: React.FC = () => {
 
             {/* Middle Card */}
             <div className="TopLeaderboard__card TopLeaderboard__card--middle duration-200 ease-in hover:scale-110">
-              <a href="/razed">
+              <a href="/spartans">
                 <div className="TopLeaderboard__card-inner">
                   <div className="TopLeaderboard__number-wrapper">
                     <Image
@@ -235,7 +235,7 @@ const TopLeaderboard: React.FC = () => {
 
             {/* Right Card */}
             <div className="TopLeaderboard__card TopLeaderboard__card--right duration-200 ease-in hover:scale-110 md:mt-10">
-              <a href="/razed">
+              <a href="/spartans">
                 <div className="TopLeaderboard__card-inner">
                   <div className="TopLeaderboard__number-wrapper">
                     <Image

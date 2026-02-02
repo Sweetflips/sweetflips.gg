@@ -24,9 +24,9 @@ export const menuGroups: MenuGroup[] = [
         route: "/",
       },
       {
-        icon: "razed",
-        label: "Razed",
-        route: "/razed",
+        icon: "spartans",
+        label: "Spartans",
+        route: "/spartans",
       },
       {
         icon: "luxdrop",

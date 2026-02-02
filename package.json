@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "test:razed": "tsx test-razed-api.ts"
+    "test:spartans": "tsx test-spartans-api.ts"
   },
   "dependencies": {
     "@headlessui/react": "^2.1.1",

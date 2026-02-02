@@ -6,12 +6,11 @@ const CACHE_TTL_MS = 10 * 60 * 1000;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const API_URL = process.env.BASE_RAZED_API_URL as string;
-    const REFERRAL_KEY = process.env.AUTH_RAZED as string;
-    const REFERRAL_CODE = process.env.RAZED_REFERRAL_CODE || "SweetFlips";
+    // Spartans API URL - path-based structure with affiliate and campaign IDs
+    const API_URL = process.env.BASE_SPARTANS_API_URL as string;
 
-    if (!API_URL || !REFERRAL_KEY) {
-      return res.status(500).json({ error: "Missing BASE_RAZED_API_URL or AUTH_RAZED in environment variables" });
+    if (!API_URL) {
+      return res.status(500).json({ error: "Missing BASE_SPARTANS_API_URL in environment variables" });
     }
 
     const now = new Date();
@@ -52,59 +51,55 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       )} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())}`;
     const fromParam = formatDate(fromDate);
     const toParam = formatDate(toDate);
-    const cacheKey = `${fromParam}|${toParam}`;
+    const cacheKey = `spartans|${fromParam}|${toParam}`;
 
     // 1. Try cache first
-    const cached = await prisma.razedLeaderboardCache.findUnique({
+    const cached = await prisma.spartansLeaderboardCache.findUnique({
       where: { cacheKey },
     });
 
     if (cached && cached.expiresAt > now) {
       if (process.env.NODE_ENV === "development") {
         console.log(
-          `[RazedProxy] Returning cached data from database (expires in ${Math.round(
+          `[SpartansProxy] Returning cached data from database (expires in ${Math.round(
             (cached.expiresAt.getTime() - now.getTime()) / 1000 / 60
           )} minutes)`
         );
       }
       const cachedData = cached.data as any;
-      // Limit to top 20 users
+      // Limit to top 25 users
       const limitedData = Array.isArray(cachedData.data)
         ? { ...cachedData, data: cachedData.data.slice(0, 25) }
         : cachedData;
 
       res.setHeader("Cache-Control", "public, max-age=600, s-maxage=600");
-      res.setHeader("Cache-Tag", "leaderboard,razed");
+      res.setHeader("Cache-Tag", "leaderboard,spartans");
       res.setHeader("Last-Modified", cached.fetchedAt.toUTCString());
 
       return res.status(200).json(limitedData);
     }
 
-    // 2. Cache miss/expired: Fetch from upstream Razed API
+    // 2. Cache miss/expired: Fetch from upstream Spartans API
     if (process.env.NODE_ENV === "development") {
-      console.log(`[RazedProxy] Cache expired or missing, fetching from API...`);
+      console.log(`[SpartansProxy] Cache expired or missing, fetching from API...`);
     }
 
-    const baseUrl = API_URL.includes("?") ? API_URL.split("?")[0] : API_URL;
-    const urlWithParams = `${baseUrl}?referral_code=${encodeURIComponent(
-      REFERRAL_CODE
-    )}&from=${encodeURIComponent(fromParam)}&to=${encodeURIComponent(toParam)}&top=25`;
-
-    const cloudflareCookie = process.env.RAZED_CLOUDFLARE_COOKIE;
-
+    // Spartans API is a direct endpoint - no query params needed
     const headers: Record<string, string> = {
-      "X-Referral-Key": REFERRAL_KEY,
       Accept: "application/json",
       "User-Agent":
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       "Accept-Language": "en-US,en;q=0.9",
       "Accept-Encoding": "gzip, deflate, br",
-      Referer: "https://razed.com/",
-      Origin: "https://razed.com",
     };
-    if (cloudflareCookie) headers["Cookie"] = cloudflareCookie;
 
-    const response = await fetch(urlWithParams, {
+    // Add x-api-key header for authentication
+    const apiKey = process.env.SPARTANS_API_KEY;
+    if (apiKey) {
+      headers["x-api-key"] = apiKey;
+    }
+
+    const response = await fetch(API_URL, {
       method: "GET",
       headers,
     });
@@ -114,7 +109,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (cached) {
         if (process.env.NODE_ENV === "development") {
           console.log(
-            `[RazedProxy] API error ${response.status}, returning stale cache`
+            `[SpartansProxy] API error ${response.status}, returning stale cache`
           );
         }
         const cachedData = cached.data as any;
@@ -123,29 +118,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           : { ...cachedData, stale: true };
 
         res.setHeader("Cache-Control", "public, max-age=600, s-maxage=600");
-        res.setHeader("Cache-Tag", "leaderboard,razed");
+        res.setHeader("Cache-Tag", "leaderboard,spartans");
         res.setHeader("Last-Modified", cached.fetchedAt.toUTCString());
         return res.status(200).json(limited);
       }
       const errorText = await response.text().catch(
         () => "Unable to read error response"
       );
-      const isCloudflare =
-        errorText.includes("Just a moment") ||
-        errorText.includes("cf-browser-verification");
       console.error(
-        `[RazedProxy] API error ${response.status}: ${
-          isCloudflare ? "Cloudflare challenge" : errorText.substring(0, 200)
-        }`
+        `[SpartansProxy] API error ${response.status}: ${errorText.substring(0, 200)}`
       );
 
       return res.status(response.status).json({
-        error: `Razed API error: ${response.status}`,
-        message:
-          response.status === 429 || isCloudflare
-            ? "Rate limited by Cloudflare. Please try again later."
-            : errorText.substring(0, 200),
-        isCloudflare,
+        error: `Spartans API error: ${response.status}`,
+        message: errorText.substring(0, 200),
       });
     }
 
@@ -155,9 +141,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       jsonResponse = JSON.parse(textResponse);
     } catch (err) {
-      console.error("[RazedProxy] JSON parse error:", err);
+      console.error("[SpartansProxy] JSON parse error:", err);
       console.error(
-        "[RazedProxy] Response text:",
+        "[SpartansProxy] Response text:",
         textResponse.substring(0, 500)
       );
       // fallback: Return stale cache if possible
@@ -168,7 +154,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           : { ...cachedData, stale: true };
 
         res.setHeader("Cache-Control", "public, max-age=600, s-maxage=600");
-        res.setHeader("Cache-Tag", "leaderboard,razed");
+        res.setHeader("Cache-Tag", "leaderboard,spartans");
         res.setHeader("Last-Modified", cached.fetchedAt.toUTCString());
         return res.status(200).json(limited);
       }
@@ -185,16 +171,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return username.slice(0, 2) + "*".repeat(len - 4) + username.slice(-2);
     };
 
-    if (Array.isArray(jsonResponse.data)) {
-      jsonResponse.data = jsonResponse.data.slice(0, 25).map((entry: any) => ({
+    // Handle different API response structures
+    // The new API might return data in a different format
+    let leaderboardData = jsonResponse.data || jsonResponse.leaderboard || jsonResponse.entries || jsonResponse;
+    
+    if (Array.isArray(leaderboardData)) {
+      leaderboardData = leaderboardData.slice(0, 25).map((entry: any) => ({
         ...entry,
-        username: maskUsername(entry.username),
+        username: maskUsername(entry.username || entry.name || entry.player || "Unknown"),
+        wagered: entry.wagered || entry.wager || entry.amount || entry.total || 0,
       }));
+      jsonResponse = { data: leaderboardData };
     }
 
     // Store in db cache
     const expiresAt = new Date(now.getTime() + CACHE_TTL_MS);
-    await prisma.razedLeaderboardCache.upsert({
+    await prisma.spartansLeaderboardCache.upsert({
       where: { cacheKey },
       create: {
         cacheKey,
@@ -211,18 +203,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (process.env.NODE_ENV === "development") {
       console.log(
-        `[RazedProxy] Success: ${jsonResponse.data?.length || 0
+        `[SpartansProxy] Success: ${jsonResponse.data?.length || 0
         } entries processed and cached`
       );
     }
 
     res.setHeader("Cache-Control", "public, max-age=600, s-maxage=600");
-    res.setHeader("Cache-Tag", "leaderboard,razed");
+    res.setHeader("Cache-Tag", "leaderboard,spartans");
     res.setHeader("Last-Modified", now.toUTCString());
 
     return res.status(200).json(jsonResponse);
   } catch (error) {
-    console.error("RazedProxy error:", error);
+    console.error("SpartansProxy error:", error);
     return res.status(500).json({
       error: "Failed to fetch API data",
       message: error instanceof Error ? error.message : "Unknown error",

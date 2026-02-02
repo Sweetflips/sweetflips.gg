@@ -25,8 +25,8 @@ const BigWins: React.FC = () => {
                 className="rounded"
                 width={40}
                 height={40}
-                src="/images/logo/Razed icon.jpg"
-                alt="Razed"
+                src="/images/logo/Spartans icon.svg"
+                alt="Spartans"
                 priority
               />
               <h3 className="text-xl font-semibold text-white">{win.game}</h3>

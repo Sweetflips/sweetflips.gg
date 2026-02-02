@@ -1,18 +1,13 @@
 import { Metadata } from "next";
-import Homepage from "@/components/Homepage/Homepage";
-import DefaultLayout from "@/components/Layouts/DefaultLayout";
+import HomeGate from "@/components/ComingSoon/HomeGate";
 
 export const metadata: Metadata = {
-  title: "SweetFlips | Entertainment & Gaming Content",
-  description: "SweetFlips - Your destination for entertainment and gaming content. Operated by Sweetflips Holdings Limited, Malta.",
+  title: "SweetFlips | Relaunch Countdown",
+  description: "SweetFlips relaunches tomorrow. Countdown to 3 Feb 2026 10:00 CET.",
 };
 
 export default function Home() {
   return (
-    <>
-      <DefaultLayout>
-        <Homepage />
-      </DefaultLayout>
-    </>
+    <HomeGate />
   );
 }
