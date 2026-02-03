@@ -11,26 +11,28 @@ const isLiveNow = (nowMs: number) => nowMs >= targetTimestamp;
 
 export default function HomeGate() {
   const [isUnlocked, setIsUnlocked] = useState<boolean>(false);
-  const [serverOffsetMs, setServerOffsetMs] = useState<number>(0);
-  const [isLive, setIsLive] = useState<boolean>(isLiveNow(Date.now()));
+  const [serverOffsetMs, setServerOffsetMs] = useState<number | null>(null);
+  const [isLive, setIsLive] = useState<boolean>(false);
 
   useEffect(() => {
-    const readState = () => {
-      setIsLive(isLiveNow(Date.now() + serverOffsetMs));
+    const readUnlockFlag = () => {
       setIsUnlocked(localStorage.getItem("unlock_casino") === "true");
     };
 
-    readState();
-    const timer = setInterval(readState, 1000);
-    window.addEventListener("storage", readState);
+    readUnlockFlag();
+    window.addEventListener("storage", readUnlockFlag);
 
     return () => {
-      clearInterval(timer);
-      window.removeEventListener("storage", readState);
+      window.removeEventListener("storage", readUnlockFlag);
     };
-  }, [serverOffsetMs]);
+  }, []);
 
   useEffect(() => {
+    const localIsLive = isLiveNow(Date.now());
+    if (!localIsLive) {
+      setIsLive(false);
+    }
+
     const syncServerTime = async () => {
       try {
         const response = await fetch("/api/server-time", {
@@ -52,9 +54,27 @@ export default function HomeGate() {
     };
 
     syncServerTime();
+    const timer = setInterval(syncServerTime, 30000);
+
+    return () => {
+      clearInterval(timer);
+    };
   }, []);
 
-  if (!isLive && !isUnlocked) {
+  useEffect(() => {
+    if (serverOffsetMs === null) {
+      return;
+    }
+    const timer = setInterval(() => {
+      setIsLive(isLiveNow(Date.now() + serverOffsetMs));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [serverOffsetMs]);
+
+  const isGateUnlocked = isUnlocked || (serverOffsetMs !== null && isLive);
+
+  if (!isGateUnlocked) {
     return <ComingSoon />;
   }
 
