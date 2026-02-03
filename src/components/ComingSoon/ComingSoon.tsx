@@ -12,9 +12,8 @@ type TimeLeft = {
 
 const targetTimestamp = Date.UTC(2026, 1, 3, 9, 0, 0);
 
-const getTimeLeft = (): TimeLeft => {
-  const now = Date.now();
-  const diffMs = Math.max(targetTimestamp - now, 0);
+const getTimeLeft = (nowMs: number): TimeLeft => {
+  const diffMs = Math.max(targetTimestamp - nowMs, 0);
   const totalSeconds = Math.floor(diffMs / 1000);
   const days = Math.floor(totalSeconds / 86400);
   const hours = Math.floor((totalSeconds % 86400) / 3600);
@@ -33,16 +32,43 @@ const getTimeLeft = (): TimeLeft => {
 const pad = (value: number) => String(value).padStart(2, "0");
 
 export default function ComingSoon() {
-  const [timeLeft, setTimeLeft] = useState<TimeLeft>(getTimeLeft());
+  const [serverOffsetMs, setServerOffsetMs] = useState<number>(0);
+  const [timeLeft, setTimeLeft] = useState<TimeLeft>(
+    getTimeLeft(Date.now()),
+  );
   const [isUnlocked, setIsUnlocked] = useState<boolean>(false);
 
   useEffect(() => {
+    const syncServerTime = async () => {
+      try {
+        const response = await fetch("/api/server-time", {
+          cache: "no-store",
+        });
+        if (!response.ok) {
+          return;
+        }
+        const data = (await response.json()) as { serverTime: number };
+        if (typeof data.serverTime !== "number") {
+          return;
+        }
+        const offset = data.serverTime - Date.now();
+        setServerOffsetMs(offset);
+        setTimeLeft(getTimeLeft(Date.now() + offset));
+      } catch {
+        return;
+      }
+    };
+
+    syncServerTime();
+  }, []);
+
+  useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft(getTimeLeft());
+      setTimeLeft(getTimeLeft(Date.now() + serverOffsetMs));
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [serverOffsetMs]);
 
   useEffect(() => {
     const readUnlockFlag = () => {
