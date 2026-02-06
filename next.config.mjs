@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     images: {
-      domains: ['qzdxgtegacnkmeninxww.supabase.co', 'uqabipngzjjuwijrvdsh.supabase.co'],
+      remotePatterns: [],
     },
     async redirects() {
       return [

@@ -7,8 +7,7 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function generateMetadata(): Promise<Metadata> {
-  // Note: Keep using Razed cover image until Spartans replacement is provided
-  const imageUrl = `/images/cover/Razed_Leaderboard_50k.png`;
+  const imageUrl = `/images/cover/Spartans_Leaderboard_75k.png`;
 
   return createMetadata({
     title: "$75,000 SPARTANS X SWEETFLIPS LEADERBOARD | SweetFlips",

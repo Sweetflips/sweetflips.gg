@@ -1,6 +1,6 @@
 import React from "react";
 
-const BannerVideo: React.FC = () => {
+const BannerVideo = () => {
   return (
     <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start rounded-4xl w-full max-w-7xl mx-auto h-auto px-2 sm:px-4">
       <video

@@ -61,7 +61,7 @@ const parseCurrencyAmount = (value: unknown): number => {
   return parsed * multiplier;
 };
 
-const LuxdropLeaderboard: React.FC = () => {
+const LuxdropLeaderboard = () => {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);

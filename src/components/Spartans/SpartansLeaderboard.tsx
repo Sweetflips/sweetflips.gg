@@ -65,7 +65,7 @@ const weeklyRewardMapping: { [key: number]: number } = {
   20: 30,
 };
 
-const SpartansLeaderboard: React.FC = () => {
+const SpartansLeaderboard = () => {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);

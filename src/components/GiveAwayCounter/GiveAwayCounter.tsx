@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import CountUp from "react-countup";
 
-const GiveAwayCounter: React.FC = () => {
+const GiveAwayCounter = () => {
   const [amount, setAmount] = useState<number | null>(null);
 
   // ✅ Fetch current value once on mount

@@ -70,7 +70,7 @@ const weeklyRewardMapping: { [key: number]: number } = {
   20: 30,
 };
 
-const Homepage: React.FC = () => {
+const Homepage = () => {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
