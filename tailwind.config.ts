@@ -229,12 +229,8 @@ const config: Config = {
         "4/3": "4 / 3",
         "21/9": "21 / 9",
       },
-      backgroundImage: {
-        video: "url('../images/video/video.png')",
-      },
-      content: {
-        "icon-copy": 'url("../images/icon/icon-copy-alt.svg")',
-      },
+      backgroundImage: {},
+      content: {},
       transitionProperty: { width: "width", stroke: "stroke" },
       borderWidth: {
         6: "6px",

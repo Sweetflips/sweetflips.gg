@@ -1,0 +1,21 @@
+# Font files — treat as binary to prevent git line-ending corruption
+*.eot binary
+*.ttf binary
+*.woff binary
+*.woff2 binary
+*.otf binary
+
+# Images
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.svg text
+
+# Video/Audio
+*.mp4 binary
+*.webm binary
+*.wav binary
+*.mp3 binary
