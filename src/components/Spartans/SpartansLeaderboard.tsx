@@ -207,7 +207,7 @@ const SpartansLeaderboard = () => {
         {/* Right Image - Temporary decorative image */}
         <div className="hide-on-ipad absolute right-0 top-[30px] hidden pr-4 sm:block">
           <Image
-            src="/images/logo/Spartans icon.svg"
+            src="/images/logo/Spartans-icon.svg"
             alt="Spartans Logo"
             className="transform"
             width={204}
@@ -228,7 +228,7 @@ const SpartansLeaderboard = () => {
         {/* Right Image mobile - Temporary decorative image */}
         <div className="absolute -right-5 top-[250px] pr-2 sm:block md:hidden">
           <Image
-            src="/images/logo/Spartans icon.svg"
+            src="/images/logo/Spartans-icon.svg"
             alt="Spartans Logo"
             className="h-[77.25px] w-[51.0375px] transform"
             width={51.0375}

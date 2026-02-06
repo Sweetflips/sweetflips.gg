@@ -145,7 +145,7 @@ export const AvatarIcon = ({ fill = "white", width = "24", height = "24", classN
 
 export const SpartansIcon = ({ width = "24", height = "24", className }: { fill?: string; width?: string; height?: string; className?: string }) => (
   <Image
-    src="/images/logo/Spartans icon.svg"
+    src="/images/logo/Spartans-icon.svg"
     alt="Spartans"
     width={parseInt(width)}
     height={parseInt(height)}

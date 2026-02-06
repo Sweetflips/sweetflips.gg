@@ -72,14 +72,14 @@ const GiveAwayCounter = () => {
               <a href="/spartans" rel="noopener noreferrer" className="group">
                 <div className="relative">
                   <Image
-                    src="/images/logo/Spartans icon.svg"
+                    src="/images/logo/Spartans-icon.svg"
                     alt="Spartans"
                     width={50}
                     height={50}
                     className="relative z-10 object-contain transition-transform hover:scale-105"
                   />
                   <Image
-                    src="/images/logo/Spartans icon.svg"
+                    src="/images/logo/Spartans-icon.svg"
                     alt="Spartans Glow"
                     width={50}
                     height={50}
