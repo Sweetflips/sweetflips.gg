@@ -53,17 +53,3 @@ export const createMetadata = ({
     },
   };
 };
-
-// Company information for legal pages and metadata
-export const COMPANY_INFO = {
-  name: "Sweetflips Holdings Limited",
-  address: {
-    street: "Capital Business Centre, Entrance A, Floor 1",
-    city: "San Gwann",
-    postalCode: "SGN 3000",
-    country: "Malta",
-    full: "Capital Business Centre, Entrance A, Floor 1, Triq Taz-Zwejt, San Gwann, SGN 3000, Malta",
-  },
-  jurisdiction: "Malta",
-  incorporationDate: "December 17, 2025",
-};

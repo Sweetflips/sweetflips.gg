@@ -49,18 +49,6 @@ model TokenTransaction {
   @@index([createdAt])
 }
 
-model RazedLeaderboardCache {
-  id            String   @id @default(uuid())
-  cacheKey      String   @unique // Unique identifier for this cache entry (e.g., date range)
-  data          Json     // The leaderboard data
-  fetchedAt     DateTime @default(now()) // When data was fetched from API
-  expiresAt     DateTime // When cache expires and needs refresh
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  @@index([expiresAt])
-}
-
 model SpartansLeaderboardCache {
   id            String   @id @default(uuid())
   cacheKey      String   @unique // Unique identifier for this cache entry (e.g., date range)

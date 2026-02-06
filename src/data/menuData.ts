@@ -1,6 +1,3 @@
-// import React from 'react'; // No longer needed for JSX
-// import { HomeIcon, LeaderboardsIcon, ShopIcon, StreamIcon, GamesIcon } from '@/components/icons/MenuIcons'; // Will be handled by consumer
-
 export interface MenuItem {
   icon?: string; // Changed from React.ReactNode to string | undefined
   label: string;

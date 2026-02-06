@@ -7,7 +7,7 @@ const Loader = () => {
       <Image
     src="/images/logo/sweet_flips_emblem.png"
     alt="SweetFlips Emblem"
-    className="h-24 w-24 md:h-24 md:w-24 spin-on-hover animate-bounce absolute"
+    className="h-24 w-24 md:h-24 md:w-24 animate-bounce absolute"
     width={96}
     height={96}
   />
