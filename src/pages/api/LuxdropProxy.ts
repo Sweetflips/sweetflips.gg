@@ -261,21 +261,6 @@ export default async function handler(
 
   // If cache exists and is still fresh, return from database
   if (cached && cached.expiresAt > currentTime) {
-    console.log(`[LuxdropProxy] Cache hit (expires in ${Math.round((cached.expiresAt.getTime() - currentTime.getTime()) / 1000)}s, key=${cacheKey})`);
-
-    res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=900, max-age=60");
-    res.setHeader("Cache-Tag", "leaderboard,luxdrop");
-    if (cached.etag) {
-      res.setHeader("ETag", cached.etag);
-    }
-
-    // Check ETag for 304 Not Modified
-    const ifNoneMatch = req.headers["if-none-match"];
-    if (cached.etag && ifNoneMatch === cached.etag) {
-      res.status(304).end();
-      return;
-    }
-
     // Return cached data (usernames should already be masked from when data was stored)
     // But mask again to handle any old cached data with unmasked usernames
     const cachedData = cached.data as unknown as LeaderboardData;
@@ -284,14 +269,26 @@ export default async function handler(
       data: cachedData.data
         .slice(0, 20) // Limit to top 20 users
         .map(entry => {
-          // Only mask if username doesn't already contain asterisks (to avoid double-masking)
           const username = entry.username.includes('*') ? entry.username : maskUsername(entry.username);
-          return {
-            ...entry,
-            username,
-          };
+          return { ...entry, username };
         }),
     };
+
+    // Always compute a proper MD5 ETag from the actual content (replaces any old broken ETags)
+    const contentEtag = `W/"${crypto.createHash("md5").update(JSON.stringify(maskedData)).digest("hex")}"`;
+
+    console.log(`[LuxdropProxy] Cache hit (expires in ${Math.round((cached.expiresAt.getTime() - currentTime.getTime()) / 1000)}s, key=${cacheKey}, etag=${contentEtag})`);
+
+    res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=900, max-age=60");
+    res.setHeader("Cache-Tag", "leaderboard,luxdrop");
+    res.setHeader("ETag", contentEtag);
+
+    // Check ETag for 304 Not Modified
+    const ifNoneMatch = req.headers["if-none-match"];
+    if (ifNoneMatch === contentEtag) {
+      res.status(304).end();
+      return;
+    }
 
     res.status(200).json(maskedData);
     return;
@@ -391,7 +388,7 @@ export default async function handler(
 
     // If API fails but we have stale cache, return stale cache
     if (cached) {
-      console.warn(`[LuxdropProxy] API error ${statusCode}, returning stale cache (key=${cacheKey})`);
+      console.warn(`[LuxdropProxy] API error ${statusCode}: ${errorMessage} — returning stale cache (key=${cacheKey})`);
       const staleData = cached.data as unknown as LeaderboardData;
       const maskedStaleData = {
         ...staleData,
@@ -407,11 +404,12 @@ export default async function handler(
           }),
         stale: true,
       };
-      res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=900, max-age=60");
+      // Short cache on stale responses so fresh data is picked up sooner
+      res.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=120, max-age=30");
       res.setHeader("Cache-Tag", "leaderboard,luxdrop");
-      if (cached.etag) {
-        res.setHeader("ETag", cached.etag);
-      }
+      // Generate a fresh ETag for stale data (don't re-use old ETags that may be in broken format)
+      const staleEtag = `W/"${crypto.createHash("md5").update(JSON.stringify(maskedStaleData)).digest("hex")}"`;
+      res.setHeader("ETag", staleEtag);
       res.status(200).json(maskedStaleData);
       return;
     }
