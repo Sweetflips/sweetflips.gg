@@ -154,9 +154,9 @@ export default async function handler(
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 
-  // --- Read API and Leaderboard Config from Environment ---
-  const API_KEY = process.env.LUXDROP_API_KEY;
-  const AFFILIATE_CODE = process.env.LUXDROP_AFFILIATE_CODE || "sweetflips";
+  // --- Read API and Leaderboard Config from Environment (trim to strip any \r\n from env values) ---
+  const API_KEY = process.env.LUXDROP_API_KEY?.trim();
+  const AFFILIATE_CODE = (process.env.LUXDROP_AFFILIATE_CODE || "sweetflips").trim();
 
   if (!API_KEY) {
     console.error("Server configuration error: Missing Luxdrop API key.");
@@ -165,11 +165,11 @@ export default async function handler(
 
   const affiliateCode: string = AFFILIATE_CODE;
 
-  // --- Read Proxy Details from Environment ---
-  const proxyHost = process.env.PROXY_HOST;
-  const proxyPortString = process.env.PROXY_PORT;
-  const proxyUsername = process.env.PROXY_USERNAME;
-  const proxyPassword = process.env.PROXY_PASSWORD;
+  // --- Read Proxy Details from Environment (trim to strip any \r\n from env values) ---
+  const proxyHost = process.env.PROXY_HOST?.trim();
+  const proxyPortString = process.env.PROXY_PORT?.trim();
+  const proxyUsername = process.env.PROXY_USERNAME?.trim();
+  const proxyPassword = process.env.PROXY_PASSWORD?.trim();
 
   let proxyPort: number | undefined = undefined;
   if (proxyPortString) {
@@ -304,13 +304,14 @@ export default async function handler(
       endDate: endDateISO,
     };
 
-    const LUXDROP_API_BASE_URL = process.env.LUXDROP_API_BASE_URL || "https://api.luxdrop.com/external/affiliates";
+    const LUXDROP_API_BASE_URL = (process.env.LUXDROP_API_BASE_URL || "https://api.luxdrop.com/external/affiliates").trim();
 
     const config: AxiosRequestConfig = {
       method: "get",
       url: LUXDROP_API_BASE_URL,
       params: params,
       timeout: 30000,
+      proxy: false, // Prevent axios from auto-detecting env proxy vars — we use our own HttpsProxyAgent
       headers: {
         "x-api-key": API_KEY,
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
