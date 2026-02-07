@@ -1,6 +1,7 @@
 // src/pages/api/LuxdropProxy.ts
 import { prisma } from "@/lib/prisma";
 import axios, { AxiosRequestConfig } from "axios";
+import crypto from "crypto";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import { DateTime } from "luxon";
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -246,17 +247,21 @@ export default async function handler(
   };
 
   // Check database cache first
-  const cached = await prisma.luxdropLeaderboardCache.findUnique({
-    where: {
-      cacheKey: cacheKey,
-    },
-  });
+  let cached: Awaited<ReturnType<typeof prisma.luxdropLeaderboardCache.findUnique>> = null;
+  try {
+    cached = await prisma.luxdropLeaderboardCache.findUnique({
+      where: {
+        cacheKey: cacheKey,
+      },
+    });
+  } catch (dbError: any) {
+    console.error(`[LuxdropProxy] Database cache lookup failed: ${dbError.message}`);
+    // Continue without cache — will fetch fresh from API
+  }
 
   // If cache exists and is still fresh, return from database
   if (cached && cached.expiresAt > currentTime) {
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[LuxdropProxy] Returning cached data from database (expires in ${Math.round((cached.expiresAt.getTime() - currentTime.getTime()) / 1000 / 60)} minutes)`);
-    }
+    console.log(`[LuxdropProxy] Cache hit (expires in ${Math.round((cached.expiresAt.getTime() - currentTime.getTime()) / 1000)}s, key=${cacheKey})`);
 
     res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=900, max-age=60");
     res.setHeader("Cache-Tag", "leaderboard,luxdrop");
@@ -293,9 +298,7 @@ export default async function handler(
   }
 
   // Cache expired or missing - fetch from API
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`[LuxdropProxy] Cache expired or missing, fetching from API...`);
-  }
+  console.log(`[LuxdropProxy] Cache ${cached ? 'expired' : 'miss'}, fetching fresh from API (key=${cacheKey})`);
 
   try {
     const params = {
@@ -338,7 +341,7 @@ export default async function handler(
 
     // Store in database cache
     const expiresAt = new Date(currentTime.getTime() + CACHE_TTL_MS);
-    const etag = `W/"${Buffer.from(JSON.stringify(processedData)).toString('base64').substring(0, 16)}"`;
+    const etag = `W/"${crypto.createHash("md5").update(JSON.stringify(processedData)).digest("hex")}"`;
 
     await prisma.luxdropLeaderboardCache.upsert({
       where: {
@@ -375,9 +378,7 @@ export default async function handler(
       },
     });
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[LuxdropProxy] Success: ${processedData.data.length} entries processed and cached`);
-    }
+    console.log(`[LuxdropProxy] Fresh data: ${processedData.data.length} entries cached (etag=${etag})`);
 
     res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=900, max-age=60");
     res.setHeader("Cache-Tag", "leaderboard,luxdrop");
@@ -390,9 +391,7 @@ export default async function handler(
 
     // If API fails but we have stale cache, return stale cache
     if (cached) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[LuxdropProxy] API error ${statusCode}, returning stale cache`);
-      }
+      console.warn(`[LuxdropProxy] API error ${statusCode}, returning stale cache (key=${cacheKey})`);
       const staleData = cached.data as unknown as LeaderboardData;
       const maskedStaleData = {
         ...staleData,
