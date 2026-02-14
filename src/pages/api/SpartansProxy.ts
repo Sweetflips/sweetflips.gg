@@ -15,6 +15,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const now = new Date();
 
+    // Cron bypass: when called by refresh-leaderboards with cron_refresh=1 + Bearer token,
+    // skip cache and force fetch from upstream (avoids edge cache serving stale data)
+    const isCronRefresh =
+      req.query.cron_refresh === "1" &&
+      req.headers.authorization === `Bearer ${process.env.CRON_SECRET}`;
+
     // Special period controls: Start & End date (via .env)
     // Format: YYYY-MM-DD
     const specialStartEnv = process.env.SPECIAL_PERIOD_START_DATE;
@@ -53,12 +59,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const toParam = formatDate(toDate);
     const cacheKey = `spartans|${fromParam}|${toParam}`;
 
-    // 1. Try cache first
+    // 1. Try cache first (skip when cron forces refresh)
     const cached = await prisma.spartansLeaderboardCache.findUnique({
       where: { cacheKey },
     });
 
-    if (cached && cached.expiresAt > now) {
+    if (!isCronRefresh && cached && cached.expiresAt > now) {
       if (process.env.NODE_ENV === "development") {
         console.log(
           `[SpartansProxy] Returning cached data from database (expires in ${Math.round(
@@ -72,7 +78,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ? { ...cachedData, data: cachedData.data.slice(0, 25) }
         : cachedData;
 
-      res.setHeader("Cache-Control", "public, max-age=600, s-maxage=600");
+      res.setHeader("Cache-Control", "public, max-age=60, s-maxage=60");
       res.setHeader("Cache-Tag", "leaderboard,spartans");
       res.setHeader("Last-Modified", cached.fetchedAt.toUTCString());
 
@@ -117,7 +123,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           ? { ...cachedData, data: cachedData.data.slice(0, 25), stale: true }
           : { ...cachedData, stale: true };
 
-        res.setHeader("Cache-Control", "public, max-age=600, s-maxage=600");
+        res.setHeader("Cache-Control", "public, max-age=60, s-maxage=60");
         res.setHeader("Cache-Tag", "leaderboard,spartans");
         res.setHeader("Last-Modified", cached.fetchedAt.toUTCString());
         return res.status(200).json(limited);
@@ -153,7 +159,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           ? { ...cachedData, data: cachedData.data.slice(0, 25), stale: true }
           : { ...cachedData, stale: true };
 
-        res.setHeader("Cache-Control", "public, max-age=600, s-maxage=600");
+        res.setHeader("Cache-Control", "public, max-age=60, s-maxage=60");
         res.setHeader("Cache-Tag", "leaderboard,spartans");
         res.setHeader("Last-Modified", cached.fetchedAt.toUTCString());
         return res.status(200).json(limited);
@@ -174,14 +180,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Handle different API response structures
     // The new API might return data in a different format
     let leaderboardData = jsonResponse.data || jsonResponse.leaderboard || jsonResponse.entries || jsonResponse;
-    
+
     if (Array.isArray(leaderboardData)) {
-      leaderboardData = leaderboardData.slice(0, 25).map((entry: any) => ({
-        ...entry,
-        username: maskUsername(entry.username || entry.name || entry.player || "Unknown"),
-        wagered: entry.wagered || entry.wager || entry.amount || entry.total || 0,
-      }));
-      jsonResponse = { data: leaderboardData };
+      const extractWagered = (e: any) =>
+        Number(e.wagered || e.wager || e.amount || e.total || 0) || 0;
+      const getRawUsername = (e: any) =>
+        (e.username || e.name || e.player || "Unknown").toString().trim();
+      const canonicalize = (u: string) => {
+        const lower = u.toLowerCase();
+        if (lower === "killcam") return "killacamx";
+        return u;
+      };
+
+      const byCanonical = new Map<string, number>();
+      for (const entry of leaderboardData) {
+        const raw = getRawUsername(entry);
+        const canonical = canonicalize(raw);
+        const wagered = extractWagered(entry);
+        byCanonical.set(canonical, (byCanonical.get(canonical) ?? 0) + wagered);
+      }
+
+      const aggregated = Array.from(byCanonical.entries())
+        .map(([username, wagered]) => ({ username, wagered }))
+        .sort((a, b) => b.wagered - a.wagered)
+        .slice(0, 25)
+        .map(({ username, wagered }) => ({
+          username: maskUsername(username),
+          wagered,
+        }));
+      jsonResponse = { data: aggregated };
     }
 
     // Store in db cache
@@ -208,7 +235,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       );
     }
 
-    res.setHeader("Cache-Control", "public, max-age=600, s-maxage=600");
+    // Cron refresh responses must not be cached at edge (different URL + no-cache)
+    if (isCronRefresh) {
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+    } else {
+      res.setHeader("Cache-Control", "public, max-age=60, s-maxage=60");
+    }
     res.setHeader("Cache-Tag", "leaderboard,spartans");
     res.setHeader("Last-Modified", now.toUTCString());
 
