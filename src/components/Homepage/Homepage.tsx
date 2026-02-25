@@ -1,6 +1,6 @@
 "use client";
 import { useSearchParams } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import BannerVideo from "@/components/BannerVideo/BannerVideo";
 import HomeBanner from "@/components/HomeBanner/HomeBanner";
 import RegisterBlocks from "@/components/RegisterBlocks/RegisterBlocks";
@@ -168,7 +168,7 @@ const Homepage = () => {
       }
     };
     fetchData();
-    const interval = setInterval(fetchData, 300_000);
+    const interval = setInterval(fetchData, 900_000); // 15 min, matches Spartans source
     return () => {
       isMounted = false;
       clearInterval(interval);

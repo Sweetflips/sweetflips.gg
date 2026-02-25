@@ -2,7 +2,7 @@
 import { Timer } from "@/app/ui/timer/Timer";
 import Loader from "@/components/common/Loader";
 import Image from "next/image";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const API_PROXY_URL = "/api/SpartansProxy";
 
@@ -161,7 +161,7 @@ const SpartansLeaderboard = () => {
     };
     fetchData();
     // Refresh leaderboard every 5 minutes (same as Luxdrop)
-    const interval = setInterval(fetchData, 300_000);
+    const interval = setInterval(fetchData, 900_000); // 15 min, matches Spartans source
     return () => {
       isMounted = false;
       clearInterval(interval);

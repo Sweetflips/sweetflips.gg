@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import type { NextApiRequest, NextApiResponse } from "next";
 
-// Cache TTL: 10 minutes
-const CACHE_TTL_MS = 10 * 60 * 1000;
+// Cache TTL: 15 minutes (matches Spartans source update frequency)
+const CACHE_TTL_MS = 15 * 60 * 1000;
 const SPARTANS_ACTIVE_URL =
   "https://nexus-campaign-hub-production.up.railway.app/affiliates/527938/campaigns/20499/leaderboards/active";
 

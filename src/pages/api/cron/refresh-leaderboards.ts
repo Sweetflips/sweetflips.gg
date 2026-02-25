@@ -24,10 +24,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     // Refresh Spartans leaderboard
     try {
-      const spartansResponse = await fetch(`${baseUrl}/api/SpartansProxy`, {
+      const spartansResponse = await fetch(`${baseUrl}/api/SpartansProxy?cron_refresh=1`, {
         method: "GET",
         headers: {
           "Cache-Control": "no-cache",
+          Authorization: `Bearer ${process.env.CRON_SECRET}`,
         },
       });
 
