@@ -77,6 +77,7 @@ const GiveAwayCounter = () => {
                     width={50}
                     height={50}
                     className="relative z-10 object-contain transition-transform hover:scale-105"
+                    unoptimized
                   />
                   <Image
                     src="/images/logo/Spartans-icon.svg"
@@ -84,6 +85,7 @@ const GiveAwayCounter = () => {
                     width={50}
                     height={50}
                     className="absolute top-0 left-0 z-0 object-contain opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-40"
+                    unoptimized
                   />
                 </div>
               </a>
@@ -95,6 +97,7 @@ const GiveAwayCounter = () => {
                     width={50}
                     height={50}
                     className="relative z-10 object-contain transition-transform hover:scale-105"
+                    unoptimized
                   />
                   <Image
                     src="/images/icon/luxdrop_fav.png"
@@ -102,6 +105,7 @@ const GiveAwayCounter = () => {
                     width={50}
                     height={50}
                     className="absolute top-0 left-0 z-0 object-contain opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-40"
+                    unoptimized
                   />
                 </div>
               </a>

@@ -118,6 +118,7 @@ const SpartansLeaderboard = () => {
   };
 
   useEffect(() => {
+    let isMounted = true;
     const fetchData = async () => {
       try {
         const response = await fetch(API_PROXY_URL, {
@@ -151,14 +152,20 @@ const SpartansLeaderboard = () => {
             ...user,
             reward: currentRewardMapping[index + 1] || 0,
           }));
-        setData(sortedData);
+        if (isMounted) setData(sortedData);
       } catch (err: any) {
-        setError(err.message);
+        if (isMounted) setError(err.message);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
     fetchData();
+    // Refresh leaderboard every 5 minutes (same as Luxdrop)
+    const interval = setInterval(fetchData, 300_000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, [currentRewardMapping]);
 
   const topUsers = data.slice(0, 3);
@@ -201,6 +208,7 @@ const SpartansLeaderboard = () => {
             className="transform"
             width={272}
             height={408}
+            priority
           />
         </div>
 
@@ -212,6 +220,7 @@ const SpartansLeaderboard = () => {
             className="transform"
             width={204}
             height={306}
+            priority
           />
         </div>
         {/* Left Image mobile - Temporary decorative image */}
@@ -222,6 +231,7 @@ const SpartansLeaderboard = () => {
             className="h-[103px] w-[68.05px] transform"
             width={68.05}
             height={103}
+            priority
           />
         </div>
 
@@ -233,6 +243,7 @@ const SpartansLeaderboard = () => {
             className="h-[77.25px] w-[51.0375px] transform"
             width={51.0375}
             height={77.25}
+            priority
           />
         </div>
 
@@ -254,6 +265,7 @@ const SpartansLeaderboard = () => {
               width={200}
               height={100}
               sizes="(max-width: 640px) 150px, (max-width: 768px) 200px, 250px"
+              priority
             />
             {/* Leaderboard Text */}
             <b className="text-4xl text-white sm:text-2xl md:text-3xl lg:text-3xl">
@@ -295,6 +307,7 @@ const SpartansLeaderboard = () => {
                     className="h-8 w-8"
                     width={32}
                     height={32}
+                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-image">
@@ -304,6 +317,7 @@ const SpartansLeaderboard = () => {
                     className="h-24 w-24"
                     width={96}
                     height={96}
+                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-content">
@@ -330,6 +344,7 @@ const SpartansLeaderboard = () => {
                     className="h-8 w-8"
                     width={32}
                     height={32}
+                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-image">
@@ -339,6 +354,7 @@ const SpartansLeaderboard = () => {
                     className="h-24 w-24"
                     width={96}
                     height={96}
+                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-content">
@@ -365,6 +381,7 @@ const SpartansLeaderboard = () => {
                     className="h-8 w-8"
                     width={32}
                     height={32}
+                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-image">
@@ -374,6 +391,7 @@ const SpartansLeaderboard = () => {
                     className="h-24 w-24"
                     width={96}
                     height={96}
+                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-content">

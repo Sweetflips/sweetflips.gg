@@ -64,6 +64,7 @@ export const StreamIcon = ({ width = "24", height = "24", className }: { fill?: 
     height={parseInt(height)}
     className={`rounded ${className || ''}`}
     style={{ objectFit: 'contain' }}
+    unoptimized
   />
 );
 
@@ -151,6 +152,7 @@ export const SpartansIcon = ({ width = "24", height = "24", className }: { fill?
     height={parseInt(height)}
     className={`rounded ${className || ''}`}
     style={{ objectFit: 'contain' }}
+    unoptimized
   />
 );
 
@@ -162,6 +164,7 @@ export const LuxdropIcon = ({ width = "24", height = "24", className }: { fill?:
     height={parseInt(height)}
     className={`rounded ${className || ''}`}
     style={{ objectFit: 'contain' }}
+    unoptimized
   />
 );
 
@@ -173,6 +176,7 @@ export const RewardsIcon = ({ width = "24", height = "24", className }: { fill?:
     height={parseInt(height)}
     className={`rounded ${className || ''}`}
     style={{ objectFit: 'contain' }}
+    unoptimized
   />
 );
 
