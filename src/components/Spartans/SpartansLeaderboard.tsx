@@ -223,55 +223,12 @@ const SpartansLeaderboard = () => {
             priority
           />
         </div>
-        {/* Left Image mobile - Temporary decorative image */}
-        <div className="absolute -left-1 top-[-20px] sm:block md:hidden">
-          <Image
-            src="/images/logo/sweet_flips_emblem_gold.png"
-            alt="SweetFlips Gold Emblem"
-            className="h-[103px] w-[68.05px] transform"
-            width={68.05}
-            height={103}
-            priority
-          />
-        </div>
-
-        {/* Right Image mobile - Temporary decorative image */}
-        <div className="absolute -right-5 top-[250px] pr-2 sm:block md:hidden">
-          <Image
-            src="/images/logo/Spartans-icon.svg"
-            alt="Spartans Logo"
-            className="h-[77.25px] w-[51.0375px] transform"
-            width={51.0375}
-            height={77.25}
-            priority
-          />
-        </div>
-
         {/* Centered Text Section */}
         <div className="relative z-10 mx-auto mt-6 max-w-screen-lg px-4 text-center md:mt-8">
           {/* Prize Pool Text */}
           <b className="animate-pulse-glow text-2xl leading-tight text-[#fff] sm:text-3xl md:text-4xl lg:text-5xl">
             {leaderboardTitle}
           </b>
-
-          {/* Image and Leaderboard Layout */}
-          <div className="mt-4 flex flex-col items-end justify-center sm:flex-row sm:items-end sm:space-x-4">
-            {/* Spartans Logo */}
-            <Image
-              src="/images/logo/Spartans wordmark.webp"
-              alt="Spartans Logo"
-              className="mb-3 transition-all duration-300 sm:mb-0 sm:w-[150px] md:w-[200px] lg:w-[250px] xl:w-[250px]"
-              style={{ filter: 'grayscale(1)' }}
-              width={200}
-              height={100}
-              sizes="(max-width: 640px) 150px, (max-width: 768px) 200px, 250px"
-              priority
-            />
-            {/* Leaderboard Text */}
-            <b className="text-4xl text-white sm:text-2xl md:text-3xl lg:text-3xl">
-              Leaderboard
-            </b>
-          </div>
 
           {/* Description Text */}
           <p className="mx-auto mt-3 max-w-4xl text-center text-sm leading-relaxed text-white sm:text-base md:text-lg lg:text-xl">
@@ -288,7 +245,7 @@ const SpartansLeaderboard = () => {
               height={408}
             />
             <Image
-              src="/images/logo/Spartans icon.svg"
+              src="/images/logo/Spartans-icon.svg"
               alt="Spartans Logo"
               className="h-[58px] w-auto"
               width={204}
