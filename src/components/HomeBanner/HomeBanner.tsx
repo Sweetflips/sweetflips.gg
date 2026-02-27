@@ -1,6 +1,6 @@
 import React from "react";
 
-const HomeBanner: React.FC = () => {
+const HomeBanner = () => {
   const spartansReferralCode = process.env.NEXT_PUBLIC_SPARTANS_REFERRAL_CODE || "SweetFlips";
   const luxdropAffiliateCode = process.env.NEXT_PUBLIC_LUXDROP_AFFILIATE_CODE || "sweetflips";
   // REFLINK (promo codes are not available yet)

@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 
-const RegisterBlocks: React.FC = () => {
+const RegisterBlocks = () => {
   const spartansReferralCode = process.env.NEXT_PUBLIC_SPARTANS_REFERRAL_CODE || "SweetFlips";
   const luxdropAffiliateCode = process.env.NEXT_PUBLIC_LUXDROP_AFFILIATE_CODE || "sweetflips";
   const kickChannelUrl = process.env.NEXT_PUBLIC_KICK_CHANNEL_URL || "https://kick.com/sweetflips";
@@ -31,6 +31,7 @@ const RegisterBlocks: React.FC = () => {
                 style={{ filter: 'grayscale(1)' }}
                 width={280}
                 height={53}
+                priority
               />
               <Image
                 src="/images/logo/Spartans wordmark.webp"
@@ -39,6 +40,7 @@ const RegisterBlocks: React.FC = () => {
                 style={{ filter: 'grayscale(1)' }}
                 width={280}
                 height={53}
+                priority
               />
             </div>
             <p className="mb-4 mt-4 text-sm">
@@ -61,6 +63,7 @@ const RegisterBlocks: React.FC = () => {
                 className="relative z-10 mb-3 transition-all duration-300 sm:mb-0"
                 width={280}
                 height={53}
+                priority
               />
               <Image
                 src="/images/logo/luxdrop_logo.svg"
@@ -68,6 +71,7 @@ const RegisterBlocks: React.FC = () => {
                 className="absolute top-0 z-0 mb-3 opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-40 sm:mb-0"
                 width={280}
                 height={53}
+                priority
               />
             </div>
             <p className="mb-4 mt-4 text-sm">
@@ -90,6 +94,7 @@ const RegisterBlocks: React.FC = () => {
                 className="relative z-10"
                 width={100}
                 height={56}
+                priority
               />
               <Image
                 src="/images/logo/Kick_logo.png"
@@ -97,6 +102,7 @@ const RegisterBlocks: React.FC = () => {
                 className="absolute top-0 z-0 opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-40"
                 width={100}
                 height={56}
+                priority
               />
             </div>
             <p className="mt-8 text-sm">

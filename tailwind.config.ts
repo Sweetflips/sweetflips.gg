@@ -229,12 +229,8 @@ const config: Config = {
         "4/3": "4 / 3",
         "21/9": "21 / 9",
       },
-      backgroundImage: {
-        video: "url('../images/video/video.png')",
-      },
-      content: {
-        "icon-copy": 'url("../images/icon/icon-copy-alt.svg")',
-      },
+      backgroundImage: {},
+      content: {},
       transitionProperty: { width: "width", stroke: "stroke" },
       borderWidth: {
         6: "6px",
@@ -276,75 +272,16 @@ const config: Config = {
           "50%": { transform: "translateX(10px)" },
         },
         'pulse-glow': {
-        '0%, 100%': { textShadow: '0 0 10px #d946ef, 0 0 20px #a855f7, 0 0 30px #9333ea' },
-        '50%': { textShadow: '0 0 20px #f0abfc, 0 0 30px #d946ef, 0 0 40px #a855f7' },
-      },
-        linspin: {
-          "100%": { transform: "rotate(360deg)" },
-        },
-        easespin: {
-          "12.5%": { transform: "rotate(135deg)" },
-          "25%": { transform: "rotate(270deg)" },
-          "37.5%": { transform: "rotate(405deg)" },
-          "50%": { transform: "rotate(540deg)" },
-          "62.5%": { transform: "rotate(675deg)" },
-          "75%": { transform: "rotate(810deg)" },
-          "87.5%": { transform: "rotate(945deg)" },
-          "100%": { transform: "rotate(1080deg)" },
-        },
-        "left-spin": {
-          "0%": { transform: "rotate(130deg)" },
-          "50%": { transform: "rotate(-5deg)" },
-          "100%": { transform: "rotate(130deg)" },
-        },
-        "right-spin": {
-          "0%": { transform: "rotate(-130deg)" },
-          "50%": { transform: "rotate(5deg)" },
-          "100%": { transform: "rotate(-130deg)" },
-        },
-        rotating: {
-          "0%, 100%": { transform: "rotate(360deg)" },
-          "50%": { transform: "rotate(0deg)" },
-        },
-        topbottom: {
-          "0%, 100%": { transform: "translate3d(0, -100%, 0)" },
-          "50%": { transform: "translate3d(0, 0, 0)" },
-        },
-        bottomtop: {
-          "0%, 100%": { transform: "translate3d(0, 0, 0)" },
-          "50%": { transform: "translate3d(0, -100%, 0)" },
-        },
-        line: {
-          "0%, 100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(10%)" },
-        },
-        "line-revert": {
-          "0%, 100%": { transform: "translateY(100%)" },
-          "50%": { transform: "translateY(0)" },
+          '0%, 100%': { textShadow: '0 0 10px #d946ef, 0 0 20px #a855f7, 0 0 30px #9333ea' },
+          '50%': { textShadow: '0 0 20px #f0abfc, 0 0 30px #d946ef, 0 0 40px #a855f7' },
         },
       },
       animation: {
         horizontalBounce: "horizontalBounce 2s infinite ease-in-out",
         'pulse-glow': 'pulse-glow 2s infinite ease-in-out',
-        linspin: "linspin 1568.2353ms linear infinite",
-        easespin: "easespin 5332ms cubic-bezier(0.4, 0, 0.2, 1) infinite both",
-        "left-spin":
-          "left-spin 1333ms cubic-bezier(0.4, 0, 0.2, 1) infinite both",
-        "right-spin":
-          "right-spin 1333ms cubic-bezier(0.4, 0, 0.2, 1) infinite both",
-        "ping-once": "ping 5s cubic-bezier(0, 0, 0.2, 1)",
-        rotating: "rotating 30s linear infinite",
-        topbottom: "topbottom 60s infinite alternate linear",
-        bottomtop: "bottomtop 60s infinite alternate linear",
-        "spin-1.5": "spin 1.5s linear infinite",
-        "spin-2": "spin 2s linear infinite",
-        "spin-3": "spin 3s linear infinite",
-        line1: "line 1s infinite linear",
-        line2: "line-revert 8s infinite linear",
-        line3: "line 10s infinite linear",
       },
     },
   },
-  plugins: [require('daisyui')],
+  plugins: [],
 };
 export default config;

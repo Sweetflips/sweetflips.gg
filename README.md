@@ -25,22 +25,6 @@ This document outlines all the cleanup and production readiness work completed o
 - Removed corresponding `@types/*` packages from devDependencies
 
 #### Removed Dead Code
-- **Plinko Game System** - Completely removed:
-  - `lib/plinkoValidator.ts` - Game validation logic
-  - `src/app/plinko/` - Plinko page directory
-  - `src/components/Plinko/` - Plinko component directory
-  - `src/pages/api/plinko/` - Plinko API routes
-  - Plinko entries from BigWins component
-  - All Plinko-related environment variables
-
-- **Botrix Integration** - Completely removed:
-  - `src/pages/api/BotrixLeaderboard.ts` - API route
-  - `src/pages/api/cron/botrix.ts` - Cron job
-  - `src/components/BotrixLeaderboard/` - Component directory
-  - Botrix references from stream page
-  - Botrix cron job from `vercel.json`
-  - `BASE_BOTRIX_API_URL` environment variable
-
 - **Rate Limiter** - Removed:
   - `lib/rateLimiter.ts` - Entire file (not used anywhere)
 
@@ -53,10 +37,7 @@ This document outlines all the cleanup and production readiness work completed o
 - Kept essential `console.error` for error logging
 - Fixed crypto import to use Node.js built-in module (`import * as crypto from 'crypto'`)
 - Improved TypeScript type safety (replaced `any` types):
-  - `lib/supabase.ts` - Proper `SupabaseClient` types
   - `lib/auditLogger.ts` - Created `DecimalLike` type for flexible Decimal handling
-  - `lib/rateLimiter.ts` - Fixed process.on type checking (before removal)
-  - `lib/plinkoValidator.ts` - Fixed process.on type checking (before removal)
   - `src/pages/api/LuxdropProxy.ts` - Fixed `proxyAgent` type
 
 #### Configuration Improvements
@@ -88,9 +69,8 @@ This document outlines all the cleanup and production readiness work completed o
 #### Other Features
 - Stream schedule page (`/stream`)
 - Big Wins display
-- User authentication (Kick + Supabase)
+- User authentication (Kick)
 - Admin panel
-- Shop system
 - Chat system
 - Avatar creator
 
@@ -134,10 +114,6 @@ See [ENV_VARIABLES.md](./ENV_VARIABLES.md) for a complete list of required and o
 
 #### Database
 - `DATABASE_URL` - PostgreSQL connection string
-
-#### Supabase
-- `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous key
 
 #### API Keys
 - `BASE_SPARTANS_API_URL` - Spartans API endpoint
@@ -199,7 +175,6 @@ sweetflips.gg-1/
 │           └── LuxdropProxy.ts    # Luxdrop API proxy
 ├── lib/                  # Shared utilities
 │   ├── prisma.ts         # Prisma client
-│   ├── supabase.ts       # Supabase client
 │   └── auditLogger.ts    # Transaction audit logging
 ├── prisma/               # Database schema and migrations
 │   └── schema.prisma     # Prisma schema
@@ -222,10 +197,9 @@ sweetflips.gg-1/
 ### Type Safety
 - Strict TypeScript configuration enabled
 - Replaced all `any` types with proper types
-- Proper type definitions for Supabase, Prisma, and API responses
+- Proper type definitions for Prisma and API responses
 
 ### Serverless Compatibility
-- In-memory stores are documented (Plinko sessions, rate limiting were removed)
 - Database-backed solutions recommended for production
 - All cleanup intervals handle serverless environments gracefully
 
@@ -275,15 +249,13 @@ sweetflips.gg-1/
 ## Recent Changes Summary
 
 - ✅ Removed 20+ unused dependencies
-- ✅ Removed Plinko game system completely
-- ✅ Removed Botrix integration completely
 - ✅ Removed rate limiter (was unused)
 - ✅ Cleaned up 50+ console.log statements
 - ✅ Fixed all TypeScript type safety issues
 - ✅ Made all dates configurable via environment variables
 - ✅ Created comprehensive environment variable documentation
 - ✅ Updated proxy code to support authentication-optional proxies
-- ✅ Migrated from Razed to Spartans casino (February 2026)
+- ✅ Migrated to Spartans casino (February 2026)
 
 ## Support
 

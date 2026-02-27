@@ -107,17 +107,3 @@ export default function CookieConsent() {
     </div>
   );
 }
-
-// Export a hook to check consent status
-export function useCookieConsent(): ConsentStatus {
-  const [status, setStatus] = useState<ConsentStatus>('pending');
-
-  useEffect(() => {
-    const stored = localStorage.getItem(COOKIE_CONSENT_KEY);
-    if (stored === 'accepted' || stored === 'rejected') {
-      setStatus(stored as ConsentStatus);
-    }
-  }, []);
-
-  return status;
-}

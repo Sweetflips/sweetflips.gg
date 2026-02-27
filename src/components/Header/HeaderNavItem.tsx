@@ -12,14 +12,14 @@ interface HeaderNavItemProps {
   isMobile?: boolean;
 }
 
-const HeaderNavItem: React.FC<React.PropsWithChildren<HeaderNavItemProps>> = ({
+const HeaderNavItem = ({
   label,
   route,
   external,
   icon,
   children: propChildren,
   isMobile,
-}) => {
+}: HeaderNavItemProps & { children?: React.ReactNode }) => {
   const pathname = usePathname();
   const childrenArray = React.Children.toArray(propChildren);
   const isActive =
@@ -28,8 +28,8 @@ const HeaderNavItem: React.FC<React.PropsWithChildren<HeaderNavItemProps>> = ({
       childrenArray.some((child) => {
         return (
           React.isValidElement(child) &&
-          child.props.href &&
-          pathname === child.props.href
+          (child.props as { href?: string })?.href &&
+          pathname === (child.props as { href?: string }).href
         );
       }));
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -102,7 +102,7 @@ const HeaderNavItem: React.FC<React.PropsWithChildren<HeaderNavItemProps>> = ({
               {childrenArray.map((child, index) => {
                 if (!React.isValidElement(child)) return null;
 
-                const childProps = child.props as any;
+                const childProps = child.props as { href?: string; className?: string };
                 const childIsActive = pathname === childProps.href;
                 const childLinkClasses = `block px-4 py-2 text-sm text-center transition-colors ${
                   childIsActive

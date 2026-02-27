@@ -2,6 +2,7 @@
 /node_modules
 .next
 .prisma/client
+prisma/generated/
 .env
 .env.local
 
@@ -22,6 +23,9 @@ yarn-error.log*
 # local env files
 .env.local
 .env*.local
+
+# scripts with secrets
+*.ps1
 
 # vercel
 .vercel

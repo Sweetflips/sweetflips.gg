@@ -61,7 +61,7 @@ const parseCurrencyAmount = (value: unknown): number => {
   return parsed * multiplier;
 };
 
-const LuxdropLeaderboard: React.FC = () => {
+const LuxdropLeaderboard = () => {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -266,6 +266,7 @@ const LuxdropLeaderboard: React.FC = () => {
             className="transform"
             width={540}
             height={378}
+            priority
           />
         </div>
 
@@ -277,6 +278,7 @@ const LuxdropLeaderboard: React.FC = () => {
             className="transform"
             width={540}
             height={378}
+            priority
           />
         </div>
 
@@ -291,6 +293,7 @@ const LuxdropLeaderboard: React.FC = () => {
               width={280}
               height={53}
               className="mb-3 transition-all duration-300 sm:mb-0"
+              priority
             />
             <b className="text-4xl text-white sm:text-2xl md:text-3xl lg:mt-4 lg:text-3xl">
               Leaderboard
@@ -328,6 +331,7 @@ const LuxdropLeaderboard: React.FC = () => {
                     alt="Rank 2"
                     width={32}
                     height={32}
+                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-image">
@@ -336,6 +340,7 @@ const LuxdropLeaderboard: React.FC = () => {
                     alt="Silver Emblem"
                     width={96}
                     height={96}
+                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-content">
@@ -361,6 +366,7 @@ const LuxdropLeaderboard: React.FC = () => {
                     alt="Rank 1"
                     width={32}
                     height={32}
+                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-image">
@@ -369,6 +375,7 @@ const LuxdropLeaderboard: React.FC = () => {
                     alt="Gold Emblem"
                     width={96}
                     height={96}
+                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-content">
@@ -394,6 +401,7 @@ const LuxdropLeaderboard: React.FC = () => {
                     alt="Rank 3"
                     width={32}
                     height={32}
+                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-image">
@@ -402,6 +410,7 @@ const LuxdropLeaderboard: React.FC = () => {
                     alt="Bronze Emblem"
                     width={96}
                     height={96}
+                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-content">

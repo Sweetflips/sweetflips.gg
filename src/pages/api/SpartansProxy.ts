@@ -1,19 +1,23 @@
 import { prisma } from "@/lib/prisma";
 import type { NextApiRequest, NextApiResponse } from "next";
 
-// Cache TTL: 10 minutes
-const CACHE_TTL_MS = 10 * 60 * 1000;
+// Cache TTL: 15 minutes (matches Spartans source update frequency)
+const CACHE_TTL_MS = 15 * 60 * 1000;
+const SPARTANS_ACTIVE_URL =
+  "https://nexus-campaign-hub-production.up.railway.app/affiliates/527938/campaigns/20499/leaderboards/active";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    // Spartans API URL - path-based structure with affiliate and campaign IDs
-    const API_URL = process.env.BASE_SPARTANS_API_URL as string;
-
-    if (!API_URL) {
-      return res.status(500).json({ error: "Missing BASE_SPARTANS_API_URL in environment variables" });
-    }
+    // Force Spartans source to affiliateId=527938 + campaignId=20499.
+    const API_URL = SPARTANS_ACTIVE_URL;
 
     const now = new Date();
+
+    // Cron bypass: when called by refresh-leaderboards with cron_refresh=1 + Bearer token,
+    // skip cache and force fetch from upstream (avoids edge cache serving stale data)
+    const isCronRefresh =
+      req.query.cron_refresh === "1" &&
+      req.headers.authorization === `Bearer ${process.env.CRON_SECRET}`;
 
     // Special period controls: Start & End date (via .env)
     // Format: YYYY-MM-DD
@@ -51,28 +55,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       )} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())}`;
     const fromParam = formatDate(fromDate);
     const toParam = formatDate(toDate);
-    const cacheKey = `spartans|${fromParam}|${toParam}`;
+    const cacheKey = `spartans|527938|20499|${fromParam}|${toParam}`;
 
-    // 1. Try cache first
+    // 1. Try cache first (skip when cron forces refresh)
     const cached = await prisma.spartansLeaderboardCache.findUnique({
       where: { cacheKey },
     });
 
-    if (cached && cached.expiresAt > now) {
-      if (process.env.NODE_ENV === "development") {
-        console.log(
-          `[SpartansProxy] Returning cached data from database (expires in ${Math.round(
-            (cached.expiresAt.getTime() - now.getTime()) / 1000 / 60
-          )} minutes)`
-        );
-      }
+    if (!isCronRefresh && cached && cached.expiresAt > now) {
       const cachedData = cached.data as any;
       // Limit to top 25 users
       const limitedData = Array.isArray(cachedData.data)
         ? { ...cachedData, data: cachedData.data.slice(0, 25) }
         : cachedData;
 
-      res.setHeader("Cache-Control", "public, max-age=600, s-maxage=600");
+      res.setHeader("Cache-Control", "public, max-age=60, s-maxage=60");
       res.setHeader("Cache-Tag", "leaderboard,spartans");
       res.setHeader("Last-Modified", cached.fetchedAt.toUTCString());
 
@@ -80,10 +77,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // 2. Cache miss/expired: Fetch from upstream Spartans API
-    if (process.env.NODE_ENV === "development") {
-      console.log(`[SpartansProxy] Cache expired or missing, fetching from API...`);
-    }
-
     // Spartans API is a direct endpoint - no query params needed
     const headers: Record<string, string> = {
       Accept: "application/json",
@@ -107,17 +100,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!response.ok) {
       // fallback: If stale cache exists, return that
       if (cached) {
-        if (process.env.NODE_ENV === "development") {
-          console.log(
-            `[SpartansProxy] API error ${response.status}, returning stale cache`
-          );
-        }
         const cachedData = cached.data as any;
         const limited = Array.isArray(cachedData.data)
           ? { ...cachedData, data: cachedData.data.slice(0, 25), stale: true }
           : { ...cachedData, stale: true };
 
-        res.setHeader("Cache-Control", "public, max-age=600, s-maxage=600");
+        res.setHeader("Cache-Control", "public, max-age=60, s-maxage=60");
         res.setHeader("Cache-Tag", "leaderboard,spartans");
         res.setHeader("Last-Modified", cached.fetchedAt.toUTCString());
         return res.status(200).json(limited);
@@ -142,10 +130,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       jsonResponse = JSON.parse(textResponse);
     } catch (err) {
       console.error("[SpartansProxy] JSON parse error:", err);
-      console.error(
-        "[SpartansProxy] Response text:",
-        textResponse.substring(0, 500)
-      );
       // fallback: Return stale cache if possible
       if (cached) {
         const cachedData = cached.data as any;
@@ -153,7 +137,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           ? { ...cachedData, data: cachedData.data.slice(0, 25), stale: true }
           : { ...cachedData, stale: true };
 
-        res.setHeader("Cache-Control", "public, max-age=600, s-maxage=600");
+        res.setHeader("Cache-Control", "public, max-age=60, s-maxage=60");
         res.setHeader("Cache-Tag", "leaderboard,spartans");
         res.setHeader("Last-Modified", cached.fetchedAt.toUTCString());
         return res.status(200).json(limited);
@@ -174,14 +158,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Handle different API response structures
     // The new API might return data in a different format
     let leaderboardData = jsonResponse.data || jsonResponse.leaderboard || jsonResponse.entries || jsonResponse;
-    
+
     if (Array.isArray(leaderboardData)) {
-      leaderboardData = leaderboardData.slice(0, 25).map((entry: any) => ({
-        ...entry,
-        username: maskUsername(entry.username || entry.name || entry.player || "Unknown"),
-        wagered: entry.wagered || entry.wager || entry.amount || entry.total || 0,
-      }));
-      jsonResponse = { data: leaderboardData };
+      const extractWagered = (e: any) => {
+        const value = e.wagered || e.wager || e.amount || e.total || 0;
+        if (typeof value === "string") {
+          const cleaned = value.replace(/[$,\s]/g, "");
+          const parsed = parseFloat(cleaned);
+          return Number.isFinite(parsed) ? parsed : 0;
+        }
+        return Number(value) || 0;
+      };
+      const getRawUsername = (e: any) =>
+        (e.username || e.name || e.player || "Unknown").toString().trim();
+
+      const processed = leaderboardData
+        .map((entry: any) => ({
+          username: getRawUsername(entry),
+          wagered: extractWagered(entry),
+        }))
+        .sort((a, b) => b.wagered - a.wagered)
+        .slice(0, 25)
+        .map((entry) => ({
+          username: maskUsername(entry.username),
+          wagered: entry.wagered,
+        }));
+      jsonResponse = { data: processed };
     }
 
     // Store in db cache
@@ -201,14 +203,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
     });
 
-    if (process.env.NODE_ENV === "development") {
-      console.log(
-        `[SpartansProxy] Success: ${jsonResponse.data?.length || 0
-        } entries processed and cached`
-      );
+    // Cron refresh responses must not be cached at edge (different URL + no-cache)
+    if (isCronRefresh) {
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+    } else {
+      res.setHeader("Cache-Control", "public, max-age=60, s-maxage=60");
     }
-
-    res.setHeader("Cache-Control", "public, max-age=600, s-maxage=600");
     res.setHeader("Cache-Tag", "leaderboard,spartans");
     res.setHeader("Last-Modified", now.toUTCString());
 

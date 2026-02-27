@@ -1,6 +1,6 @@
 "use client";
 import { useSearchParams } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import BannerVideo from "@/components/BannerVideo/BannerVideo";
 import HomeBanner from "@/components/HomeBanner/HomeBanner";
 import RegisterBlocks from "@/components/RegisterBlocks/RegisterBlocks";
@@ -70,7 +70,7 @@ const weeklyRewardMapping: { [key: number]: number } = {
   20: 30,
 };
 
-const Homepage: React.FC = () => {
+const Homepage = () => {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -122,9 +122,14 @@ const Homepage: React.FC = () => {
   };
 
   useEffect(() => {
+    let isMounted = true;
+    let isInitialLoad = true;
     const fetchData = async () => {
-      setLoading(true); // Start loading
-      setError(null); // Reset error
+      if (isInitialLoad) {
+        setLoading(true);
+        isInitialLoad = false;
+      }
+      setError(null);
       try {
         const response = await fetch(API_PROXY_URL, {
           method: "GET",
@@ -155,14 +160,19 @@ const Homepage: React.FC = () => {
             ...user,
             reward: currentRewardMapping[index + 1] || 0,
           }));
-        setData(sortedData);
+        if (isMounted) setData(sortedData);
       } catch (err: any) {
-        setError(err.message);
+        if (isMounted) setError(err.message);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
     fetchData();
+    const interval = setInterval(fetchData, 900_000); // 15 min, matches Spartans source
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, [currentRewardMapping]);
 
   const topUsers = data.slice(0, 3);
@@ -300,15 +310,17 @@ const Homepage: React.FC = () => {
                   className="transform"
                   width={272}
                   height={408}
+                  priority
                 />
               </div>
               <div className="hide-on-ipad absolute right-0 top-[30px] hidden pr-4 sm:block">
                 <Image
-                  src="/images/logo/Spartans icon.svg"
+                  src="/images/logo/Spartans-icon.svg"
                   alt="Spartans Logo"
                   className="transform"
                   width={204}
                   height={306}
+                  priority
                 />
               </div>
               <div className="absolute -left-1 top-[-20px] sm:block md:hidden">
@@ -318,15 +330,17 @@ const Homepage: React.FC = () => {
                   className="h-[103px] w-[68.05px] transform"
                   width={68.05}
                   height={103}
+                  priority
                 />
               </div>
               <div className="absolute -right-5 top-[250px] pr-2 sm:block md:hidden">
                 <Image
-                  src="/images/logo/Spartans icon.svg"
+                  src="/images/logo/Spartans-icon.svg"
                   alt="Spartans Logo"
                   className="h-[77.25px] w-[51.0375px] transform"
                   width={51.0375}
                   height={77.25}
+                  priority
                 />
               </div>
               <div className="absolute left-0 right-0 mx-auto mt-6 max-w-screen-lg px-4 text-center md:mt-10">
@@ -342,6 +356,7 @@ const Homepage: React.FC = () => {
                     width={200}
                     height={100}
                     sizes="(max-width: 640px) 150px, (max-width: 768px) 200px, 250px"
+                    priority
                   />
                   <b className="text-4xl text-white sm:text-2xl md:text-3xl lg:text-3xl">
                     Leaderboard
@@ -384,6 +399,7 @@ const Homepage: React.FC = () => {
                               alt="Second Place"
                               width={32}
                               height={32}
+                              priority
                             />
                           </div>
                           <div className="TopLeaderboard__card-image">
@@ -392,6 +408,7 @@ const Homepage: React.FC = () => {
                               alt="SweetFlips Emblem Silver"
                               width={96}
                               height={96}
+                              priority
                             />
                           </div>
                           <div className="TopLeaderboard__card-content">
@@ -416,6 +433,7 @@ const Homepage: React.FC = () => {
                               alt="First Place"
                               width={32}
                               height={32}
+                              priority
                             />
                           </div>
                           <div className="TopLeaderboard__card-image">
@@ -424,6 +442,7 @@ const Homepage: React.FC = () => {
                               alt="SweetFlips Emblem Gold"
                               width={96}
                               height={96}
+                              priority
                             />
                           </div>
                           <div className="TopLeaderboard__card-content">
@@ -448,6 +467,7 @@ const Homepage: React.FC = () => {
                               alt="Third Place"
                               width={32}
                               height={32}
+                              priority
                             />
                           </div>
                           <div className="TopLeaderboard__card-image">
@@ -456,6 +476,7 @@ const Homepage: React.FC = () => {
                               alt="SweetFlips Emblem Bronze"
                               width={96}
                               height={96}
+                              priority
                             />
                           </div>
                           <div className="TopLeaderboard__card-content">

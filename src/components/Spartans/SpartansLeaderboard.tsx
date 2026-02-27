@@ -2,7 +2,7 @@
 import { Timer } from "@/app/ui/timer/Timer";
 import Loader from "@/components/common/Loader";
 import Image from "next/image";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const API_PROXY_URL = "/api/SpartansProxy";
 
@@ -65,7 +65,7 @@ const weeklyRewardMapping: { [key: number]: number } = {
   20: 30,
 };
 
-const SpartansLeaderboard: React.FC = () => {
+const SpartansLeaderboard = () => {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -118,6 +118,7 @@ const SpartansLeaderboard: React.FC = () => {
   };
 
   useEffect(() => {
+    let isMounted = true;
     const fetchData = async () => {
       try {
         const response = await fetch(API_PROXY_URL, {
@@ -151,14 +152,20 @@ const SpartansLeaderboard: React.FC = () => {
             ...user,
             reward: currentRewardMapping[index + 1] || 0,
           }));
-        setData(sortedData);
+        if (isMounted) setData(sortedData);
       } catch (err: any) {
-        setError(err.message);
+        if (isMounted) setError(err.message);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
     fetchData();
+    // Refresh leaderboard every 5 minutes (same as Luxdrop)
+    const interval = setInterval(fetchData, 900_000); // 15 min, matches Spartans source
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, [currentRewardMapping]);
 
   const topUsers = data.slice(0, 3);
@@ -201,25 +208,70 @@ const SpartansLeaderboard: React.FC = () => {
             className="transform"
             width={272}
             height={408}
+            priority
           />
         </div>
 
         {/* Right Image - Temporary decorative image */}
         <div className="hide-on-ipad absolute right-0 top-[30px] hidden pr-4 md:block">
           <Image
-            src="/images/logo/Spartans icon.svg"
+            src="/images/logo/Spartans-icon.svg"
             alt="Spartans Logo"
             className="transform"
             width={204}
             height={306}
+            priority
           />
         </div>
+        {/* Left Image mobile - Temporary decorative image */}
+        <div className="absolute -left-1 top-[-20px] sm:block md:hidden">
+          <Image
+            src="/images/logo/sweet_flips_emblem_gold.png"
+            alt="SweetFlips Gold Emblem"
+            className="h-[103px] w-[68.05px] transform"
+            width={68.05}
+            height={103}
+            priority
+          />
+        </div>
+
+        {/* Right Image mobile - Temporary decorative image */}
+        <div className="absolute -right-5 top-[250px] pr-2 sm:block md:hidden">
+          <Image
+            src="/images/logo/Spartans-icon.svg"
+            alt="Spartans Logo"
+            className="h-[77.25px] w-[51.0375px] transform"
+            width={51.0375}
+            height={77.25}
+            priority
+          />
+        </div>
+
         {/* Centered Text Section */}
         <div className="relative z-10 mx-auto mt-6 max-w-screen-lg px-4 text-center md:mt-8">
           {/* Prize Pool Text */}
           <b className="animate-pulse-glow text-2xl leading-tight text-[#fff] sm:text-3xl md:text-4xl lg:text-5xl">
             {leaderboardTitle}
           </b>
+
+          {/* Image and Leaderboard Layout */}
+          <div className="mt-4 flex flex-col items-end justify-center sm:flex-row sm:items-end sm:space-x-4">
+            {/* Spartans Logo */}
+            <Image
+              src="/images/logo/Spartans wordmark.webp"
+              alt="Spartans Logo"
+              className="mb-3 transition-all duration-300 sm:mb-0 sm:w-[150px] md:w-[200px] lg:w-[250px] xl:w-[250px]"
+              style={{ filter: 'grayscale(1)' }}
+              width={200}
+              height={100}
+              sizes="(max-width: 640px) 150px, (max-width: 768px) 200px, 250px"
+              priority
+            />
+            {/* Leaderboard Text */}
+            <b className="text-4xl text-white sm:text-2xl md:text-3xl lg:text-3xl">
+              Leaderboard
+            </b>
+          </div>
 
           {/* Description Text */}
           <p className="mx-auto mt-3 max-w-4xl text-center text-sm leading-relaxed text-white sm:text-base md:text-lg lg:text-xl">
@@ -273,6 +325,7 @@ const SpartansLeaderboard: React.FC = () => {
                     className="h-8 w-8"
                     width={32}
                     height={32}
+                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-image">
@@ -282,6 +335,7 @@ const SpartansLeaderboard: React.FC = () => {
                     className="h-24 w-24"
                     width={96}
                     height={96}
+                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-content">
@@ -308,6 +362,7 @@ const SpartansLeaderboard: React.FC = () => {
                     className="h-8 w-8"
                     width={32}
                     height={32}
+                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-image">
@@ -317,6 +372,7 @@ const SpartansLeaderboard: React.FC = () => {
                     className="h-24 w-24"
                     width={96}
                     height={96}
+                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-content">
@@ -343,6 +399,7 @@ const SpartansLeaderboard: React.FC = () => {
                     className="h-8 w-8"
                     width={32}
                     height={32}
+                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-image">
@@ -352,6 +409,7 @@ const SpartansLeaderboard: React.FC = () => {
                     className="h-24 w-24"
                     width={96}
                     height={96}
+                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-content">

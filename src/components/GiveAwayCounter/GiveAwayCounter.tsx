@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import CountUp from "react-countup";
 
-const GiveAwayCounter: React.FC = () => {
+const GiveAwayCounter = () => {
   const [amount, setAmount] = useState<number | null>(null);
 
   // ✅ Fetch current value once on mount
@@ -72,18 +72,20 @@ const GiveAwayCounter: React.FC = () => {
               <a href="/spartans" rel="noopener noreferrer" className="group">
                 <div className="relative">
                   <Image
-                    src="/images/logo/Spartans icon.svg"
+                    src="/images/logo/Spartans-icon.svg"
                     alt="Spartans"
                     width={50}
                     height={50}
                     className="relative z-10 object-contain transition-transform hover:scale-105"
+                    unoptimized
                   />
                   <Image
-                    src="/images/logo/Spartans icon.svg"
+                    src="/images/logo/Spartans-icon.svg"
                     alt="Spartans Glow"
                     width={50}
                     height={50}
                     className="absolute top-0 left-0 z-0 object-contain opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-40"
+                    unoptimized
                   />
                 </div>
               </a>
@@ -95,6 +97,7 @@ const GiveAwayCounter: React.FC = () => {
                     width={50}
                     height={50}
                     className="relative z-10 object-contain transition-transform hover:scale-105"
+                    unoptimized
                   />
                   <Image
                     src="/images/icon/luxdrop_fav.png"
@@ -102,6 +105,7 @@ const GiveAwayCounter: React.FC = () => {
                     width={50}
                     height={50}
                     className="absolute top-0 left-0 z-0 object-contain opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-40"
+                    unoptimized
                   />
                 </div>
               </a>

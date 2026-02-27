@@ -6,10 +6,8 @@ This document lists all required and optional environment variables for the Swee
 
 ### Database
 - `DATABASE_URL` - PostgreSQL database connection string (used by Prisma)
-
-### Supabase
-- `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous/public key
+  - When using Vercel Postgres, this should be set to `POSTGRES_PRISMA_URL` (includes connection pooling)
+  - For migrations, use `POSTGRES_URL_NON_POOLING` if available
 
 ### API Keys
 

@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/cron/refresh-leaderboards",
-      "schedule": "*/10 * * * *"
+      "schedule": "*/15 * * * *"
     }
   ],
   "redirects": [
@@ -22,72 +22,6 @@
     }
   ],
   "headers": [
-    {
-      "source": "/webgl/(.*).gz",
-      "headers": [
-        {
-          "key": "Content-Encoding",
-          "value": "gzip"
-        }
-      ]
-    },
-    {
-      "source": "/webgl/(.*).br",
-      "headers": [
-        {
-          "key": "Content-Encoding",
-          "value": "br"
-        }
-      ]
-    },
-    {
-      "source": "/webgl/(.*).wasm",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "application/wasm"
-        }
-      ]
-    },
-    {
-      "source": "/webgl/(.*).js.gz",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "application/javascript"
-        },
-        {
-          "key": "Content-Encoding",
-          "value": "gzip"
-        }
-      ]
-    },
-    {
-      "source": "/webgl/(.*).data.gz",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "application/octet-stream"
-        },
-        {
-          "key": "Content-Encoding",
-          "value": "gzip"
-        }
-      ]
-    },
-    {
-      "source": "/webgl/(.*).wasm.gz",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "application/wasm"
-        },
-        {
-          "key": "Content-Encoding",
-          "value": "gzip"
-        }
-      ]
-    },
     {
       "source": "/spartans",
       "headers": [
@@ -106,15 +40,6 @@
         {
           "key": "Surrogate-Control",
           "value": "no-store"
-        }
-      ]
-    },
-    {
-      "source": "/images/cover/Razed_Leaderboard.png",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
         }
       ]
     }
