@@ -16,26 +16,16 @@ type LeaderboardEntry = {
 };
 
 const rewardMapping: { [key: number]: number } = {
-  1: 4250,
-  2: 2100,
-  3: 1050,
-  4: 700,
-  5: 500,
-  6: 350,
-  7: 300,
-  8: 275,
-  9: 250,
-  10: 225,
-  11: 200,
-  12: 180,
-  13: 160,
-  14: 130,
-  15: 110,
-  16: 80,
-  17: 50,
-  18: 40,
-  19: 30,
-  20: 20,
+  1: 5000,
+  2: 2000,
+  3: 1000,
+  4: 750,
+  5: 400,
+  6: 300,
+  7: 250,
+  8: 150,
+  9: 100,
+  10: 50,
 };
 
 const parseCurrencyAmount = (value: unknown): number => {
@@ -65,6 +55,8 @@ const LuxdropLeaderboard = () => {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const leaderboardStartsAt = DateTime.utc(2026, 3, 1, 0, 0, 0);
+  const isComingSoon = DateTime.utc() < leaderboardStartsAt;
 
   const maskUsername = (username: string) => {
     if (!username) return "";
@@ -76,14 +68,8 @@ const LuxdropLeaderboard = () => {
 
   const calculatePeriod = () => {
     const now = DateTime.utc();
-    const baseStartDate = DateTime.utc(2025, 12, 1, 0, 0, 0);
-    const periodLengthDays = 14;
-
-    const daysSinceStart = Math.floor(now.diff(baseStartDate, "days").days);
-    const periodNumber = Math.floor(daysSinceStart / periodLengthDays);
-
-    const periodStartDate = baseStartDate.plus({ days: periodNumber * periodLengthDays });
-    const periodEndDate = periodStartDate.plus({ days: periodLengthDays - 1 }).set({ hour: 23, minute: 59, second: 59 });
+    const periodStartDate = now.startOf("month");
+    const periodEndDate = now.endOf("month");
 
     return {
       startDate: periodStartDate.toISODate(),
@@ -94,6 +80,13 @@ const LuxdropLeaderboard = () => {
   };
 
   useEffect(() => {
+    if (isComingSoon) {
+      setLoading(false);
+      setError(null);
+      setData([]);
+      return;
+    }
+
     let isMounted = true;
     const fetchData = async () => {
       setLoading(true);
@@ -119,7 +112,7 @@ const LuxdropLeaderboard = () => {
           throw new Error("Invalid data format from API");
         const processedData = result.data
           .filter((user: any) => user.username)
-          .slice(0, 20)
+          .slice(0, 10)
           .map((user: any, index: number) => {
             const rank = user.rank !== undefined ? user.rank : index + 1;
             const wagered =
@@ -158,9 +151,10 @@ const LuxdropLeaderboard = () => {
       isMounted = false;
       clearInterval(interval);
     };
-  }, []);
+  }, [isComingSoon]);
 
   const handleRetry = () => {
+    if (isComingSoon) return;
     setError(null);
     setLoading(true);
     const period = calculatePeriod();
@@ -186,7 +180,7 @@ const LuxdropLeaderboard = () => {
           throw new Error("Invalid data format from API");
         const processedData = result.data
           .filter((user: any) => user.username)
-          .slice(0, 20)
+          .slice(0, 10)
           .map((user: any, index: number) => {
             const rank = user.rank !== undefined ? user.rank : index + 1;
             const wagered =
@@ -214,6 +208,16 @@ const LuxdropLeaderboard = () => {
         setLoading(false);
       });
   };
+
+  if (isComingSoon)
+    return (
+      <div className="mt-12 p-6 text-center text-white">
+        <h2 className="text-3xl font-bold sm:text-4xl">Coming soon</h2>
+        <p className="mt-4 text-lg sm:text-xl">
+          LuxDrop leaderboard starts on March 1, 2026.
+        </p>
+      </div>
+    );
 
   if (loading) return <Loader />;
   if (error && data.length === 0)
@@ -247,7 +251,7 @@ const LuxdropLeaderboard = () => {
   };
 
   const topUsers = data.slice(0, 3);
-  const restUsers = data.slice(3, 20);
+  const restUsers = data.slice(3, 10);
 
   const period = calculatePeriod();
   const targetDate = period.periodEnd;
@@ -284,7 +288,7 @@ const LuxdropLeaderboard = () => {
 
         <div className="absolute left-0 right-0 mx-auto mt-6 max-w-screen-lg px-4 text-center md:mt-10">
           <b className="animate-pulse-glow text-5xl text-[#fff] sm:text-2xl md:text-3xl lg:text-4xl xl:text-4xl">
-            $22,000
+            $10,000
           </b>
           <div className="mt-4 flex flex-col items-center justify-center sm:flex-row sm:space-x-4">
             <Image
@@ -300,13 +304,13 @@ const LuxdropLeaderboard = () => {
             </b>
           </div>
           <p className="m-4 mx-auto text-center leading-relaxed text-white sm:m-6 sm:text-xl md:text-2xl lg:m-8 lg:text-3xl xl:text-xl">
-            Every two weeks, a total of $11,000 is distributed across the top 20 users!
+            Every month, a total of $10,000 is distributed across the top 10 users!
           </p>
         </div>
       </div>
 
       <div className="mb-4 mt-12 flex flex-col items-center text-2xl font-bold">
-        Bi-weekly Leaderboard ends in
+        Monthly Leaderboard ends in
       </div>
       {countDownDate && (
         <div className="relative mb-15 flex justify-center space-x-4">

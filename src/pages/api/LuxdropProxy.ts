@@ -126,7 +126,7 @@ function processApiResponse(
       };
     })
     .sort((a, b) => b.wagered - a.wagered)
-    .slice(0, 20) // Limit to top 20 users
+    .slice(0, 10) // Limit to top 10 users
     .map((entry, index) => ({
       ...entry,
       rank: index + 1,
@@ -203,14 +203,8 @@ export default async function handler(
       return res.status(400).json({ error: "Invalid date format in query parameters" });
     }
   } else {
-    const baseStartDate = DateTime.utc(2025, 12, 1, 0, 0, 0);
-    const periodLengthDays = 14;
-
-    const daysSinceStart = Math.floor(now.diff(baseStartDate, "days").days);
-    const periodNumber = Math.floor(daysSinceStart / periodLengthDays);
-
-    startDate = baseStartDate.plus({ days: periodNumber * periodLengthDays });
-    endDate = startDate.plus({ days: periodLengthDays - 1 }).set({ hour: 23, minute: 59, second: 59 });
+    startDate = now.startOf("month");
+    endDate = now.endOf("month");
     periodYear = endDate.year;
     periodMonth = endDate.month;
     periodLabel = `${startDate.toFormat("MMM d")} - ${endDate.toFormat("MMM d, yyyy")}`;
@@ -267,7 +261,7 @@ export default async function handler(
     const maskedData = {
       ...cachedData,
       data: cachedData.data
-        .slice(0, 20) // Limit to top 20 users
+        .slice(0, 10) // Limit to top 10 users
         .map(entry => {
           const username = entry.username.includes('*') ? entry.username : maskUsername(entry.username);
           return { ...entry, username };
@@ -394,7 +388,7 @@ export default async function handler(
       const maskedStaleData = {
         ...staleData,
         data: staleData.data
-          .slice(0, 20) // Limit to top 20 users
+          .slice(0, 10) // Limit to top 10 users
           .map(entry => {
             // Only mask if username doesn't already contain asterisks (to avoid double-masking)
             const username = entry.username.includes('*') ? entry.username : maskUsername(entry.username);
