@@ -4,7 +4,7 @@ import { Timer } from "@/app/ui/timer/Timer";
 import Loader from "@/components/common/Loader";
 import { DateTime } from "luxon";
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 const API_PROXY_URL = "/api/LuxdropProxy";
 
@@ -13,6 +13,13 @@ type LeaderboardEntry = {
   wagered: number;
   reward: number;
   rank?: number;
+};
+
+type ApiLeaderboardEntry = {
+  username?: unknown;
+  wagered?: unknown;
+  reward?: unknown;
+  rank?: unknown;
 };
 
 const rewardMapping: { [key: number]: number } = {
@@ -51,6 +58,72 @@ const parseCurrencyAmount = (value: unknown): number => {
   return parsed * multiplier;
 };
 
+const formatUsdCurrency = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+});
+
+const formatUsdReward = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  minimumFractionDigits: 0,
+});
+
+const getErrorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : "Unknown error";
+
+const isAbortError = (error: unknown): boolean =>
+  error instanceof Error && error.name === "AbortError";
+
+const maskUsername = (username: string) => {
+  if (!username) return "";
+  const len = username.length;
+  if (len <= 2) return username;
+  if (len <= 4) return username[0] + "*".repeat(len - 2) + username[len - 1];
+  return username.slice(0, 2) + "*".repeat(len - 4) + username.slice(-2);
+};
+
+const calculatePeriod = () => {
+  const now = DateTime.utc();
+  const periodStartDate = now.startOf("month");
+  const periodEndDate = now.endOf("month");
+
+  return {
+    startDate: periodStartDate.toISODate(),
+    endDate: periodEndDate.toISODate(),
+    periodStart: periodStartDate,
+    periodEnd: periodEndDate,
+  };
+};
+
+const buildLuxdropUrl = (): string => {
+  const period = calculatePeriod();
+  return `${API_PROXY_URL}?startDate=${encodeURIComponent(period.startDate || "")}&endDate=${encodeURIComponent(period.endDate || "")}`;
+};
+
+const normalizeLeaderboardData = (
+  rows: ApiLeaderboardEntry[],
+): LeaderboardEntry[] =>
+  rows
+    .filter((user) => typeof user.username === "string" && user.username.trim().length > 0)
+    .slice(0, 10)
+    .map((user, index) => {
+      const rank =
+        typeof user.rank === "number" && Number.isFinite(user.rank)
+          ? user.rank
+          : index + 1;
+      const wagered = parseCurrencyAmount(user.wagered);
+      const rewardFromApi = parseCurrencyAmount(user.reward);
+      const reward = rewardFromApi > 0 ? rewardFromApi : rewardMapping[rank] || 0;
+
+      return {
+        username: maskUsername(String(user.username)),
+        wagered,
+        reward,
+        rank,
+      };
+    });
+
 const LuxdropLeaderboard = () => {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -58,25 +131,34 @@ const LuxdropLeaderboard = () => {
   const leaderboardStartsAt = DateTime.utc(2026, 3, 1, 0, 0, 0);
   const isComingSoon = DateTime.utc() < leaderboardStartsAt;
 
-  const maskUsername = (username: string) => {
-    if (!username) return "";
-    const len = username.length;
-    if (len <= 2) return username;
-    if (len <= 4) return username[0] + "*".repeat(len - 2) + username[len - 1];
-    return username.slice(0, 2) + "*".repeat(len - 4) + username.slice(-2);
-  };
+  const fetchLeaderboard = useCallback(
+    async (signal?: AbortSignal): Promise<LeaderboardEntry[]> => {
+      const response = await fetch(buildLuxdropUrl(), {
+        method: "GET",
+        signal,
+      });
 
-  const calculatePeriod = () => {
-    const periodStartDate = DateTime.utc(2026, 2, 23, 0, 0, 0);
-    const periodEndDate = DateTime.utc(2026, 3, 31, 23, 59, 59);
+      if (!response.ok) {
+        let errorData: { message?: string } = {};
+        try {
+          errorData = (await response.json()) as { message?: string };
+        } catch {
+          errorData = { message: response.statusText };
+        }
+        throw new Error(
+          `API returned ${response.status}: ${errorData.message || response.statusText}`,
+        );
+      }
 
-    return {
-      startDate: periodStartDate.toISODate(),
-      endDate: periodEndDate.toISODate(),
-      periodStart: periodStartDate,
-      periodEnd: periodEndDate,
-    };
-  };
+      const result = (await response.json()) as { data?: unknown };
+      if (!Array.isArray(result.data)) {
+        throw new Error("Invalid data format from API");
+      }
+
+      return normalizeLeaderboardData(result.data as ApiLeaderboardEntry[]);
+    },
+    [],
+  );
 
   useEffect(() => {
     if (isComingSoon) {
@@ -87,125 +169,58 @@ const LuxdropLeaderboard = () => {
     }
 
     let isMounted = true;
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const period = calculatePeriod();
-        const url = `${API_PROXY_URL}?startDate=${encodeURIComponent(period.startDate || "")}&endDate=${encodeURIComponent(period.endDate || "")}`;
+    let activeController: AbortController | null = null;
 
-        const response = await fetch(url, { method: "GET" });
-        if (!response.ok) {
-          let errorData;
-          try {
-            errorData = await response.json();
-          } catch {
-            errorData = { message: response.statusText };
-          }
-          throw new Error(
-            `API returned ${response.status}: ${errorData.message || response.statusText}`
-          );
-        }
-        const result = await response.json();
-        if (!result.data || !Array.isArray(result.data))
-          throw new Error("Invalid data format from API");
-        const processedData = result.data
-          .filter((user: any) => user.username)
-          .slice(0, 10)
-          .map((user: any, index: number) => {
-            const rank = user.rank !== undefined ? user.rank : index + 1;
-            const wagered =
-              typeof user.wagered === "number"
-                ? user.wagered
-                : parseCurrencyAmount(user.wagered);
-            const rewardFromApi =
-              typeof user.reward === "number"
-                ? user.reward
-                : parseCurrencyAmount(user.reward);
-            const reward =
-              rewardFromApi > 0 ? rewardFromApi : rewardMapping[rank] || 0;
-            return {
-              username: maskUsername(user.username),
-              wagered,
-              reward,
-              rank,
-            };
-          });
+    const fetchData = async (showLoader: boolean) => {
+      if (showLoader) {
+        setLoading(true);
+      }
+      setError(null);
+
+      activeController?.abort();
+      const controller = new AbortController();
+      activeController = controller;
+
+      try {
+        const processedData = await fetchLeaderboard(controller.signal);
         if (isMounted) {
           setData(processedData);
-          setLoading(false);
         }
-      } catch (err: any) {
-        if (isMounted) {
-          setError(`Unable to load leaderboard: ${err.message}`);
+      } catch (err: unknown) {
+        if (!isMounted || isAbortError(err)) return;
+        setError(`Unable to load leaderboard: ${getErrorMessage(err)}`);
+      } finally {
+        if (isMounted && showLoader) {
           setLoading(false);
         }
       }
     };
 
-    fetchData();
+    void fetchData(true);
     // Refresh leaderboard every 5 minutes
-    const interval = setInterval(fetchData, 300_000);
+    const interval = window.setInterval(() => {
+      void fetchData(false);
+    }, 300_000);
     return () => {
       isMounted = false;
-      clearInterval(interval);
+      activeController?.abort();
+      window.clearInterval(interval);
     };
-  }, [isComingSoon]);
+  }, [fetchLeaderboard, isComingSoon]);
 
-  const handleRetry = () => {
+  const handleRetry = async () => {
     if (isComingSoon) return;
     setError(null);
     setLoading(true);
-    const period = calculatePeriod();
-    const url = `${API_PROXY_URL}?startDate=${encodeURIComponent(period.startDate || "")}&endDate=${encodeURIComponent(period.endDate || "")}`;
 
-    fetch(url, { method: "GET" })
-      .then(async (response) => {
-        if (!response.ok) {
-          let errorData;
-          try {
-            errorData = await response.json();
-          } catch {
-            errorData = { message: response.statusText };
-          }
-          throw new Error(
-            `API returned ${response.status}: ${errorData.message || response.statusText}`
-          );
-        }
-        return response.json();
-      })
-      .then((result) => {
-        if (!result.data || !Array.isArray(result.data))
-          throw new Error("Invalid data format from API");
-        const processedData = result.data
-          .filter((user: any) => user.username)
-          .slice(0, 10)
-          .map((user: any, index: number) => {
-            const rank = user.rank !== undefined ? user.rank : index + 1;
-            const wagered =
-              typeof user.wagered === "number"
-                ? user.wagered
-                : parseCurrencyAmount(user.wagered);
-            const rewardFromApi =
-              typeof user.reward === "number"
-                ? user.reward
-                : parseCurrencyAmount(user.reward);
-            const reward =
-              rewardFromApi > 0 ? rewardFromApi : rewardMapping[rank] || 0;
-            return {
-              username: maskUsername(user.username),
-              wagered,
-              reward,
-              rank,
-            };
-          });
-        setData(processedData);
-        setLoading(false);
-      })
-      .catch((err: any) => {
-        setError(`Unable to load leaderboard: ${err.message}`);
-        setLoading(false);
-      });
+    try {
+      const processedData = await fetchLeaderboard();
+      setData(processedData);
+    } catch (err: unknown) {
+      setError(`Unable to load leaderboard: ${getErrorMessage(err)}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (isComingSoon)
@@ -232,18 +247,10 @@ const LuxdropLeaderboard = () => {
       </div>
     );
 
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
+  const formatCurrency = (amount: number) => formatUsdCurrency.format(amount);
 
   const formatRewardCurrency = (amount: number) => {
-    const formattedAmount = new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-    }).format(amount);
+    const formattedAmount = formatUsdReward.format(amount);
     return formattedAmount.endsWith(".00")
       ? formattedAmount.slice(0, -3)
       : formattedAmount;
@@ -254,7 +261,6 @@ const LuxdropLeaderboard = () => {
 
   const period = calculatePeriod();
   const targetDate = period.periodEnd;
-  const periodLabel = `${period.periodStart.toFormat("MMM d")} - ${period.periodEnd.toFormat("MMM d, yyyy")}`;
 
   const countDownDate = targetDate.toISO();
 

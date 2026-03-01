@@ -1,75 +1,70 @@
-import React, { useEffect, useState } from "react";
-import { NumberBox } from "./NumberBox";
+import React, { useEffect, useMemo, useState } from "react";
 import { TimerContainer } from "./TimerContainer";
 import { DateTime } from "luxon";
 
-interface timerProps {
+interface TimerProps {
   type: string;
   date: string;
 }
 
-export const Timer = ({ type, date }: timerProps) => {
-  const [time, setTime] = useState<number>(7);
-  const [newTime, setNewTime] = useState<number>(0);
-  const [days, setDays] = useState<number>(0);
-  const [hours, setHours] = useState<number>(0);
-  const [minutes, setMinutes] = useState<number>(0);
-  const [seconds, setSeconds] = useState<number>(0);
-  const [message, setMessage] = useState<string>("");
+type CountdownState = {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+};
 
-  const timeToDays = time * 60 * 60 * 24 * 1000;
+const ZERO_COUNTDOWN: CountdownState = {
+  days: 0,
+  hours: 0,
+  minutes: 0,
+  seconds: 0,
+};
 
-  const countDownDate = DateTime.fromISO(date).toUTC().toMillis();
+const getCountdown = (
+  targetDateMillis: number,
+  nowMillis: number,
+): CountdownState => {
+  const difference = Math.max(targetDateMillis - nowMillis, 0);
 
-useEffect(() => {
-  const updateTime = setInterval(() => {
-    const now = DateTime.utc().toMillis();
+  const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((difference % (1000 * 60)) / 1000);
 
-    const difference = countDownDate - now;
+  return { days, hours, minutes, seconds };
+};
 
-    const newDays = Math.floor(difference / (1000 * 60 * 60 * 24));
-    const newHours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const newMinutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-    const newSeconds = Math.floor((difference % (1000 * 60)) / 1000);
+export const Timer = ({ type, date }: TimerProps) => {
+  const [countdown, setCountdown] = useState<CountdownState>(ZERO_COUNTDOWN);
+  const countDownDate = useMemo(
+    () => DateTime.fromISO(date, { zone: "utc" }).toMillis(),
+    [date],
+  );
 
-    setDays(newDays);
-    setHours(newHours);
-    setMinutes(newMinutes);
-    setSeconds(newSeconds);
-
-    if (difference <= 0) {
-      clearInterval(updateTime);
-      setMessage("The Launch Has Started");
-      setDays(0);
-      setHours(0);
-      setMinutes(0);
-      setSeconds(0);
+  useEffect(() => {
+    if (!Number.isFinite(countDownDate)) {
+      setCountdown(ZERO_COUNTDOWN);
+      return;
     }
-  });
+    const updateCountdown = () => {
+      setCountdown(getCountdown(countDownDate, DateTime.utc().toMillis()));
+    };
 
-  return () => {
-    clearInterval(updateTime);
-  };
-}, [countDownDate]);
-
-  const handleClick = () => {
-    setTime(newTime);
-    // console.log(time);
-    setNewTime(0);
-  };
-
-  const handleChange = (e: any) => {
-    let inputTime = e.target.value;
-    setNewTime(inputTime);
-  };
+    updateCountdown();
+    const timerId = window.setInterval(updateCountdown, 1000);
+    return () => {
+      window.clearInterval(timerId);
+    };
+  }, [countDownDate]);
 
   return (
     <TimerContainer
       type={type}
-      days={days}
-      hours={hours}
-      minutes={minutes}
-      seconds={seconds}
+      days={countdown.days}
+      hours={countdown.hours}
+      minutes={countdown.minutes}
+      seconds={countdown.seconds}
     />
   );
 };

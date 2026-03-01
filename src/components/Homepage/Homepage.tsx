@@ -1,6 +1,6 @@
 "use client";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import BannerVideo from "@/components/BannerVideo/BannerVideo";
 import HomeBanner from "@/components/HomeBanner/HomeBanner";
 import RegisterBlocks from "@/components/RegisterBlocks/RegisterBlocks";
@@ -46,6 +46,31 @@ const monthlyRewardMapping: { [key: number]: number } = {
   25: 165,
 };
 
+const parseWageredAmount = (value: unknown): number => {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value !== "string") {
+    return 0;
+  }
+
+  const cleanedValue = value.replace(/[^0-9.-]/g, "");
+  const parsed = Number.parseFloat(cleanedValue);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const usdCurrencyFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+});
+
+const usdRewardFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  minimumFractionDigits: 0,
+});
+
 const Homepage = () => {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -53,7 +78,6 @@ const Homepage = () => {
   const [urlError, setUrlError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const searchParams = useSearchParams();
-  const fireworksLaunched = useRef(false); // Prevent multiple launches
 
   // --- Date Logic ---
   const now = new Date(); // Current date in UTC
@@ -61,7 +85,6 @@ const Homepage = () => {
   // No special period active -- standard monthly leaderboard
   const isSpecialWeekActive = false;
 
-  const prizePoolAmount = 75000;
   const leaderboardTitle = `$75,000 SPARTANS X SWEETFLIPS LEADERBOARD`;
   const leaderboardDescription = `Each month, $75,000 is distributed among 25 users based on their total wagered amount on Spartans.`;
   const currentRewardMapping = monthlyRewardMapping;
@@ -104,7 +127,7 @@ const Homepage = () => {
         const parsedData = result.data.map(
           (user: any): LeaderboardEntry => ({
             username: maskUsername(user.username),
-            wagered: parseFloat(user.wagered),
+            wagered: parseWageredAmount(user.wagered),
             reward: 0,
           }),
         );
@@ -157,18 +180,10 @@ const Homepage = () => {
     }
   }, [searchParams]);
 
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
+  const formatCurrency = (amount: number) => usdCurrencyFormatter.format(amount);
 
   const formatRewardCurrency = (amount: number) => {
-    const formattedAmount = new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-    }).format(amount);
+    const formattedAmount = usdRewardFormatter.format(amount);
     return formattedAmount.endsWith(".00")
       ? formattedAmount.slice(0, -3)
       : formattedAmount;

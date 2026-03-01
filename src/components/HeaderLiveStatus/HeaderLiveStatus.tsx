@@ -7,21 +7,44 @@ export function HeaderLiveStatus() {
   const [isLive, setIsLive] = useState<boolean | null>(null);
 
   useEffect(() => {
-    async function fetchStatus() {
+    let isMounted = true;
+    let activeController: AbortController | null = null;
+
+    const fetchStatus = async () => {
+      activeController?.abort();
+      const controller = new AbortController();
+      activeController = controller;
+
       try {
         const channelName = process.env.NEXT_PUBLIC_KICK_CHANNEL_NAME || "sweetflips";
-        const res = await fetch(`/api/kick/channel-status?channel=${encodeURIComponent(channelName)}`);
+        const res = await fetch(`/api/kick/channel-status?channel=${encodeURIComponent(channelName)}`, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        if (!res.ok) {
+          throw new Error(`Kick status request failed with ${res.status}`);
+        }
         const data = await res.json();
-        setIsLive(data.livestream?.is_live ?? false);
-      } catch (err) {
+        if (isMounted && !controller.signal.aborted) {
+          setIsLive(data.livestream?.is_live ?? false);
+        }
+      } catch (err: unknown) {
+        if (!isMounted || (err instanceof Error && err.name === "AbortError")) return;
         console.error('Failed to fetch Kick live status:', err);
         setIsLive(false);
       }
-    }
+    };
 
-    fetchStatus();
-    const interval = setInterval(fetchStatus, 30000);
-    return () => clearInterval(interval);
+    void fetchStatus();
+    const interval = window.setInterval(() => {
+      void fetchStatus();
+    }, 30000);
+
+    return () => {
+      isMounted = false;
+      activeController?.abort();
+      window.clearInterval(interval);
+    };
   }, []);
 
   if (isLive === null) return null;

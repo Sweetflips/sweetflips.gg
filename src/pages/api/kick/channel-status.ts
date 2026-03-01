@@ -8,6 +8,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const channel = (req.query.channel as string) || process.env.KICK_CHANNEL_NAME || "sweetflips";
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
+
   try {
     const upstream = await fetch(`https://kick.com/api/v2/channels/${encodeURIComponent(channel)}`, {
       // Explicitly request CORS-friendly headers are irrelevant server-side
@@ -15,6 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         "Accept": "application/json, text/plain, */*",
         "User-Agent": "sweetflips.gg/1.0 (+https://sweetflips.gg)"
       },
+      signal: controller.signal,
     });
 
     // Transparently forward status codes
@@ -31,8 +35,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Return JSON to the client.
     return res.status(200).json(data);
-  } catch (err) {
+  } catch (err: unknown) {
+    if (err instanceof Error && err.name === "AbortError") {
+      return res.status(504).json({ error: "Kick channel status request timed out" });
+    }
     console.error("Kick channel proxy error:", err);
     return res.status(502).json({ error: "Failed to fetch channel status from Kick" });
+  } finally {
+    clearTimeout(timeoutId);
   }
 }

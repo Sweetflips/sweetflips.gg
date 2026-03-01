@@ -2,15 +2,18 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import CountUp from "react-countup";
+import Link from "next/link";
 
 const GiveAwayCounter = () => {
   const [amount, setAmount] = useState<number | null>(null);
 
   // ✅ Fetch current value once on mount
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchAmount = async () => {
       try {
-        const res = await fetch("/api/giveaway-counter");
+        const res = await fetch("/api/giveaway-counter", { signal: controller.signal });
         if (!res.ok) {
           console.error(`Failed to fetch giveaway counter: ${res.status} ${res.statusText}`);
           setAmount(0); // Set default value on error
@@ -18,13 +21,18 @@ const GiveAwayCounter = () => {
         }
         const data = await res.json();
         setAmount(data.amount);
-      } catch (error) {
+      } catch (error: unknown) {
+        if (error instanceof Error && error.name === "AbortError") return;
         console.error("Error fetching giveaway counter:", error);
         setAmount(0); // Set default value on error
       }
     };
 
-    fetchAmount();
+    void fetchAmount();
+
+    return () => {
+      controller.abort();
+    };
   }, []);
 
   return (
@@ -69,7 +77,7 @@ const GiveAwayCounter = () => {
               Leaderboards
             </p>
             <div className="flex items-center space-x-4">
-              <a href="/spartans" rel="noopener noreferrer" className="group">
+              <Link href="/spartans" className="group">
                 <div className="relative">
                   <Image
                     src="/images/logo/Spartans-icon.svg"
@@ -77,7 +85,6 @@ const GiveAwayCounter = () => {
                     width={50}
                     height={50}
                     className="relative z-10 object-contain transition-transform hover:scale-105"
-                    unoptimized
                   />
                   <Image
                     src="/images/logo/Spartans-icon.svg"
@@ -85,11 +92,10 @@ const GiveAwayCounter = () => {
                     width={50}
                     height={50}
                     className="absolute top-0 left-0 z-0 object-contain opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-40"
-                    unoptimized
                   />
                 </div>
-              </a>
-              <a href="/luxdrop" rel="noopener noreferrer" className="group">
+              </Link>
+              <Link href="/luxdrop" className="group">
                 <div className="relative">
                   <Image
                     src="/images/icon/luxdrop_fav.png"
@@ -97,7 +103,6 @@ const GiveAwayCounter = () => {
                     width={50}
                     height={50}
                     className="relative z-10 object-contain transition-transform hover:scale-105"
-                    unoptimized
                   />
                   <Image
                     src="/images/icon/luxdrop_fav.png"
@@ -105,10 +110,9 @@ const GiveAwayCounter = () => {
                     width={50}
                     height={50}
                     className="absolute top-0 left-0 z-0 object-contain opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-40"
-                    unoptimized
                   />
                 </div>
-              </a>
+              </Link>
             </div>
           </div>
         </div>
