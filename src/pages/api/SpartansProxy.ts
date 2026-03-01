@@ -55,6 +55,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.setHeader("Cache-Control", "public, max-age=30, s-maxage=30");
       res.setHeader("Cache-Tag", "leaderboard,spartans");
       res.setHeader("Last-Modified", cached.fetchedAt.toUTCString());
+      // #region agent log
+      res.setHeader("X-Spartans-Source", (limitedData as any)?.source || "db-cache");
+      res.setHeader("X-Spartans-Top-Wager", String(topCached?.wagered ?? ""));
+      // #endregion
 
       return res.status(200).json(limitedData);
     }
@@ -98,6 +102,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         res.setHeader("Cache-Control", "public, max-age=30, s-maxage=30");
         res.setHeader("Cache-Tag", "leaderboard,spartans");
         res.setHeader("Last-Modified", cached.fetchedAt.toUTCString());
+        // #region agent log
+        res.setHeader("X-Spartans-Source", "stale-cache-fallback");
+        res.setHeader("X-Spartans-Top-Wager", String(topFallback?.wagered ?? ""));
+        // #endregion
         return res.status(200).json(limited);
       }
       const errorText = await response.text().catch(
@@ -130,6 +138,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         res.setHeader("Cache-Control", "public, max-age=30, s-maxage=30");
         res.setHeader("Cache-Tag", "leaderboard,spartans");
         res.setHeader("Last-Modified", cached.fetchedAt.toUTCString());
+        // #region agent log
+        const topFallback = Array.isArray(limited.data) && limited.data.length > 0 ? limited.data[0] : null;
+        res.setHeader("X-Spartans-Source", "stale-cache-json-parse-fallback");
+        res.setHeader("X-Spartans-Top-Wager", String(topFallback?.wagered ?? ""));
+        // #endregion
         return res.status(200).json(limited);
       }
       return res
@@ -210,7 +223,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           username: maskUsername(entry.username),
           wagered: entry.wagered,
         }));
-      jsonResponse = { data: processed };
+      const responseSource = jsonResponse?.source || "active-leaderboard";
+      jsonResponse = { data: processed, source: responseSource };
       const topProcessed = processed.length > 0 ? processed[0] : null;
       // #region agent log
       fetch('http://127.0.0.1:7645/ingest/6a8b2e86-6c53-4ebd-8e5c-d8c843c7eab9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d5ed66'},body:JSON.stringify({sessionId:'d5ed66',runId:debugRunId,hypothesisId:'H3',location:'SpartansProxy.ts:170',message:'fresh_processed_payload',data:{entriesCount:processed.length,topWagered:topProcessed?.wagered ?? null,topUsername:topProcessed?.username ?? null},timestamp:Date.now()})}).catch(()=>{});
@@ -242,6 +256,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     res.setHeader("Cache-Tag", "leaderboard,spartans");
     res.setHeader("Last-Modified", now.toUTCString());
+    // #region agent log
+    const topFinal = Array.isArray((jsonResponse as any)?.data) && (jsonResponse as any).data.length > 0
+      ? (jsonResponse as any).data[0]
+      : null;
+    res.setHeader("X-Spartans-Source", (jsonResponse as any)?.source || "upstream-processed");
+    res.setHeader("X-Spartans-Top-Wager", String(topFinal?.wagered ?? ""));
+    // #endregion
 
     return res.status(200).json(jsonResponse);
   } catch (error) {
