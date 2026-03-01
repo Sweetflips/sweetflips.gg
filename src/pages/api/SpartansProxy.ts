@@ -8,6 +8,7 @@ const SPARTANS_ACTIVE_URL =
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
+    const debugRunId = "run-initial";
     // Force Spartans source to affiliateId=527938 + campaignId=20499.
     const API_URL = SPARTANS_ACTIVE_URL;
 
@@ -31,6 +32,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const fromParam = formatDate(fromDate);
     const toParam = formatDate(toDate);
     const cacheKey = `spartans|527938|20499|${fromParam}|${toParam}`;
+    // #region agent log
+    fetch('http://127.0.0.1:7645/ingest/6a8b2e86-6c53-4ebd-8e5c-d8c843c7eab9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d5ed66'},body:JSON.stringify({sessionId:'d5ed66',runId:debugRunId,hypothesisId:'H4',location:'SpartansProxy.ts:33',message:'proxy_entry',data:{isCronRefresh,cacheKey,nowIso:now.toISOString()},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
 
     // 1. Try cache first (skip when cron forces refresh)
     const cached = await prisma.spartansLeaderboardCache.findUnique({
@@ -43,6 +47,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const limitedData = Array.isArray(cachedData.data)
         ? { ...cachedData, data: cachedData.data.slice(0, 25) }
         : cachedData;
+      const topCached = Array.isArray(limitedData.data) && limitedData.data.length > 0 ? limitedData.data[0] : null;
+      // #region agent log
+      fetch('http://127.0.0.1:7645/ingest/6a8b2e86-6c53-4ebd-8e5c-d8c843c7eab9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d5ed66'},body:JSON.stringify({sessionId:'d5ed66',runId:debugRunId,hypothesisId:'H1',location:'SpartansProxy.ts:47',message:'served_from_db_cache',data:{cacheExpiresAt:cached.expiresAt.toISOString(),nowIso:now.toISOString(),topWagered:topCached?.wagered ?? null,topUsername:topCached?.username ?? null,hasStaleFlag:Boolean((limitedData as any).stale)},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
 
       res.setHeader("Cache-Control", "public, max-age=30, s-maxage=30");
       res.setHeader("Cache-Tag", "leaderboard,spartans");
@@ -71,6 +79,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       method: "GET",
       headers,
     });
+    // #region agent log
+    fetch('http://127.0.0.1:7645/ingest/6a8b2e86-6c53-4ebd-8e5c-d8c843c7eab9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d5ed66'},body:JSON.stringify({sessionId:'d5ed66',runId:debugRunId,hypothesisId:'H2',location:'SpartansProxy.ts:80',message:'upstream_response_received',data:{status:response.status,ok:response.ok},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
 
     if (!response.ok) {
       // fallback: If stale cache exists, return that
@@ -79,6 +90,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const limited = Array.isArray(cachedData.data)
           ? { ...cachedData, data: cachedData.data.slice(0, 25), stale: true }
           : { ...cachedData, stale: true };
+        const topFallback = Array.isArray(limited.data) && limited.data.length > 0 ? limited.data[0] : null;
+        // #region agent log
+        fetch('http://127.0.0.1:7645/ingest/6a8b2e86-6c53-4ebd-8e5c-d8c843c7eab9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d5ed66'},body:JSON.stringify({sessionId:'d5ed66',runId:debugRunId,hypothesisId:'H2',location:'SpartansProxy.ts:93',message:'upstream_failed_served_stale_cache',data:{status:response.status,topWagered:topFallback?.wagered ?? null,topUsername:topFallback?.username ?? null},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
 
         res.setHeader("Cache-Control", "public, max-age=30, s-maxage=30");
         res.setHeader("Cache-Tag", "leaderboard,spartans");
@@ -121,6 +136,43 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .status(500)
         .json({ error: "Invalid JSON response from API" });
     }
+    // #region agent log
+    fetch('http://127.0.0.1:7645/ingest/6a8b2e86-6c53-4ebd-8e5c-d8c843c7eab9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d5ed66'},body:JSON.stringify({sessionId:'d5ed66',runId:debugRunId,hypothesisId:'H3',location:'SpartansProxy.ts:141',message:'upstream_payload_shape',data:{hasEntriesArray:Array.isArray(jsonResponse?.entries),hasDataArray:Array.isArray(jsonResponse?.data),startAt:jsonResponse?.startAt ?? null,endAt:jsonResponse?.endAt ?? null,status:jsonResponse?.status ?? null},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+
+    // If /active resolves to FINISHED/SCHEDULED, use TAP all-players for current month timeframe.
+    // This keeps leaderboard wagers aligned with the live month period.
+    if (jsonResponse?.status && jsonResponse.status !== "ACTIVE") {
+      const allPlayersUrl = new URL(
+        "https://nexus-campaign-hub-production.up.railway.app/affiliates/527938/campaigns/20499/all-players"
+      );
+      allPlayersUrl.searchParams.set("date_from", fromDate.toISOString());
+      allPlayersUrl.searchParams.set("date_to", toDate.toISOString());
+      allPlayersUrl.searchParams.set("limit", "50");
+      allPlayersUrl.searchParams.set("order_by", "wagered");
+      allPlayersUrl.searchParams.set("order_dir", "desc");
+
+      const allPlayersResponse = await fetch(allPlayersUrl.toString(), {
+        method: "GET",
+        headers,
+      });
+      // #region agent log
+      fetch('http://127.0.0.1:7645/ingest/6a8b2e86-6c53-4ebd-8e5c-d8c843c7eab9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d5ed66'},body:JSON.stringify({sessionId:'d5ed66',runId:debugRunId,hypothesisId:'H5',location:'SpartansProxy.ts:166',message:'all_players_attempt',data:{upstreamActiveStatus:jsonResponse.status,httpStatus:allPlayersResponse.status,ok:allPlayersResponse.ok,dateFrom:fromDate.toISOString(),dateTo:toDate.toISOString()},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+
+      if (allPlayersResponse.ok) {
+        const allPlayersJson = await allPlayersResponse.json().catch(() => null);
+        if (Array.isArray(allPlayersJson?.items)) {
+          jsonResponse = {
+            data: allPlayersJson.items.map((p: any) => ({
+              username: (p.username || p.registrationId || "Unknown").toString().trim(),
+              wagered: Number(p.wagered) || 0,
+            })),
+            source: "all-players",
+          };
+        }
+      }
+    }
 
     // MASK USERNAMES
     const maskUsername = (username: string) => {
@@ -159,6 +211,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           wagered: entry.wagered,
         }));
       jsonResponse = { data: processed };
+      const topProcessed = processed.length > 0 ? processed[0] : null;
+      // #region agent log
+      fetch('http://127.0.0.1:7645/ingest/6a8b2e86-6c53-4ebd-8e5c-d8c843c7eab9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d5ed66'},body:JSON.stringify({sessionId:'d5ed66',runId:debugRunId,hypothesisId:'H3',location:'SpartansProxy.ts:170',message:'fresh_processed_payload',data:{entriesCount:processed.length,topWagered:topProcessed?.wagered ?? null,topUsername:topProcessed?.username ?? null},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
     }
 
     // Store in db cache
