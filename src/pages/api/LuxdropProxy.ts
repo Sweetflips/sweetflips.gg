@@ -204,7 +204,7 @@ export default async function handler(
     }
   } else {
     startDate = DateTime.utc(2026, 2, 23, 0, 0, 0);
-    endDate = DateTime.utc(2026, 3, 1, 23, 59, 59);
+    endDate = DateTime.utc(2026, 3, 31, 23, 59, 59);
     periodYear = endDate.year;
     periodMonth = endDate.month;
     periodLabel = `${startDate.toFormat("MMM d")} - ${endDate.toFormat("MMM d, yyyy")}`;

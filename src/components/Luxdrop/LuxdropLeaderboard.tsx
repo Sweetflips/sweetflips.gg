@@ -85,7 +85,7 @@ const maskUsername = (username: string) => {
 
 const calculatePeriod = () => {
   const periodStartDate = DateTime.utc(2026, 2, 23, 0, 0, 0);
-  const periodEndDate = DateTime.utc(2026, 3, 1, 23, 59, 59);
+  const periodEndDate = DateTime.utc(2026, 3, 31, 23, 59, 59);
 
   return {
     startDate: periodStartDate.toISODate(),
