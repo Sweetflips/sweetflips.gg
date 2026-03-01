@@ -387,22 +387,22 @@ The cron job calls `/api/LuxdropProxy` to refresh the cache periodically.
 
 ```bash
 # Luxdrop API
-LUXDROP_API_KEY=65dc17f61f7889075fe2b070856a096e6960ba75ff58a505e0f04c0a40975191
+LUXDROP_API_KEY=<your-luxdrop-api-key>
 LUXDROP_API_BASE_URL=https://api.luxdrop.com/external/affiliates
 LUXDROP_AFFILIATE_CODE=sweetflips
 NEXT_PUBLIC_LUXDROP_AFFILIATE_CODE=sweetflips
 
 # Proxy (Optional)
-PROXY_HOST=104.253.199.227
-PROXY_PORT=5506
-PROXY_USERNAME=ozxnqgrw
-PROXY_PASSWORD=kbqc558eowm4
+PROXY_HOST=<your-proxy-host>
+PROXY_PORT=<your-proxy-port>
+PROXY_USERNAME=<your-proxy-username>
+PROXY_PASSWORD=<your-proxy-password>
 
 # Database
-DATABASE_URL=postgres://5d39421497db3a202bd6e1267adeeca926d962bd97530f1762477ae2927a818c:sk_gs6SvaeJHjsMtH6jXvn8P@db.prisma.io:5432/postgres?sslmode=require
+DATABASE_URL=<your-database-connection-string>
 
 # Cron
-CRON_SECRET=Wg!n+kYdmnj@LJd-z)qLYRJC2ZNF*Y
+CRON_SECRET=<your-cron-secret>
 ```
 
 ---

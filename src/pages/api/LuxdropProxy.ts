@@ -203,8 +203,8 @@ export default async function handler(
       return res.status(400).json({ error: "Invalid date format in query parameters" });
     }
   } else {
-    startDate = DateTime.utc(2026, 2, 23, 0, 0, 0);
-    endDate = DateTime.utc(2026, 3, 31, 23, 59, 59);
+    startDate = now.startOf("month");
+    endDate = now.endOf("month");
     periodYear = endDate.year;
     periodMonth = endDate.month;
     periodLabel = `${startDate.toFormat("MMM d")} - ${endDate.toFormat("MMM d, yyyy")}`;
@@ -271,7 +271,9 @@ export default async function handler(
     // Always compute a proper MD5 ETag from the actual content (replaces any old broken ETags)
     const contentEtag = `W/"${crypto.createHash("md5").update(JSON.stringify(maskedData)).digest("hex")}"`;
 
-    console.log(`[LuxdropProxy] Cache hit (expires in ${Math.round((cached.expiresAt.getTime() - currentTime.getTime()) / 1000)}s, key=${cacheKey}, etag=${contentEtag})`);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[LuxdropProxy] Cache hit (expires in ${Math.round((cached.expiresAt.getTime() - currentTime.getTime()) / 1000)}s, key=${cacheKey}, etag=${contentEtag})`);
+    }
 
     res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=900, max-age=60");
     res.setHeader("Cache-Tag", "leaderboard,luxdrop");
@@ -289,7 +291,9 @@ export default async function handler(
   }
 
   // Cache expired or missing - fetch from API
-  console.log(`[LuxdropProxy] Cache ${cached ? 'expired' : 'miss'}, fetching fresh from API (key=${cacheKey})`);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[LuxdropProxy] Cache ${cached ? 'expired' : 'miss'}, fetching fresh from API (key=${cacheKey})`);
+  }
 
   try {
     const params = {
@@ -370,7 +374,9 @@ export default async function handler(
       },
     });
 
-    console.log(`[LuxdropProxy] Fresh data: ${processedData.data.length} entries cached (etag=${etag})`);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[LuxdropProxy] Fresh data: ${processedData.data.length} entries cached (etag=${etag})`);
+    }
 
     res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=900, max-age=60");
     res.setHeader("Cache-Tag", "leaderboard,luxdrop");

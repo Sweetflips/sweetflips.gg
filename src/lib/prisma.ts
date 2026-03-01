@@ -14,10 +14,15 @@ if (!databaseUrl) {
   throw new Error('DATABASE_URL or POSTGRES_PRISMA_URL must be set');
 }
 
-// Create PostgreSQL connection pool
+// Append uselibpqcompat=true when sslmode=require to silence pg v8 deprecation warning
+// (pg v9 will change sslmode=require semantics; this preserves current verify-full behavior)
+const connectionUrl = databaseUrl.includes('sslmode=require') && !databaseUrl.includes('uselibpqcompat=true')
+  ? `${databaseUrl}${databaseUrl.includes('?') ? '&' : '?'}uselibpqcompat=true`
+  : databaseUrl;
+
 const pool = new Pool({
-  connectionString: databaseUrl,
-  ssl: databaseUrl.includes('sslmode=require') || databaseUrl.includes('ssl=true') ? { rejectUnauthorized: false } : undefined,
+  connectionString: connectionUrl,
+  ssl: connectionUrl.includes('sslmode=require') || connectionUrl.includes('ssl=true') ? { rejectUnauthorized: false } : undefined,
 });
 
 // Create Prisma adapter

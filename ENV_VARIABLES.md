@@ -11,9 +11,10 @@ This document lists all required and optional environment variables for the Swee
 
 ### API Keys
 
-#### Spartans API
-- `BASE_SPARTANS_API_URL` - Base URL for Spartans API endpoint (e.g., "https://nexus-campaign-hub-production.up.railway.app/affiliates/524999/campaigns/20499/leaderboards/active")
-- `SPARTANS_API_KEY` - API key for x-api-key header authentication
+#### Spartans API (Nexus Campaign Hub)
+- `API_KEY_SWEET_FLIPS` - API key for x-api-key header (preferred; falls back to `SPARTANS_API_KEY`)
+- `SPARTANS_API_KEY` - Legacy API key (fallback if `API_KEY_SWEET_FLIPS` not set)
+- `BASE_SPARTANS_API_URL` - Not used by proxy (kept for reference only; proxy uses hardcoded endpoint for affiliateId 527938 / campaignId 20499)
 - `SPARTANS_REFERRAL_CODE` - Referral code used in API requests (default: "SweetFlips")
 - `NEXT_PUBLIC_SPARTANS_REFERRAL_CODE` - Referral code for client-side components (default: "SweetFlips")
 - `NEXT_PUBLIC_SPARTANS_SIGNUP_URL` - Spartans casino signup URL with referral
@@ -64,7 +65,7 @@ This document lists all required and optional environment variables for the Swee
 
 The application validates critical environment variables at runtime:
 
-- API routes check for `BASE_SPARTANS_API_URL` before making Spartans API requests
+- Spartans proxy uses `API_KEY_SWEET_FLIPS` (or `SPARTANS_API_KEY` fallback) for upstream authentication
 - API routes check for `LUXDROP_API_KEY` before making Luxdrop API requests
 - Database connection is validated by Prisma during initialization
 
