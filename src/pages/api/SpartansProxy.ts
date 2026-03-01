@@ -19,34 +19,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       req.query.cron_refresh === "1" &&
       req.headers.authorization === `Bearer ${process.env.CRON_SECRET}`;
 
-    // Special period controls: Start & End date (via .env)
-    // Format: YYYY-MM-DD
-    const specialStartEnv = process.env.SPECIAL_PERIOD_START_DATE;
-    const specialEndEnv = process.env.SPECIAL_PERIOD_END_DATE;
-    let SPECIAL_PERIOD_START_DATE: Date | null = null;
-    let SPECIAL_PERIOD_END_DATE: Date | null = null;
-    if (specialStartEnv && specialEndEnv) {
-      const [startYear, startMonth, startDay] = specialStartEnv.split('-').map(Number);
-      const [endYear, endMonth, endDay] = specialEndEnv.split('-').map(Number);
-      SPECIAL_PERIOD_START_DATE = new Date(Date.UTC(startYear, startMonth - 1, startDay, 0, 0, 0, 0));
-      SPECIAL_PERIOD_END_DATE = new Date(Date.UTC(endYear, endMonth - 1, endDay, 23, 59, 59, 999));
-    }
-
-    let fromDate: Date;
-    let toDate: Date;
-
-    if (
-      SPECIAL_PERIOD_START_DATE &&
-      SPECIAL_PERIOD_END_DATE &&
-      now >= SPECIAL_PERIOD_START_DATE &&
-      now <= SPECIAL_PERIOD_END_DATE
-    ) {
-      fromDate = SPECIAL_PERIOD_START_DATE;
-      toDate = SPECIAL_PERIOD_END_DATE;
-    } else {
-      fromDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0));
-      toDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999));
-    }
+    // Monthly period: 1st of current month 00:00 UTC → last day 23:59:59 UTC
+    const fromDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0));
+    const toDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999));
 
     const pad = (n: number) => String(n).padStart(2, "0");
     const formatDate = (date: Date) =>
@@ -77,7 +52,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // 2. Cache miss/expired: Fetch from upstream Spartans API
-    // Spartans API is a direct endpoint - no query params needed
     const headers: Record<string, string> = {
       Accept: "application/json",
       "User-Agent":
@@ -86,13 +60,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       "Accept-Encoding": "gzip, deflate, br",
     };
 
-    // Add x-api-key header for authentication
     const apiKey = process.env.SPARTANS_API_KEY;
     if (apiKey) {
       headers["x-api-key"] = apiKey;
     }
 
-    const response = await fetch(API_URL, {
+    const url = new URL(API_URL);
+    url.searchParams.set("from", fromParam);
+    url.searchParams.set("to", toParam);
+
+    console.log(`[SpartansProxy] Fetching: ${url.toString()} (period: ${fromParam} → ${toParam})`);
+
+    const response = await fetch(url.toString(), {
       method: "GET",
       headers,
     });
@@ -183,8 +162,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           username: maskUsername(entry.username),
           wagered: entry.wagered,
         }));
-      jsonResponse = { data: processed };
+      jsonResponse = {
+        data: processed,
+        period: { from: fromParam, to: toParam },
+      };
     }
+
+    console.log(`[SpartansProxy] Processed ${Array.isArray(jsonResponse.data) ? jsonResponse.data.length : 0} entries for period ${fromParam} → ${toParam}`);
 
     // Store in db cache
     const expiresAt = new Date(now.getTime() + CACHE_TTL_MS);

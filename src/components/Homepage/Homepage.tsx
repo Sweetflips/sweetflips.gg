@@ -46,30 +46,6 @@ const monthlyRewardMapping: { [key: number]: number } = {
   25: 165,
 };
 
-// Define the WEEKLY reward mapping ($10,000 total for top 25)
-const weeklyRewardMapping: { [key: number]: number } = {
-  1: 3200,
-  2: 1800,
-  3: 1200,
-  4: 700,
-  5: 600,
-  6: 500,
-  7: 400,
-  8: 300,
-  9: 250,
-  10: 200,
-  11: 160,
-  12: 130,
-  13: 120,
-  14: 110,
-  15: 90,
-  16: 80,
-  17: 60,
-  18: 50,
-  19: 40,
-  20: 30,
-};
-
 const Homepage = () => {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -82,36 +58,16 @@ const Homepage = () => {
   // --- Date Logic ---
   const now = new Date(); // Current date in UTC
 
-  const SPECIAL_PERIOD_START_DATE = new Date(Date.UTC(2025, 5, 23, 0, 0, 0, 0)); // June 23, 2025, 00:00:00.000 UTC
+  // No special period active -- standard monthly leaderboard
+  const isSpecialWeekActive = false;
 
-  const SPECIAL_PERIOD_END_DATE = new Date(
-    Date.UTC(2025, 5, 30, 23, 59, 59, 999),
-  ); // June 30, 2025, 23:59:59.999 UTC
-
-  const isSpecialWeekActive =
-    now >= SPECIAL_PERIOD_START_DATE && now <= SPECIAL_PERIOD_END_DATE;
-
-  let targetDateForTimer: Date;
-  let currentRewardMapping: { [key: number]: number };
-  let prizePoolAmount: number;
-  let leaderboardTitle: string;
-  let leaderboardDescription: string;
-
-  if (isSpecialWeekActive) {
-    prizePoolAmount = 10000;
-    leaderboardTitle = `$${prizePoolAmount.toLocaleString()}`;
-    leaderboardDescription = `Weekly leaderboard with $10,000 distributed across 20 users based on their total wagered amount until June 30th.`;
-    currentRewardMapping = weeklyRewardMapping;
-    targetDateForTimer = SPECIAL_PERIOD_END_DATE;
-  } else {
-    prizePoolAmount = 75000;
-    leaderboardTitle = `$75,000 SPARTANS X SWEETFLIPS LEADERBOARD`;
-    leaderboardDescription = `Each month, $75,000 is distributed among 25 users based on their total wagered amount on Spartans.`;
-    currentRewardMapping = monthlyRewardMapping;
-    targetDateForTimer = new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999),
-    );
-  }
+  const prizePoolAmount = 75000;
+  const leaderboardTitle = `$75,000 SPARTANS X SWEETFLIPS LEADERBOARD`;
+  const leaderboardDescription = `Each month, $75,000 is distributed among 25 users based on their total wagered amount on Spartans.`;
+  const currentRewardMapping = monthlyRewardMapping;
+  const targetDateForTimer = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999),
+  );
   // --- End Date Logic ---
 
   const maskUsername = (username: string) => {
