@@ -80,6 +80,7 @@ const Homepage = () => {
   useEffect(() => {
     let isMounted = true;
     let isInitialLoad = true;
+    const debugRunId = "run-client-home";
     const fetchData = async () => {
       if (isInitialLoad) {
         setLoading(true);
@@ -98,6 +99,9 @@ const Homepage = () => {
           throw new Error(`API request failed with status ${response.status}: ${errorData.message || response.statusText}`);
         }
         const result = await response.json();
+        // #region agent log
+        fetch('http://127.0.0.1:7645/ingest/6a8b2e86-6c53-4ebd-8e5c-d8c843c7eab9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d5ed66'},body:JSON.stringify({sessionId:'d5ed66',runId:debugRunId,hypothesisId:'H6',location:'Homepage.tsx:145',message:'home_client_api_payload',data:{source:result?.source ?? null,entriesCount:Array.isArray(result?.data)?result.data.length:null,topApiWagered:Array.isArray(result?.data)&&result.data.length>0?result.data[0]?.wagered:null,topApiUsername:Array.isArray(result?.data)&&result.data.length>0?result.data[0]?.username:null},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         if (!Array.isArray(result.data)) {
           throw new Error("Invalid data format: expected 'data' array");
         }
@@ -116,8 +120,14 @@ const Homepage = () => {
             ...user,
             reward: currentRewardMapping[index + 1] || 0,
           }));
+        // #region agent log
+        fetch('http://127.0.0.1:7645/ingest/6a8b2e86-6c53-4ebd-8e5c-d8c843c7eab9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d5ed66'},body:JSON.stringify({sessionId:'d5ed66',runId:debugRunId,hypothesisId:'H7',location:'Homepage.tsx:162',message:'home_client_sorted_payload',data:{topUiWagered:sortedData.length>0?sortedData[0]?.wagered:null,topUiUsername:sortedData.length>0?sortedData[0]?.username:null},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         if (isMounted) setData(sortedData);
       } catch (err: any) {
+        // #region agent log
+        fetch('http://127.0.0.1:7645/ingest/6a8b2e86-6c53-4ebd-8e5c-d8c843c7eab9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d5ed66'},body:JSON.stringify({sessionId:'d5ed66',runId:debugRunId,hypothesisId:'H8',location:'Homepage.tsx:167',message:'home_client_fetch_error',data:{message:err?.message ?? 'unknown'},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         if (isMounted) setError(err.message);
       } finally {
         if (isMounted) setLoading(false);
