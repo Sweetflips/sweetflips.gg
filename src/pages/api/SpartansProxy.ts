@@ -65,13 +65,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       headers["x-api-key"] = apiKey;
     }
 
-    const url = new URL(API_URL);
-    url.searchParams.set("from", fromParam);
-    url.searchParams.set("to", toParam);
-
-    console.log(`[SpartansProxy] Fetching: ${url.toString()} (period: ${fromParam} → ${toParam})`);
-
-    const response = await fetch(url.toString(), {
+    // The Spartans /active endpoint manages its own period (startAt/endAt in response).
+    // Do NOT append from/to query params -- the API doesn't support them and will error.
+    const response = await fetch(API_URL, {
       method: "GET",
       headers,
     });
@@ -162,13 +158,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           username: maskUsername(entry.username),
           wagered: entry.wagered,
         }));
-      jsonResponse = {
-        data: processed,
-        period: { from: fromParam, to: toParam },
-      };
+      jsonResponse = { data: processed };
     }
-
-    console.log(`[SpartansProxy] Processed ${Array.isArray(jsonResponse.data) ? jsonResponse.data.length : 0} entries for period ${fromParam} → ${toParam}`);
 
     // Store in db cache
     const expiresAt = new Date(now.getTime() + CACHE_TTL_MS);
