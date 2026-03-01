@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/cron/refresh-leaderboards",
-      "schedule": "*/15 * * * *"
+      "schedule": "*/5 * * * *"
     }
   ],
   "redirects": [

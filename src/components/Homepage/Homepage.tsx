@@ -46,30 +46,6 @@ const monthlyRewardMapping: { [key: number]: number } = {
   25: 165,
 };
 
-// Define the WEEKLY reward mapping ($10,000 total for top 25)
-const weeklyRewardMapping: { [key: number]: number } = {
-  1: 3200,
-  2: 1800,
-  3: 1200,
-  4: 700,
-  5: 600,
-  6: 500,
-  7: 400,
-  8: 300,
-  9: 250,
-  10: 200,
-  11: 160,
-  12: 130,
-  13: 120,
-  14: 110,
-  15: 90,
-  16: 80,
-  17: 60,
-  18: 50,
-  19: 40,
-  20: 30,
-};
-
 const Homepage = () => {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -82,36 +58,16 @@ const Homepage = () => {
   // --- Date Logic ---
   const now = new Date(); // Current date in UTC
 
-  const SPECIAL_PERIOD_START_DATE = new Date(Date.UTC(2025, 5, 23, 0, 0, 0, 0)); // June 23, 2025, 00:00:00.000 UTC
+  // No special period active -- standard monthly leaderboard
+  const isSpecialWeekActive = false;
 
-  const SPECIAL_PERIOD_END_DATE = new Date(
-    Date.UTC(2025, 5, 30, 23, 59, 59, 999),
-  ); // June 30, 2025, 23:59:59.999 UTC
-
-  const isSpecialWeekActive =
-    now >= SPECIAL_PERIOD_START_DATE && now <= SPECIAL_PERIOD_END_DATE;
-
-  let targetDateForTimer: Date;
-  let currentRewardMapping: { [key: number]: number };
-  let prizePoolAmount: number;
-  let leaderboardTitle: string;
-  let leaderboardDescription: string;
-
-  if (isSpecialWeekActive) {
-    prizePoolAmount = 10000;
-    leaderboardTitle = `$${prizePoolAmount.toLocaleString()}`;
-    leaderboardDescription = `Weekly leaderboard with $10,000 distributed across 20 users based on their total wagered amount until June 30th.`;
-    currentRewardMapping = weeklyRewardMapping;
-    targetDateForTimer = SPECIAL_PERIOD_END_DATE;
-  } else {
-    prizePoolAmount = 75000;
-    leaderboardTitle = `$75,000 SPARTANS X SWEETFLIPS LEADERBOARD`;
-    leaderboardDescription = `Each month, $75,000 is distributed among 25 users based on their total wagered amount on Spartans.`;
-    currentRewardMapping = monthlyRewardMapping;
-    targetDateForTimer = new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999),
-    );
-  }
+  const prizePoolAmount = 75000;
+  const leaderboardTitle = `$75,000 SPARTANS X SWEETFLIPS LEADERBOARD`;
+  const leaderboardDescription = `Each month, $75,000 is distributed among 25 users based on their total wagered amount on Spartans.`;
+  const currentRewardMapping = monthlyRewardMapping;
+  const targetDateForTimer = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999),
+  );
   // --- End Date Logic ---
 
   const maskUsername = (username: string) => {
@@ -124,6 +80,7 @@ const Homepage = () => {
   useEffect(() => {
     let isMounted = true;
     let isInitialLoad = true;
+    const debugRunId = "run-client-home";
     const fetchData = async () => {
       if (isInitialLoad) {
         setLoading(true);
@@ -131,6 +88,9 @@ const Homepage = () => {
       }
       setError(null);
       try {
+        // #region agent log
+        fetch('http://127.0.0.1:7645/ingest/6a8b2e86-6c53-4ebd-8e5c-d8c843c7eab9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d5ed66'},body:JSON.stringify({sessionId:'d5ed66',runId:debugRunId,hypothesisId:'H9',location:'Homepage.tsx:134',message:'home_client_page_context',data:{href:typeof window!=='undefined'?window.location.href:null,host:typeof window!=='undefined'?window.location.host:null,path:typeof window!=='undefined'?window.location.pathname:null},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         const response = await fetch(API_PROXY_URL, {
           method: "GET",
           headers: {
@@ -142,6 +102,9 @@ const Homepage = () => {
           throw new Error(`API request failed with status ${response.status}: ${errorData.message || response.statusText}`);
         }
         const result = await response.json();
+        // #region agent log
+        fetch('http://127.0.0.1:7645/ingest/6a8b2e86-6c53-4ebd-8e5c-d8c843c7eab9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d5ed66'},body:JSON.stringify({sessionId:'d5ed66',runId:debugRunId,hypothesisId:'H6',location:'Homepage.tsx:145',message:'home_client_api_payload',data:{source:result?.source ?? null,entriesCount:Array.isArray(result?.data)?result.data.length:null,topApiWagered:Array.isArray(result?.data)&&result.data.length>0?result.data[0]?.wagered:null,topApiUsername:Array.isArray(result?.data)&&result.data.length>0?result.data[0]?.username:null},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         if (!Array.isArray(result.data)) {
           throw new Error("Invalid data format: expected 'data' array");
         }
@@ -160,15 +123,21 @@ const Homepage = () => {
             ...user,
             reward: currentRewardMapping[index + 1] || 0,
           }));
+        // #region agent log
+        fetch('http://127.0.0.1:7645/ingest/6a8b2e86-6c53-4ebd-8e5c-d8c843c7eab9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d5ed66'},body:JSON.stringify({sessionId:'d5ed66',runId:debugRunId,hypothesisId:'H7',location:'Homepage.tsx:162',message:'home_client_sorted_payload',data:{topUiWagered:sortedData.length>0?sortedData[0]?.wagered:null,topUiUsername:sortedData.length>0?sortedData[0]?.username:null},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         if (isMounted) setData(sortedData);
       } catch (err: any) {
+        // #region agent log
+        fetch('http://127.0.0.1:7645/ingest/6a8b2e86-6c53-4ebd-8e5c-d8c843c7eab9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d5ed66'},body:JSON.stringify({sessionId:'d5ed66',runId:debugRunId,hypothesisId:'H8',location:'Homepage.tsx:167',message:'home_client_fetch_error',data:{message:err?.message ?? 'unknown'},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         if (isMounted) setError(err.message);
       } finally {
         if (isMounted) setLoading(false);
       }
     };
     fetchData();
-    const interval = setInterval(fetchData, 900_000); // 15 min, matches Spartans source
+    const interval = setInterval(fetchData, 300_000); // 5 min, fresher wager data
     return () => {
       isMounted = false;
       clearInterval(interval);
