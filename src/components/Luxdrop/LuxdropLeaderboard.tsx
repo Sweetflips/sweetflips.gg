@@ -67,9 +67,8 @@ const LuxdropLeaderboard = () => {
   };
 
   const calculatePeriod = () => {
-    const now = DateTime.utc();
-    const periodStartDate = now.startOf("month");
-    const periodEndDate = now.endOf("month");
+    const periodStartDate = DateTime.utc(2026, 2, 23, 0, 0, 0);
+    const periodEndDate = DateTime.utc(2026, 3, 31, 23, 59, 59);
 
     return {
       startDate: periodStartDate.toISODate(),
