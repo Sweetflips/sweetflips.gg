@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import type { NextApiRequest, NextApiResponse } from "next";
 
-// Cache TTL: 15 minutes (matches Spartans source update frequency)
-const CACHE_TTL_MS = 15 * 60 * 1000;
+// Cache TTL: 5 minutes (fresher wager data; upstream updates frequently)
+const CACHE_TTL_MS = 5 * 60 * 1000;
 const SPARTANS_ACTIVE_URL =
   "https://nexus-campaign-hub-production.up.railway.app/affiliates/527938/campaigns/20499/leaderboards/active";
 
@@ -44,7 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ? { ...cachedData, data: cachedData.data.slice(0, 25) }
         : cachedData;
 
-      res.setHeader("Cache-Control", "public, max-age=60, s-maxage=60");
+      res.setHeader("Cache-Control", "public, max-age=30, s-maxage=30");
       res.setHeader("Cache-Tag", "leaderboard,spartans");
       res.setHeader("Last-Modified", cached.fetchedAt.toUTCString());
 
@@ -60,7 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       "Accept-Encoding": "gzip, deflate, br",
     };
 
-    const apiKey = process.env.SPARTANS_API_KEY;
+    const apiKey = process.env.API_KEY_SWEET_FLIPS || process.env.SPARTANS_API_KEY;
     if (apiKey) {
       headers["x-api-key"] = apiKey;
     }
@@ -80,7 +80,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           ? { ...cachedData, data: cachedData.data.slice(0, 25), stale: true }
           : { ...cachedData, stale: true };
 
-        res.setHeader("Cache-Control", "public, max-age=60, s-maxage=60");
+        res.setHeader("Cache-Control", "public, max-age=30, s-maxage=30");
         res.setHeader("Cache-Tag", "leaderboard,spartans");
         res.setHeader("Last-Modified", cached.fetchedAt.toUTCString());
         return res.status(200).json(limited);
@@ -112,7 +112,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           ? { ...cachedData, data: cachedData.data.slice(0, 25), stale: true }
           : { ...cachedData, stale: true };
 
-        res.setHeader("Cache-Control", "public, max-age=60, s-maxage=60");
+        res.setHeader("Cache-Control", "public, max-age=30, s-maxage=30");
         res.setHeader("Cache-Tag", "leaderboard,spartans");
         res.setHeader("Last-Modified", cached.fetchedAt.toUTCString());
         return res.status(200).json(limited);
@@ -182,7 +182,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (isCronRefresh) {
       res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
     } else {
-      res.setHeader("Cache-Control", "public, max-age=60, s-maxage=60");
+      res.setHeader("Cache-Control", "public, max-age=30, s-maxage=30");
     }
     res.setHeader("Cache-Tag", "leaderboard,spartans");
     res.setHeader("Last-Modified", now.toUTCString());

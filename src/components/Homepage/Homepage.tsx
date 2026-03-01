@@ -124,7 +124,7 @@ const Homepage = () => {
       }
     };
     fetchData();
-    const interval = setInterval(fetchData, 900_000); // 15 min, matches Spartans source
+    const interval = setInterval(fetchData, 300_000); // 5 min, fresher wager data
     return () => {
       isMounted = false;
       clearInterval(interval);
