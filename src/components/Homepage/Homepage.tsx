@@ -88,6 +88,9 @@ const Homepage = () => {
       }
       setError(null);
       try {
+        // #region agent log
+        fetch('http://127.0.0.1:7645/ingest/6a8b2e86-6c53-4ebd-8e5c-d8c843c7eab9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d5ed66'},body:JSON.stringify({sessionId:'d5ed66',runId:debugRunId,hypothesisId:'H9',location:'Homepage.tsx:134',message:'home_client_page_context',data:{href:typeof window!=='undefined'?window.location.href:null,host:typeof window!=='undefined'?window.location.host:null,path:typeof window!=='undefined'?window.location.pathname:null},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         const response = await fetch(API_PROXY_URL, {
           method: "GET",
           headers: {
