@@ -3,19 +3,21 @@ import React from "react";
 const BannerVideo = () => {
   return (
     <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start rounded-4xl w-full max-w-7xl mx-auto h-auto px-2 sm:px-4">
-      <div className="w-full h-auto rounded-4xl object-cover overflow-hidden
-                   max-h-[200px] sm:max-h-[300px] md:max-h-[400px] lg:max-h-[500px] xl:max-h-[600px]
-                   min-h-[150px] sm:min-h-[200px] relative">
+      <div
+        className="relative w-full overflow-hidden rounded-4xl bg-[radial-gradient(ellipse_at_center,_#3a1357_0%,_#130c1a_75%)] aspect-[3.2/1] min-h-[150px] sm:min-h-[200px]"
+      >
         <video
-          src="/video/Banner_V6.webm"
+          src="/Banner Home.webm"
           autoPlay
           loop
           muted
           playsInline
-          className="w-full h-auto rounded-4xl object-cover"
+          className="block h-full w-full rounded-4xl object-cover mix-blend-screen bg-transparent"
           style={{
             objectFit: "cover",
             objectPosition: "center",
+            mixBlendMode: "screen",
+            backgroundColor: "transparent",
           }}
           aria-label="SweetFlips Banner"
         />

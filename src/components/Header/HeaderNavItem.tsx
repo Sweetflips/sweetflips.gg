@@ -139,13 +139,11 @@ const HeaderNavItem = ({
     }
 
     return (
-      <Link href={route} legacyBehavior passHref>
-        <a className={baseClasses}>
-          {IconComponent && (
-            <IconComponent className={`h-6 w-6 flex-shrink-0 ${isActive ? "text-primary" : "text-gray-400"}`} />
-          )}
-          <span>{label}</span>
-        </a>
+      <Link href={route} className={baseClasses}>
+        {IconComponent && (
+          <IconComponent className={`h-6 w-6 flex-shrink-0 ${isActive ? "text-primary" : "text-gray-400"}`} />
+        )}
+        <span>{label}</span>
       </Link>
     );
   }
@@ -175,8 +173,8 @@ const HeaderNavItem = ({
   }
 
   return (
-    <Link href={route} legacyBehavior passHref>
-      <a className={mobileBaseClasses}>{mobileItemContent}</a>
+    <Link href={route} className={mobileBaseClasses}>
+      {mobileItemContent}
     </Link>
   );
 };

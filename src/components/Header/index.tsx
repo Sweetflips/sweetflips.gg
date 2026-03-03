@@ -65,8 +65,8 @@ const Header = () => {
                   );
                 }
                 return (
-                  <Link key={childIndex} href={childItem.route} legacyBehavior passHref>
-                    <a>{childItem.label}</a>
+                  <Link key={childIndex} href={childItem.route}>
+                    {childItem.label}
                   </Link>
                 );
               })}
@@ -134,12 +134,10 @@ const Header = () => {
                         <Link
                           key={childKey}
                           href={childItem.route}
-                          passHref
-                          legacyBehavior
+                          className={subItemClasses}
+                          onClick={() => setMobileMenuOpen(false)}
                         >
-                          <a className={subItemClasses} onClick={() => setMobileMenuOpen(false)}>
-                            {childItem.label}
-                          </a>
+                          {childItem.label}
                         </Link>
                       );
                     })}
