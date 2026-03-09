@@ -8,13 +8,10 @@ const SPARTANS_ACTIVE_URL =
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    // Force Spartans source to affiliateId=527938 + campaignId=20499.
     const API_URL = SPARTANS_ACTIVE_URL;
 
     const now = new Date();
 
-    // Cron bypass: when called by refresh-leaderboards with cron_refresh=1 + Bearer token,
-    // skip cache and force fetch from upstream (avoids edge cache serving stale data)
     const isCronRefresh =
       req.query.cron_refresh === "1" &&
       req.headers.authorization === `Bearer ${process.env.CRON_SECRET}`;
@@ -32,14 +29,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const toParam = formatDate(toDate);
     const cacheKey = `spartans|527938|20499|${fromParam}|${toParam}`;
 
-    // 1. Try cache first (skip when cron forces refresh)
-    const cached = await prisma.spartansLeaderboardCache.findUnique({
-      where: { cacheKey },
-    });
+    // 1. Try DB cache first — if DB is unreachable, skip and fetch live
+    let cached: Awaited<ReturnType<typeof prisma.spartansLeaderboardCache.findUnique>> = null;
+    try {
+      cached = await prisma.spartansLeaderboardCache.findUnique({
+        where: { cacheKey },
+      });
+    } catch (dbErr) {
+      console.warn("[SpartansProxy] DB cache lookup failed, fetching live:", (dbErr as Error).message);
+    }
 
     if (!isCronRefresh && cached && cached.expiresAt > now) {
       const cachedData = cached.data as any;
-      // Limit to top 25 users
       const limitedData = Array.isArray(cachedData.data)
         ? { ...cachedData, data: cachedData.data.slice(0, 25) }
         : cachedData;
@@ -51,7 +52,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(200).json(limitedData);
     }
 
-    // 2. Cache miss/expired: Fetch from upstream Spartans API
+    // 2. Cache miss/expired/unavailable: Fetch from upstream Spartans API
     const headers: Record<string, string> = {
       Accept: "application/json",
       "User-Agent":
@@ -60,7 +61,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       "Accept-Encoding": "gzip, deflate, br",
     };
 
-    const apiKey = process.env.API_KEY_SWEET_FLIPS || process.env.SPARTANS_API_KEY;
+    const apiKey = process.env.SPARTANS_API_KEY;
     if (apiKey) {
       headers["x-api-key"] = apiKey;
     }
@@ -192,22 +193,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       jsonResponse = { data: processed, source: responseSource };
     }
 
-    // Store in db cache
-    const expiresAt = new Date(now.getTime() + CACHE_TTL_MS);
-    await prisma.spartansLeaderboardCache.upsert({
-      where: { cacheKey },
-      create: {
-        cacheKey,
-        data: jsonResponse as any,
-        expiresAt,
-        fetchedAt: now,
-      },
-      update: {
-        data: jsonResponse as any,
-        expiresAt,
-        fetchedAt: now,
-      },
-    });
+    // Store in db cache (best-effort — don't fail the response if DB is down)
+    try {
+      const expiresAt = new Date(now.getTime() + CACHE_TTL_MS);
+      await prisma.spartansLeaderboardCache.upsert({
+        where: { cacheKey },
+        create: {
+          cacheKey,
+          data: jsonResponse as any,
+          expiresAt,
+          fetchedAt: now,
+        },
+        update: {
+          data: jsonResponse as any,
+          expiresAt,
+          fetchedAt: now,
+        },
+      });
+    } catch (dbErr) {
+      console.warn("[SpartansProxy] DB cache write failed:", (dbErr as Error).message);
+    }
 
     // Cron refresh responses must not be cached at edge (different URL + no-cache)
     if (isCronRefresh) {

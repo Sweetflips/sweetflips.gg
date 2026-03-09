@@ -335,47 +335,51 @@ export default async function handler(
       true // Always mask usernames before storing in cache
     );
 
-    // Store in database cache
+    // Store in database cache (best-effort — don't fail the response if DB is down)
     const expiresAt = new Date(currentTime.getTime() + CACHE_TTL_MS);
     const etag = `W/"${crypto.createHash("md5").update(JSON.stringify(processedData)).digest("hex")}"`;
 
-    await prisma.luxdropLeaderboardCache.upsert({
-      where: {
-        cacheKey: cacheKey,
-      },
-      create: {
-        cacheKey: cacheKey,
-        data: processedData as any,
-        period: {
-          month: processedData.period.month,
-          year: processedData.period.year,
-          period: processedData.period.period,
-          startDate: processedData.period.startDate,
-          endDate: processedData.period.endDate,
-          note: processedData.period.note,
+    try {
+      await prisma.luxdropLeaderboardCache.upsert({
+        where: {
+          cacheKey: cacheKey,
         },
-        etag: etag,
-        expiresAt: expiresAt,
-        fetchedAt: currentTime,
-      },
-      update: {
-        data: processedData as any,
-        period: {
-          month: processedData.period.month,
-          year: processedData.period.year,
-          period: processedData.period.period,
-          startDate: processedData.period.startDate,
-          endDate: processedData.period.endDate,
-          note: processedData.period.note,
+        create: {
+          cacheKey: cacheKey,
+          data: processedData as any,
+          period: {
+            month: processedData.period.month,
+            year: processedData.period.year,
+            period: processedData.period.period,
+            startDate: processedData.period.startDate,
+            endDate: processedData.period.endDate,
+            note: processedData.period.note,
+          },
+          etag: etag,
+          expiresAt: expiresAt,
+          fetchedAt: currentTime,
         },
-        etag: etag,
-        expiresAt: expiresAt,
-        fetchedAt: currentTime,
-      },
-    });
+        update: {
+          data: processedData as any,
+          period: {
+            month: processedData.period.month,
+            year: processedData.period.year,
+            period: processedData.period.period,
+            startDate: processedData.period.startDate,
+            endDate: processedData.period.endDate,
+            note: processedData.period.note,
+          },
+          etag: etag,
+          expiresAt: expiresAt,
+          fetchedAt: currentTime,
+        },
+      });
 
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`[LuxdropProxy] Fresh data: ${processedData.data.length} entries cached (etag=${etag})`);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`[LuxdropProxy] Fresh data: ${processedData.data.length} entries cached (etag=${etag})`);
+      }
+    } catch (dbErr) {
+      console.warn("[LuxdropProxy] DB cache write failed:", (dbErr as Error).message);
     }
 
     res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=900, max-age=60");
