@@ -1,5 +1,4 @@
 // src/pages/api/LuxdropProxy.ts
-import { prisma } from "@/lib/prisma";
 import axios, { AxiosRequestConfig } from "axios";
 import crypto from "crypto";
 import { HttpsProxyAgent } from "https-proxy-agent";
@@ -39,14 +38,6 @@ interface LeaderboardData {
     note: string;
   };
   stale?: boolean;
-}
-
-// Cache TTL: 10 minutes
-const CACHE_TTL_MS = 10 * 60 * 1000;
-
-// Generate cache key from request parameters
-function getCacheKey(codes: string, startDate: string, endDate: string): string {
-  return `${codes}|${startDate}|${endDate}`;
 }
 
 // Parse Retry-After header (can be seconds or HTTP date)
@@ -179,7 +170,6 @@ export default async function handler(
     }
   }
 
-  const now = DateTime.utc();
   let startDate: DateTime;
   let endDate: DateTime;
   let periodLabel: string;
@@ -229,72 +219,6 @@ export default async function handler(
     proxyAgent = new HttpsProxyAgent(proxyUrl);
   }
 
-  const cacheKey = getCacheKey(affiliateCode, startDateISO, endDateISO);
-  const currentTime = new Date();
-
-  // 🔥 Mask usernames for privacy (used when returning cached data)
-  const maskUsername = (username: string) => {
-    const len = username.length;
-    if (len <= 2) return username;
-    if (len <= 4) return username[0] + '*'.repeat(len - 2) + username[len - 1];
-    return username.slice(0, 2) + '*'.repeat(len - 4) + username.slice(-2);
-  };
-
-  // Check database cache first
-  let cached: Awaited<ReturnType<typeof prisma.luxdropLeaderboardCache.findUnique>> = null;
-  try {
-    cached = await prisma.luxdropLeaderboardCache.findUnique({
-      where: {
-        cacheKey: cacheKey,
-      },
-    });
-  } catch (dbError: any) {
-    console.error(`[LuxdropProxy] Database cache lookup failed: ${dbError.message}`);
-    // Continue without cache — will fetch fresh from API
-  }
-
-  // If cache exists and is still fresh, return from database
-  if (cached && cached.expiresAt > currentTime) {
-    // Return cached data (usernames should already be masked from when data was stored)
-    // But mask again to handle any old cached data with unmasked usernames
-    const cachedData = cached.data as unknown as LeaderboardData;
-    const maskedData = {
-      ...cachedData,
-      data: cachedData.data
-        .slice(0, 10) // Limit to top 10 users
-        .map(entry => {
-          const username = entry.username.includes('*') ? entry.username : maskUsername(entry.username);
-          return { ...entry, username };
-        }),
-    };
-
-    // Always compute a proper MD5 ETag from the actual content (replaces any old broken ETags)
-    const contentEtag = `W/"${crypto.createHash("md5").update(JSON.stringify(maskedData)).digest("hex")}"`;
-
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`[LuxdropProxy] Cache hit (expires in ${Math.round((cached.expiresAt.getTime() - currentTime.getTime()) / 1000)}s, key=${cacheKey}, etag=${contentEtag})`);
-    }
-
-    res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=900, max-age=60");
-    res.setHeader("Cache-Tag", "leaderboard,luxdrop");
-    res.setHeader("ETag", contentEtag);
-
-    // Check ETag for 304 Not Modified
-    const ifNoneMatch = req.headers["if-none-match"];
-    if (ifNoneMatch === contentEtag) {
-      res.status(304).end();
-      return;
-    }
-
-    res.status(200).json(maskedData);
-    return;
-  }
-
-  // Cache expired or missing - fetch from API
-  if (process.env.NODE_ENV !== 'production') {
-    console.log(`[LuxdropProxy] Cache ${cached ? 'expired' : 'miss'}, fetching fresh from API (key=${cacheKey})`);
-  }
-
   try {
     const params = {
       codes: affiliateCode,
@@ -324,7 +248,7 @@ export default async function handler(
 
     const response = await axios(config);
 
-    // Process response data (mask usernames before storing)
+    // Process response data (mask usernames)
     const processedData = processApiResponse(
       response.data,
       periodYear,
@@ -332,92 +256,26 @@ export default async function handler(
       periodLabel,
       startDateISO,
       endDateISO,
-      true // Always mask usernames before storing in cache
+      true // Always mask usernames
     );
 
-    // Store in database cache (best-effort — don't fail the response if DB is down)
-    const expiresAt = new Date(currentTime.getTime() + CACHE_TTL_MS);
     const etag = `W/"${crypto.createHash("md5").update(JSON.stringify(processedData)).digest("hex")}"`;
-
-    try {
-      await prisma.luxdropLeaderboardCache.upsert({
-        where: {
-          cacheKey: cacheKey,
-        },
-        create: {
-          cacheKey: cacheKey,
-          data: processedData as any,
-          period: {
-            month: processedData.period.month,
-            year: processedData.period.year,
-            period: processedData.period.period,
-            startDate: processedData.period.startDate,
-            endDate: processedData.period.endDate,
-            note: processedData.period.note,
-          },
-          etag: etag,
-          expiresAt: expiresAt,
-          fetchedAt: currentTime,
-        },
-        update: {
-          data: processedData as any,
-          period: {
-            month: processedData.period.month,
-            year: processedData.period.year,
-            period: processedData.period.period,
-            startDate: processedData.period.startDate,
-            endDate: processedData.period.endDate,
-            note: processedData.period.note,
-          },
-          etag: etag,
-          expiresAt: expiresAt,
-          fetchedAt: currentTime,
-        },
-      });
-
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(`[LuxdropProxy] Fresh data: ${processedData.data.length} entries cached (etag=${etag})`);
-      }
-    } catch (dbErr) {
-      console.warn("[LuxdropProxy] DB cache write failed:", (dbErr as Error).message);
-    }
 
     res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=900, max-age=60");
     res.setHeader("Cache-Tag", "leaderboard,luxdrop");
     res.setHeader("ETag", etag);
+
+    const ifNoneMatch = req.headers["if-none-match"];
+    if (ifNoneMatch === etag) {
+      res.status(304).end();
+      return;
+    }
+
     res.status(200).json(processedData);
 
   } catch (error: any) {
     const statusCode = error.response?.status || 500;
     const errorMessage = error.response?.data?.message || error.message || "Unknown error";
-
-    // If API fails but we have stale cache, return stale cache
-    if (cached) {
-      console.warn(`[LuxdropProxy] API error ${statusCode}: ${errorMessage} — returning stale cache (key=${cacheKey})`);
-      const staleData = cached.data as unknown as LeaderboardData;
-      const maskedStaleData = {
-        ...staleData,
-        data: staleData.data
-          .slice(0, 10) // Limit to top 10 users
-          .map(entry => {
-            // Only mask if username doesn't already contain asterisks (to avoid double-masking)
-            const username = entry.username.includes('*') ? entry.username : maskUsername(entry.username);
-            return {
-              ...entry,
-              username,
-            };
-          }),
-        stale: true,
-      };
-      // Short cache on stale responses so fresh data is picked up sooner
-      res.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=120, max-age=30");
-      res.setHeader("Cache-Tag", "leaderboard,luxdrop");
-      // Generate a fresh ETag for stale data (don't re-use old ETags that may be in broken format)
-      const staleEtag = `W/"${crypto.createHash("md5").update(JSON.stringify(maskedStaleData)).digest("hex")}"`;
-      res.setHeader("ETag", staleEtag);
-      res.status(200).json(maskedStaleData);
-      return;
-    }
 
     // Handle 429 Rate Limit
     if (statusCode === 429) {

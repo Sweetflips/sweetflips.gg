@@ -1,10 +1,6 @@
 {
   "crons": [
     {
-      "path": "/api/cron/giveaway-counter-update",
-      "schedule": "0 0 * * *"
-    },
-    {
       "path": "/api/cron/refresh-leaderboards",
       "schedule": "*/5 * * * *"
     }

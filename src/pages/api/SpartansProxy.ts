@@ -1,8 +1,5 @@
-import { prisma } from "@/lib/prisma";
 import type { NextApiRequest, NextApiResponse } from "next";
 
-// Cache TTL: 5 minutes (fresher wager data; upstream updates frequently)
-const CACHE_TTL_MS = 5 * 60 * 1000;
 const SPARTANS_ACTIVE_URL =
   "https://nexus-campaign-hub-production.up.railway.app/affiliates/527938/campaigns/20499/leaderboards/active";
 
@@ -20,39 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const fromDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0));
     const toDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999));
 
-    const pad = (n: number) => String(n).padStart(2, "0");
-    const formatDate = (date: Date) =>
-      `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(
-        date.getUTCDate()
-      )} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())}`;
-    const fromParam = formatDate(fromDate);
-    const toParam = formatDate(toDate);
-    const cacheKey = `spartans|527938|20499|${fromParam}|${toParam}`;
-
-    // 1. Try DB cache first — if DB is unreachable, skip and fetch live
-    let cached: Awaited<ReturnType<typeof prisma.spartansLeaderboardCache.findUnique>> = null;
-    try {
-      cached = await prisma.spartansLeaderboardCache.findUnique({
-        where: { cacheKey },
-      });
-    } catch (dbErr) {
-      console.warn("[SpartansProxy] DB cache lookup failed, fetching live:", (dbErr as Error).message);
-    }
-
-    if (!isCronRefresh && cached && cached.expiresAt > now) {
-      const cachedData = cached.data as any;
-      const limitedData = Array.isArray(cachedData.data)
-        ? { ...cachedData, data: cachedData.data.slice(0, 25) }
-        : cachedData;
-
-      res.setHeader("Cache-Control", "public, max-age=30, s-maxage=30");
-      res.setHeader("Cache-Tag", "leaderboard,spartans");
-      res.setHeader("Last-Modified", cached.fetchedAt.toUTCString());
-
-      return res.status(200).json(limitedData);
-    }
-
-    // 2. Cache miss/expired/unavailable: Fetch from upstream Spartans API
+    // Fetch from upstream Spartans API
     const headers: Record<string, string> = {
       Accept: "application/json",
       "User-Agent":
@@ -74,18 +39,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     if (!response.ok) {
-      // fallback: If stale cache exists, return that
-      if (cached) {
-        const cachedData = cached.data as any;
-        const limited = Array.isArray(cachedData.data)
-          ? { ...cachedData, data: cachedData.data.slice(0, 25), stale: true }
-          : { ...cachedData, stale: true };
-
-        res.setHeader("Cache-Control", "public, max-age=30, s-maxage=30");
-        res.setHeader("Cache-Tag", "leaderboard,spartans");
-        res.setHeader("Last-Modified", cached.fetchedAt.toUTCString());
-        return res.status(200).json(limited);
-      }
       const errorText = await response.text().catch(
         () => "Unable to read error response"
       );
@@ -106,18 +59,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       jsonResponse = JSON.parse(textResponse);
     } catch (err) {
       console.error("[SpartansProxy] JSON parse error:", err);
-      // fallback: Return stale cache if possible
-      if (cached) {
-        const cachedData = cached.data as any;
-        const limited = Array.isArray(cachedData.data)
-          ? { ...cachedData, data: cachedData.data.slice(0, 25), stale: true }
-          : { ...cachedData, stale: true };
-
-        res.setHeader("Cache-Control", "public, max-age=30, s-maxage=30");
-        res.setHeader("Cache-Tag", "leaderboard,spartans");
-        res.setHeader("Last-Modified", cached.fetchedAt.toUTCString());
-        return res.status(200).json(limited);
-      }
       return res
         .status(500)
         .json({ error: "Invalid JSON response from API" });
@@ -191,27 +132,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }));
       const responseSource = jsonResponse?.source || "active-leaderboard";
       jsonResponse = { data: processed, source: responseSource };
-    }
-
-    // Store in db cache (best-effort — don't fail the response if DB is down)
-    try {
-      const expiresAt = new Date(now.getTime() + CACHE_TTL_MS);
-      await prisma.spartansLeaderboardCache.upsert({
-        where: { cacheKey },
-        create: {
-          cacheKey,
-          data: jsonResponse as any,
-          expiresAt,
-          fetchedAt: now,
-        },
-        update: {
-          data: jsonResponse as any,
-          expiresAt,
-          fetchedAt: now,
-        },
-      });
-    } catch (dbErr) {
-      console.warn("[SpartansProxy] DB cache write failed:", (dbErr as Error).message);
     }
 
     // Cron refresh responses must not be cached at edge (different URL + no-cache)
