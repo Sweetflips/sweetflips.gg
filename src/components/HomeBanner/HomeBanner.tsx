@@ -40,8 +40,8 @@ const HomeBanner = () => {
             style={{ color: '#f0ff31' }}
           >
             Spartans
-          </a>{" "}
-          and{" "}
+          </a>
+          ,{" "}
           <a
             href={luxdropUrl}
             target="blank"
@@ -49,6 +49,15 @@ const HomeBanner = () => {
             style={{ color: '#1BB2FF' }}
           >
             LuxDrop
+          </a>{" "}
+          and{" "}
+          <a
+            href="https://csgowin.com/r/sweetflips"
+            target="blank"
+            className="font-extrabold hover:underline"
+          >
+            <span className="text-white">CSGO</span>
+            <span style={{ color: '#e1ab4e' }}>WIN</span>
           </a>{" "}
           using code SweetFlips. From $100,000 monthly leaderboards to VIP perks, wager milestones, events, and much more, we&apos;ve got it all.
         </p>

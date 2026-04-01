@@ -31,6 +31,11 @@ export const menuGroups: MenuGroup[] = [
         route: "/luxdrop",
       },
       {
+        icon: "csgowin",
+        label: "CSGOWIN",
+        route: "/csgowin",
+      },
+      {
         icon: "stream",
         label: "Stream",
         route: "https://kick.com/sweetflips",

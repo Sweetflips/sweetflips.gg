@@ -18,6 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const results = {
     spartans: { success: false, error: null as string | null },
     luxdrop: { success: false, error: null as string | null },
+    csgowin: { success: false, error: null as string | null },
     timestamp: new Date().toISOString(),
   };
 
@@ -69,7 +70,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.error("[Cron] Error refreshing Luxdrop leaderboard:", error);
     }
 
-    const allSuccess = results.spartans.success && results.luxdrop.success;
+    // Refresh CSGOWIN leaderboard
+    try {
+      const csgowinResponse = await fetch(`${baseUrl}/api/CsgowinProxy?cron_refresh=1`, {
+        method: "GET",
+        headers: {
+          "Cache-Control": "no-cache",
+          Authorization: `Bearer ${process.env.CRON_SECRET}`,
+        },
+      });
+
+      if (csgowinResponse.ok) {
+        const data = await csgowinResponse.json();
+        results.csgowin.success = true;
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`[Cron] CSGOWIN leaderboard refreshed: ${data.data?.length || 0} entries`);
+        }
+      } else {
+        results.csgowin.error = `HTTP ${csgowinResponse.status}`;
+      }
+    } catch (error: any) {
+      results.csgowin.error = error.message || "Unknown error";
+      console.error("[Cron] Error refreshing CSGOWIN leaderboard:", error);
+    }
+
+    const allSuccess = results.spartans.success && results.luxdrop.success && results.csgowin.success;
     const statusCode = allSuccess ? 200 : 207; // 207 Multi-Status if partial success
 
     return res.status(statusCode).json(results);

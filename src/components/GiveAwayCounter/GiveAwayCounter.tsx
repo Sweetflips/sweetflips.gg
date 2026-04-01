@@ -113,6 +113,24 @@ const GiveAwayCounter = () => {
                   />
                 </div>
               </Link>
+              <Link href="/csgowin" className="group">
+                <div className="relative">
+                  <Image
+                    src="/images/logo/csgowin_logo.webp"
+                    alt="CSGOWIN"
+                    width={50}
+                    height={50}
+                    className="relative z-10 object-contain transition-transform hover:scale-105"
+                  />
+                  <Image
+                    src="/images/logo/csgowin_logo.webp"
+                    alt="CSGOWIN Glow"
+                    width={50}
+                    height={50}
+                    className="absolute top-0 left-0 z-0 object-contain opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-40"
+                  />
+                </div>
+              </Link>
             </div>
           </div>
         </div>

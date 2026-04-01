@@ -2,7 +2,7 @@
 import { Timer } from "@/app/ui/timer/Timer";
 import Loader from "@/components/common/Loader";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 const API_PROXY_URL = "/api/SpartansProxy";
 
@@ -12,78 +12,103 @@ type LeaderboardEntry = {
   reward: number;
 };
 
-// Define the monthly reward mapping for $75,000 total prize pool
+// Define the monthly reward mapping for $50,000 total prize pool
 const monthlyRewardMapping: { [key: number]: number } = {
-  1: 30000,
-  2: 15000,
-  3: 10000,
-  4: 6000,
-  5: 2200,
-  6: 1500,
-  7: 1250,
-  8: 1000,
-  9: 900,
-  10: 850,
-  11: 780,
-  12: 730,
-  13: 670,
-  14: 620,
-  15: 520,
-  16: 470,
-  17: 420,
-  18: 370,
-  19: 345,
-  20: 295,
-  21: 270,
-  22: 245,
-  23: 220,
-  24: 170,
-  25: 165,
+  1: 20000,
+  2: 10000,
+  3: 5000,
+  4: 2500,
+  5: 1750,
+  6: 1250,
+  7: 1000,
+  8: 900,
+  9: 850,
+  10: 800,
+  11: 750,
+  12: 700,
+  13: 650,
+  14: 600,
+  15: 500,
+  16: 450,
+  17: 400,
+  18: 350,
+  19: 325,
+  20: 275,
+  21: 250,
+  22: 225,
+  23: 200,
+  24: 150,
+  25: 125,
 };
 
-const parseWageredAmount = (value: unknown): number => {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value;
-  }
-
-  if (typeof value !== "string") {
-    return 0;
-  }
-
-  const cleanedValue = value.replace(/[^0-9.-]/g, "");
-  const parsed = Number.parseFloat(cleanedValue);
-  return Number.isFinite(parsed) ? parsed : 0;
+// Define the WEEKLY reward mapping ($10,000 total for top 25)
+const weeklyRewardMapping: { [key: number]: number } = {
+  1: 3200,
+  2: 1800,
+  3: 1200,
+  4: 700,
+  5: 600,
+  6: 500,
+  7: 400,
+  8: 300,
+  9: 250,
+  10: 200,
+  11: 160,
+  12: 130,
+  13: 120,
+  14: 110,
+  15: 90,
+  16: 80,
+  17: 60,
+  18: 50,
+  19: 40,
+  20: 30,
 };
 
-const usdCurrencyFormatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-});
-
-const usdRewardFormatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  minimumFractionDigits: 0,
-});
-
-const SpartansLeaderboard = () => {
+const SpartansLeaderboard: React.FC = () => {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  const fireworksLaunched = useRef(false); // Prevent multiple launches
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+
   // --- Date Logic ---
   const now = new Date(); // Current date in UTC
 
-  // No special period active -- standard monthly leaderboard
-  const isSpecialWeekActive = false;
+  const SPECIAL_PERIOD_START_DATE = new Date(Date.UTC(2025, 5, 23, 0, 0, 0, 0)); // June 23, 2025, 00:00:00.000 UTC
 
-  const leaderboardTitle = `$75,000 SPARTANS X SWEETFLIPS LEADERBOARD`;
-  const leaderboardDescription = `Each month, $75,000 is distributed among 25 users based on their total wagered amount on Spartans.`;
-  const currentRewardMapping = monthlyRewardMapping;
-  const targetDateForTimer = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999),
-  );
+  const SPECIAL_PERIOD_END_DATE = new Date(
+    Date.UTC(2025, 5, 30, 23, 59, 59, 999),
+  ); // June 30, 2025, 23:59:59.999 UTC
+
+  const isSpecialWeekActive =
+    now >= SPECIAL_PERIOD_START_DATE && now <= SPECIAL_PERIOD_END_DATE;
+
+  let targetDateForTimer: Date;
+  let currentRewardMapping: { [key: number]: number };
+  let prizePoolAmount: number;
+  let leaderboardTitle: string;
+  let leaderboardDescription: string;
+
+  if (isSpecialWeekActive) {
+    prizePoolAmount = 10000;
+    leaderboardTitle = `$${prizePoolAmount.toLocaleString()}`;
+    leaderboardDescription = `Weekly leaderboard with $10,000 distributed across 20 users based on their total wagered amount until June 30th.`;
+    currentRewardMapping = weeklyRewardMapping;
+    targetDateForTimer = SPECIAL_PERIOD_END_DATE;
+  } else {
+    prizePoolAmount = 50000;
+    leaderboardTitle = `$${prizePoolAmount.toLocaleString()}`;
+    leaderboardDescription = `Each month, $50,000 is distributed among 25 users based on their total wagered amount on Spartans.`;
+    currentRewardMapping = monthlyRewardMapping;
+    targetDateForTimer = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999),
+    );
+  }
   // --- End Date Logic ---
+
+  const togglePopup = () => setIsPopupOpen((prevState) => !prevState);
 
   const maskUsername = (username: string) => {
     const len = username.length;
@@ -93,7 +118,6 @@ const SpartansLeaderboard = () => {
   };
 
   useEffect(() => {
-    let isMounted = true;
     const fetchData = async () => {
       try {
         const response = await fetch(API_PROXY_URL, {
@@ -115,7 +139,7 @@ const SpartansLeaderboard = () => {
         const parsedData = result.data.map(
           (user: any): LeaderboardEntry => ({
             username: maskUsername(user.username),
-            wagered: parseWageredAmount(user.wagered),
+            wagered: parseFloat(user.wagered),
             reward: 0,
           }),
         );
@@ -127,20 +151,14 @@ const SpartansLeaderboard = () => {
             ...user,
             reward: currentRewardMapping[index + 1] || 0,
           }));
-        if (isMounted) setData(sortedData);
+        setData(sortedData);
       } catch (err: any) {
-        if (isMounted) setError(err.message);
+        setError(err.message);
       } finally {
-        if (isMounted) setLoading(false);
+        setLoading(false);
       }
     };
     fetchData();
-    // Refresh leaderboard every 5 minutes (same as Luxdrop)
-    const interval = setInterval(fetchData, 300_000); // 5 min, fresher wager data
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
   }, [currentRewardMapping]);
 
   const topUsers = data.slice(0, 3);
@@ -148,10 +166,18 @@ const SpartansLeaderboard = () => {
   if (loading) return <Loader />;
   if (error) return <p className="text-red-500">Error: {error}</p>;
 
-  const formatCurrency = (amount: number) => usdCurrencyFormatter.format(amount);
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(amount);
 
   const formatRewardCurrency = (amount: number) => {
-    const formattedAmount = usdRewardFormatter.format(amount);
+    const formattedAmount = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+    }).format(amount);
     return formattedAmount.endsWith(".00")
       ? formattedAmount.slice(0, -3)
       : formattedAmount;
@@ -166,59 +192,78 @@ const SpartansLeaderboard = () => {
   return (
     <div className="mt-4 p-4 text-white">
       {/* Floating Image */}
-      <div className="FooterBg relative mx-auto flex min-h-[20rem] w-full transform flex-col items-center justify-start overflow-hidden rounded-xl p-4 shadow-[inset_0_0_20px_rgba(0,0,0,0.4)] transition-all sm:min-h-[22rem] sm:w-3/4 sm:flex-row sm:items-start md:min-h-[20rem] md:w-5/6">
-        {/* Left Image - Temporary decorative image */}
-        <div className="hide-on-ipad absolute left-0 hidden md:block">
+      <div className="FooterBg relative mx-auto flex h-80 w-full transform flex-col items-center justify-between overflow-hidden rounded-xl p-4 shadow-[inset_0_0_20px_rgba(0,0,0,0.4)] transition-all sm:w-3/4 sm:flex-row sm:items-start md:w-5/6">
+        {/* Left Image - Keep as-is until Spartans replacement provided */}
+        <div className="hide-on-ipad absolute left-0 hidden sm:block">
           <Image
-            src="/images/logo/sweet_flips_emblem_gold.png"
-            alt="SweetFlips Gold Emblem"
+            src="/images/icon/Razed_777.png"
+            alt="Slot Machine"
             className="transform"
             width={272}
             height={408}
-            priority
           />
         </div>
 
-        {/* Right Image - Temporary decorative image */}
-        <div className="hide-on-ipad absolute right-0 top-[30px] hidden pr-4 md:block">
+        {/* Right Image - Keep as-is until Spartans replacement provided */}
+        <div className="hide-on-ipad absolute right-0 top-[30px] hidden sm:block">
           <Image
-            src="/images/logo/Spartans-icon.svg"
-            alt="Spartans Logo"
+            src="/images/icon/Razed_cards.png"
+            alt="Cards"
             className="transform"
-            width={204}
-            height={306}
-            priority
+            width={272}
+            height={408}
           />
         </div>
+        {/* Left Image mobile - Keep as-is until Spartans replacement provided */}
+        <div className="absolute -left-1 top-[-20px] sm:block md:hidden">
+          <Image
+            src="/images/icon/Razed_777.png"
+            alt="Slot Machine"
+            className="h-[103px] w-[68.05px] transform"
+            width={68.05}
+            height={103}
+          />
+        </div>
+
+        {/* Right Image mobile - Keep as-is until Spartans replacement provided */}
+        <div className="absolute -right-5 top-[250px] sm:block md:hidden">
+          <Image
+            src="/images/icon/Razed_cards.png"
+            alt="Cards"
+            className="h-[103px] w-[68.05px] transform"
+            width={68.05}
+            height={103}
+          />
+        </div>
+
         {/* Centered Text Section */}
-        <div className="relative z-10 mx-auto mt-6 max-w-screen-lg px-4 text-center md:mt-8">
+        <div className="absolute left-0 right-0 mx-auto mt-6 max-w-screen-lg px-4 text-center md:mt-10">
           {/* Prize Pool Text */}
-          <b className="animate-pulse-glow text-2xl leading-tight text-[#fff] sm:text-3xl md:text-4xl lg:text-5xl">
+          <b className="animate-pulse-glow text-5xl text-[#fff] sm:text-2xl md:text-3xl lg:text-4xl xl:text-4xl">
             {leaderboardTitle}
           </b>
 
+          {/* Image and Leaderboard Layout */}
+          <div className="mt-4 flex flex-col items-center justify-center sm:flex-row sm:space-x-4">
+            {/* Spartans Logo */}
+            <Image
+              src="/images/logo/Spartans wordmark.svg"
+              alt="Spartans Logo"
+              className="mb-3 transition-all duration-300 sm:mb-0 sm:w-[150px] md:w-[200px] lg:w-[250px] xl:w-[250px]"
+              width={200}
+              height={100}
+              sizes="(max-width: 640px) 150px, (max-width: 768px) 200px, 250px"
+            />
+            {/* Leaderboard Text */}
+            <b className="text-4xl text-white sm:text-2xl md:text-3xl lg:text-3xl">
+              Leaderboard
+            </b>
+          </div>
+
           {/* Description Text */}
-          <p className="mx-auto mt-3 max-w-4xl text-center text-sm leading-relaxed text-white sm:text-base md:text-lg lg:text-xl">
+          <p className="mx-auto mt-4 text-center leading-relaxed text-white sm:text-xl md:mt-0 md:text-2xl lg:m-4 lg:text-3xl xl:text-xl">
             {leaderboardDescription}
           </p>
-
-          {/* Bottom logos on mobile */}
-          <div className="mt-4 flex items-end justify-center gap-5 md:hidden">
-            <Image
-              src="/images/logo/sweet_flips_emblem_gold.png"
-              alt="SweetFlips Gold Emblem"
-              className="h-[64px] w-auto"
-              width={272}
-              height={408}
-            />
-            <Image
-              src="/images/logo/Spartans-icon.svg"
-              alt="Spartans Logo"
-              className="h-[58px] w-auto"
-              width={204}
-              height={306}
-            />
-          </div>
         </div>
       </div>
       <div className="mb-4 mt-8 flex flex-col items-center text-2xl font-bold">
@@ -249,7 +294,6 @@ const SpartansLeaderboard = () => {
                     className="h-8 w-8"
                     width={32}
                     height={32}
-                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-image">
@@ -259,7 +303,6 @@ const SpartansLeaderboard = () => {
                     className="h-24 w-24"
                     width={96}
                     height={96}
-                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-content">
@@ -286,7 +329,6 @@ const SpartansLeaderboard = () => {
                     className="h-8 w-8"
                     width={32}
                     height={32}
-                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-image">
@@ -296,7 +338,6 @@ const SpartansLeaderboard = () => {
                     className="h-24 w-24"
                     width={96}
                     height={96}
-                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-content">
@@ -323,7 +364,6 @@ const SpartansLeaderboard = () => {
                     className="h-8 w-8"
                     width={32}
                     height={32}
-                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-image">
@@ -333,7 +373,6 @@ const SpartansLeaderboard = () => {
                     className="h-24 w-24"
                     width={96}
                     height={96}
-                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-content">

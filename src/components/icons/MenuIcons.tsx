@@ -168,6 +168,18 @@ export const LuxdropIcon = ({ width = "24", height = "24", className }: { fill?:
   />
 );
 
+export const CsgowinIcon = ({ width = "24", height = "24", className }: { fill?: string; width?: string; height?: string; className?: string }) => (
+  <Image
+    src="/images/icon/csgowin_coin.webp"
+    alt="CSGOWIN"
+    width={parseInt(width)}
+    height={parseInt(height)}
+    className={`rounded ${className || ''}`}
+    style={{ objectFit: 'contain' }}
+    unoptimized
+  />
+);
+
 export const RewardsIcon = ({ width = "24", height = "24", className }: { fill?: string; width?: string; height?: string; className?: string }) => (
   <Image
     src="/images/logo/dba2b372-f45c-4210-a19d-ca05b4536051.png"
@@ -189,5 +201,6 @@ export const iconMap: { [key: string]: (props: { fill?: string; width?: string; 
   avatar: AvatarIcon,
   spartans: SpartansIcon,
   luxdrop: LuxdropIcon,
+  csgowin: CsgowinIcon,
   rewards: RewardsIcon,
 };
