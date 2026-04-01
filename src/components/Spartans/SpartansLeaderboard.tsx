@@ -12,33 +12,33 @@ type LeaderboardEntry = {
   reward: number;
 };
 
-// Define the monthly reward mapping for $50,000 total prize pool
+// Monthly reward mapping — $75,000 total (aligned with Homepage Spartans section)
 const monthlyRewardMapping: { [key: number]: number } = {
-  1: 20000,
-  2: 10000,
-  3: 5000,
-  4: 2500,
-  5: 1750,
-  6: 1250,
-  7: 1000,
-  8: 900,
-  9: 850,
-  10: 800,
-  11: 750,
-  12: 700,
-  13: 650,
-  14: 600,
-  15: 500,
-  16: 450,
-  17: 400,
-  18: 350,
-  19: 325,
-  20: 275,
-  21: 250,
-  22: 225,
-  23: 200,
-  24: 150,
-  25: 125,
+  1: 30000,
+  2: 15000,
+  3: 10000,
+  4: 6000,
+  5: 2200,
+  6: 1500,
+  7: 1250,
+  8: 1000,
+  9: 900,
+  10: 850,
+  11: 780,
+  12: 730,
+  13: 670,
+  14: 620,
+  15: 520,
+  16: 470,
+  17: 420,
+  18: 370,
+  19: 345,
+  20: 295,
+  21: 270,
+  22: 245,
+  23: 220,
+  24: 170,
+  25: 165,
 };
 
 // Define the WEEKLY reward mapping ($10,000 total for top 25)
@@ -87,20 +87,18 @@ const SpartansLeaderboard: React.FC = () => {
 
   let targetDateForTimer: Date;
   let currentRewardMapping: { [key: number]: number };
-  let prizePoolAmount: number;
   let leaderboardTitle: string;
   let leaderboardDescription: string;
 
   if (isSpecialWeekActive) {
-    prizePoolAmount = 10000;
+    const prizePoolAmount = 10000;
     leaderboardTitle = `$${prizePoolAmount.toLocaleString()}`;
     leaderboardDescription = `Weekly leaderboard with $10,000 distributed across 20 users based on their total wagered amount until June 30th.`;
     currentRewardMapping = weeklyRewardMapping;
     targetDateForTimer = SPECIAL_PERIOD_END_DATE;
   } else {
-    prizePoolAmount = 50000;
-    leaderboardTitle = `$${prizePoolAmount.toLocaleString()}`;
-    leaderboardDescription = `Each month, $50,000 is distributed among 25 users based on their total wagered amount on Spartans.`;
+    leaderboardTitle = `$75,000 SPARTANS X SWEETFLIPS LEADERBOARD`;
+    leaderboardDescription = `Each month, $75,000 is distributed among 25 users based on their total wagered amount on Spartans.`;
     currentRewardMapping = monthlyRewardMapping;
     targetDateForTimer = new Date(
       Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999),
@@ -191,76 +189,67 @@ const SpartansLeaderboard: React.FC = () => {
 
   return (
     <div className="mt-4 p-4 text-white">
-      {/* Floating Image */}
+      {/* Top banner — matches Homepage Spartans section */}
       <div className="FooterBg relative mx-auto flex h-80 w-full transform flex-col items-center justify-between overflow-hidden rounded-xl p-4 shadow-[inset_0_0_20px_rgba(0,0,0,0.4)] transition-all sm:w-3/4 sm:flex-row sm:items-start md:w-5/6">
-        {/* Left Image - Keep as-is until Spartans replacement provided */}
         <div className="hide-on-ipad absolute left-0 hidden sm:block">
           <Image
-            src="/images/icon/Razed_777.png"
-            alt="Slot Machine"
+            src="/images/logo/sweet_flips_emblem_gold.png"
+            alt="SweetFlips Gold Emblem"
             className="transform"
             width={272}
             height={408}
+            priority
           />
         </div>
-
-        {/* Right Image - Keep as-is until Spartans replacement provided */}
-        <div className="hide-on-ipad absolute right-0 top-[30px] hidden sm:block">
+        <div className="hide-on-ipad absolute right-0 top-[30px] hidden pr-4 sm:block">
           <Image
-            src="/images/icon/Razed_cards.png"
-            alt="Cards"
+            src="/images/logo/Spartans-icon.svg"
+            alt="Spartans Logo"
             className="transform"
-            width={272}
-            height={408}
+            width={204}
+            height={306}
+            priority
           />
         </div>
-        {/* Left Image mobile - Keep as-is until Spartans replacement provided */}
         <div className="absolute -left-1 top-[-20px] sm:block md:hidden">
           <Image
-            src="/images/icon/Razed_777.png"
-            alt="Slot Machine"
+            src="/images/logo/sweet_flips_emblem_gold.png"
+            alt="SweetFlips Gold Emblem"
             className="h-[103px] w-[68.05px] transform"
             width={68.05}
             height={103}
+            priority
           />
         </div>
-
-        {/* Right Image mobile - Keep as-is until Spartans replacement provided */}
-        <div className="absolute -right-5 top-[250px] sm:block md:hidden">
+        <div className="absolute -right-5 top-[250px] pr-2 sm:block md:hidden">
           <Image
-            src="/images/icon/Razed_cards.png"
-            alt="Cards"
-            className="h-[103px] w-[68.05px] transform"
-            width={68.05}
-            height={103}
+            src="/images/logo/Spartans-icon.svg"
+            alt="Spartans Logo"
+            className="h-[77.25px] w-[51.0375px] transform"
+            width={51.0375}
+            height={77.25}
+            priority
           />
         </div>
-
-        {/* Centered Text Section */}
         <div className="absolute left-0 right-0 mx-auto mt-6 max-w-screen-lg px-4 text-center md:mt-10">
-          {/* Prize Pool Text */}
           <b className="animate-pulse-glow text-5xl text-[#fff] sm:text-2xl md:text-3xl lg:text-4xl xl:text-4xl">
             {leaderboardTitle}
           </b>
-
-          {/* Image and Leaderboard Layout */}
-          <div className="mt-4 flex flex-col items-center justify-center sm:flex-row sm:space-x-4">
-            {/* Spartans Logo */}
+          <div className="mt-4 flex flex-col items-end justify-center sm:flex-row sm:items-end sm:space-x-4">
             <Image
-              src="/images/logo/Spartans wordmark.svg"
+              src="/images/logo/Spartans wordmark.webp"
               alt="Spartans Logo"
               className="mb-3 transition-all duration-300 sm:mb-0 sm:w-[150px] md:w-[200px] lg:w-[250px] xl:w-[250px]"
+              style={{ filter: "grayscale(1)" }}
               width={200}
               height={100}
               sizes="(max-width: 640px) 150px, (max-width: 768px) 200px, 250px"
+              priority
             />
-            {/* Leaderboard Text */}
             <b className="text-4xl text-white sm:text-2xl md:text-3xl lg:text-3xl">
               Leaderboard
             </b>
           </div>
-
-          {/* Description Text */}
           <p className="mx-auto mt-4 text-center leading-relaxed text-white sm:text-xl md:mt-0 md:text-2xl lg:m-4 lg:text-3xl xl:text-xl">
             {leaderboardDescription}
           </p>

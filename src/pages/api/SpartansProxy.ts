@@ -17,7 +17,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const fromDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0));
     const toDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999));
 
-    // Fetch from upstream Spartans API
     const headers: Record<string, string> = {
       Accept: "application/json",
       "User-Agent":
@@ -31,65 +30,85 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       headers["x-api-key"] = apiKey;
     }
 
-    // The Spartans /active endpoint manages its own period (startAt/endAt in response).
-    // Do NOT append from/to query params -- the API doesn't support them and will error.
-    const response = await fetch(API_URL, {
+    const allPlayersUrl = new URL(
+      "https://nexus-campaign-hub-production.up.railway.app/affiliates/527938/campaigns/20499/all-players"
+    );
+    allPlayersUrl.searchParams.set("date_from", fromDate.toISOString());
+    allPlayersUrl.searchParams.set("date_to", toDate.toISOString());
+    allPlayersUrl.searchParams.set("limit", "50");
+    allPlayersUrl.searchParams.set("order_by", "wagered");
+    allPlayersUrl.searchParams.set("order_dir", "desc");
+
+    // Prefer month-scoped all-players first. /active can still reflect the previous period
+    // for a few days after a month boundary while status stays ACTIVE.
+    const allPlayersResponse = await fetch(allPlayersUrl.toString(), {
       method: "GET",
       headers,
     });
 
-    if (!response.ok) {
-      const errorText = await response.text().catch(
-        () => "Unable to read error response"
-      );
-      console.error(
-        `[SpartansProxy] API error ${response.status}: ${errorText.substring(0, 200)}`
-      );
-
-      return res.status(response.status).json({
-        error: `Spartans API error: ${response.status}`,
-        message: errorText.substring(0, 200),
-      });
-    }
-
-    const textResponse = await response.text();
-
     let jsonResponse: any;
-    try {
-      jsonResponse = JSON.parse(textResponse);
-    } catch (err) {
-      console.error("[SpartansProxy] JSON parse error:", err);
-      return res
-        .status(500)
-        .json({ error: "Invalid JSON response from API" });
+    if (allPlayersResponse.ok) {
+      const allPlayersJson = await allPlayersResponse.json().catch(() => null);
+      if (Array.isArray(allPlayersJson?.items)) {
+        jsonResponse = {
+          data: allPlayersJson.items.map((p: any) => ({
+            username: (p.username || p.registrationId || "Unknown").toString().trim(),
+            wagered: Number(p.wagered) || 0,
+          })),
+          source: "all-players",
+        };
+      }
     }
-    // If /active resolves to FINISHED/SCHEDULED, use TAP all-players for current month timeframe.
-    // This keeps leaderboard wagers aligned with the live month period.
-    if (jsonResponse?.status && jsonResponse.status !== "ACTIVE") {
-      const allPlayersUrl = new URL(
-        "https://nexus-campaign-hub-production.up.railway.app/affiliates/527938/campaigns/20499/all-players"
-      );
-      allPlayersUrl.searchParams.set("date_from", fromDate.toISOString());
-      allPlayersUrl.searchParams.set("date_to", toDate.toISOString());
-      allPlayersUrl.searchParams.set("limit", "50");
-      allPlayersUrl.searchParams.set("order_by", "wagered");
-      allPlayersUrl.searchParams.set("order_dir", "desc");
 
-      const allPlayersResponse = await fetch(allPlayersUrl.toString(), {
+    if (!jsonResponse?.data) {
+      // The Spartans /active endpoint manages its own period (startAt/endAt in response).
+      // Do NOT append from/to query params -- the API doesn't support them and will error.
+      const response = await fetch(API_URL, {
         method: "GET",
         headers,
       });
 
-      if (allPlayersResponse.ok) {
-        const allPlayersJson = await allPlayersResponse.json().catch(() => null);
-        if (Array.isArray(allPlayersJson?.items)) {
-          jsonResponse = {
-            data: allPlayersJson.items.map((p: any) => ({
-              username: (p.username || p.registrationId || "Unknown").toString().trim(),
-              wagered: Number(p.wagered) || 0,
-            })),
-            source: "all-players",
-          };
+      if (!response.ok) {
+        const errorText = await response.text().catch(
+          () => "Unable to read error response"
+        );
+        console.error(
+          `[SpartansProxy] API error ${response.status}: ${errorText.substring(0, 200)}`
+        );
+
+        return res.status(response.status).json({
+          error: `Spartans API error: ${response.status}`,
+          message: errorText.substring(0, 200),
+        });
+      }
+
+      const textResponse = await response.text();
+
+      try {
+        jsonResponse = JSON.parse(textResponse);
+      } catch (err) {
+        console.error("[SpartansProxy] JSON parse error:", err);
+        return res
+          .status(500)
+          .json({ error: "Invalid JSON response from API" });
+      }
+
+      if (jsonResponse?.status && jsonResponse.status !== "ACTIVE") {
+        const retry = await fetch(allPlayersUrl.toString(), {
+          method: "GET",
+          headers,
+        });
+        if (retry.ok) {
+          const allPlayersJson = await retry.json().catch(() => null);
+          if (Array.isArray(allPlayersJson?.items)) {
+            jsonResponse = {
+              data: allPlayersJson.items.map((p: any) => ({
+                username: (p.username || p.registrationId || "Unknown").toString().trim(),
+                wagered: Number(p.wagered) || 0,
+              })),
+              source: "all-players",
+            };
+          }
         }
       }
     }

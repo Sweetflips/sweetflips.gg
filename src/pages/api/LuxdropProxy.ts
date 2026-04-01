@@ -193,8 +193,9 @@ export default async function handler(
       return res.status(400).json({ error: "Invalid date format in query parameters" });
     }
   } else {
-    startDate = DateTime.utc(2026, 2, 23, 0, 0, 0);
-    endDate = DateTime.utc(2026, 3, 31, 23, 59, 59);
+    const nowUtc = DateTime.utc();
+    startDate = nowUtc.startOf("month");
+    endDate = nowUtc.endOf("month");
     periodYear = endDate.year;
     periodMonth = endDate.month;
     periodLabel = `${startDate.toFormat("MMM d")} - ${endDate.toFormat("MMM d, yyyy")}`;

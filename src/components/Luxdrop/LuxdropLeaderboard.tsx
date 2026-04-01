@@ -83,9 +83,11 @@ const maskUsername = (username: string) => {
   return username.slice(0, 2) + "*".repeat(len - 4) + username.slice(-2);
 };
 
+/** Current calendar month in UTC — matches Luxdrop monthly leaderboard copy. */
 const calculatePeriod = () => {
-  const periodStartDate = DateTime.utc(2026, 2, 23, 0, 0, 0);
-  const periodEndDate = DateTime.utc(2026, 3, 31, 23, 59, 59);
+  const now = DateTime.utc();
+  const periodStartDate = now.startOf("month");
+  const periodEndDate = now.endOf("month");
 
   return {
     startDate: periodStartDate.toISODate(),
