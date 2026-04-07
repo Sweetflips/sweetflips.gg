@@ -25,7 +25,6 @@ const Header = () => {
                 src="/images/logo/sweetflips_logo.svg"
                 alt="SweetFlips Logo"
                 className="block"
-                priority
               />
             </div>
             <div className="hidden lg:block">
@@ -35,7 +34,6 @@ const Header = () => {
                 src="/images/logo/sweetflips_logo.svg"
                 alt="SweetFlips Logo"
                 className="block"
-                priority
               />
             </div>
           </Link>

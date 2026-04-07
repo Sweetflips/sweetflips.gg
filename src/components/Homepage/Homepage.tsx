@@ -281,7 +281,6 @@ const Homepage = () => {
                   className="transform"
                   width={272}
                   height={408}
-                  priority
                 />
               </div>
               <div className="hide-on-ipad absolute right-0 top-[30px] hidden pr-4 sm:block">
@@ -291,7 +290,6 @@ const Homepage = () => {
                   className="transform"
                   width={204}
                   height={306}
-                  priority
                 />
               </div>
               <div className="absolute -left-1 top-[-20px] sm:block md:hidden">
@@ -301,7 +299,6 @@ const Homepage = () => {
                   className="h-[103px] w-[68.05px] transform"
                   width={68.05}
                   height={103}
-                  priority
                 />
               </div>
               <div className="absolute -right-5 top-[250px] pr-2 sm:block md:hidden">
@@ -311,7 +308,6 @@ const Homepage = () => {
                   className="h-[77.25px] w-[51.0375px] transform"
                   width={51.0375}
                   height={77.25}
-                  priority
                 />
               </div>
               <div className="absolute left-0 right-0 mx-auto mt-6 max-w-screen-lg px-4 text-center md:mt-10">
@@ -324,11 +320,10 @@ const Homepage = () => {
                     alt="Spartans Logo"
                     className="mb-3 transition-all duration-300 sm:mb-0 sm:w-[150px] md:w-[200px] lg:w-[250px] xl:w-[250px]"
                     style={{ filter: 'grayscale(1)' }}
-                    width={200}
-                    height={100}
-                    sizes="(max-width: 640px) 150px, (max-width: 768px) 200px, 250px"
-                    priority
-                  />
+                  width={200}
+                  height={100}
+                  sizes="(max-width: 640px) 150px, (max-width: 768px) 200px, 250px"
+                />
                   <b className="text-4xl text-white sm:text-2xl md:text-3xl lg:text-3xl">
                     Leaderboard
                   </b>
@@ -370,7 +365,6 @@ const Homepage = () => {
                               alt="Second Place"
                               width={32}
                               height={32}
-                              priority
                             />
                           </div>
                           <div className="TopLeaderboard__card-image">
@@ -379,7 +373,6 @@ const Homepage = () => {
                               alt="SweetFlips Emblem Silver"
                               width={96}
                               height={96}
-                              priority
                             />
                           </div>
                           <div className="TopLeaderboard__card-content">
@@ -404,7 +397,6 @@ const Homepage = () => {
                               alt="First Place"
                               width={32}
                               height={32}
-                              priority
                             />
                           </div>
                           <div className="TopLeaderboard__card-image">
@@ -413,7 +405,6 @@ const Homepage = () => {
                               alt="SweetFlips Emblem Gold"
                               width={96}
                               height={96}
-                              priority
                             />
                           </div>
                           <div className="TopLeaderboard__card-content">
@@ -438,7 +429,6 @@ const Homepage = () => {
                               alt="Third Place"
                               width={32}
                               height={32}
-                              priority
                             />
                           </div>
                           <div className="TopLeaderboard__card-image">
@@ -447,7 +437,6 @@ const Homepage = () => {
                               alt="SweetFlips Emblem Bronze"
                               width={96}
                               height={96}
-                              priority
                             />
                           </div>
                           <div className="TopLeaderboard__card-content">

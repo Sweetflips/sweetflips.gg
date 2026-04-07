@@ -33,3 +33,12 @@ yarn-error.log*
 # IDE configuration
 .idea/
 .vscode/
+.cursor/
+.claude/
+.serena/
+
+# TypeScript incremental build cache
+*.tsbuildinfo
+
+# Local documents (not app assets)
+*.docx

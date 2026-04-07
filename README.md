@@ -53,9 +53,10 @@ This document outlines all the cleanup and production readiness work completed o
 
 #### Active Leaderboards
 1. **Spartans Leaderboard** (`/spartans`)
-   - Monthly leaderboard with $50,000 prize pool
+   - Monthly leaderboard with $75,000 prize pool
    - Configurable via `SPECIAL_PERIOD_START_DATE` and `SPECIAL_PERIOD_END_DATE`
-   - API: `https://nexus-campaign-hub-production.up.railway.app/affiliates/524999/campaigns/20499/leaderboards/active`
+   - API: Smartico affiliate `POST https://data-api3.aff.spartans.com/plywood?by=`
+   - Shared proxy source for `/spartans` and homepage Spartans leaderboard
 
 2. **Luxdrop Leaderboard** (`/luxdrop`)
    - Bi-weekly periods (1-15 and 16-30 of month)
@@ -99,6 +100,12 @@ npx prisma generate
 npx prisma migrate deploy
 ```
 
+If you are updating an existing deployed database after the squashed migration history, mark the new baseline as already applied once, then deploy the follow-up cleanup migration:
+```bash
+npx prisma migrate resolve --applied 20260405000000_baseline_current_schema
+npx prisma migrate deploy
+```
+
 5. Start the development server:
 ```bash
 npm run dev
@@ -116,8 +123,9 @@ See [ENV_VARIABLES.md](./ENV_VARIABLES.md) for a complete list of required and o
 - `DATABASE_URL` - PostgreSQL connection string
 
 #### API Keys
-- `BASE_SPARTANS_API_URL` - Spartans API endpoint
-- `SPARTANS_API_KEY` - Spartans API key (x-api-key header)
+- `SPARTANS_SMARTICO_LABEL_ID` - Spartans Smartico label id (defaults to `591127`)
+- `SPARTANS_SMARTICO_COOKIE` - Full Cookie header value for the Smartico request
+- `SPARTANS_SMARTICO_PAYLOAD` - Full Smartico plywood request body as JSON
 - `LUXDROP_API_KEY` - Luxdrop API key
 - `CRON_SECRET` - Secret for cron job authentication
 
@@ -169,13 +177,13 @@ sweetflips.gg-1/
 │   │   ├── Spartans/     # Spartans leaderboard component
 │   │   ├── Luxdrop/      # Luxdrop leaderboard component
 │   │   └── ...
+│   ├── lib/              # Shared utilities
+│   │   ├── metadata.ts   # Page metadata helpers
+│   │   └── getBaseUrl.ts # Base URL for server-side fetches
 │   └── pages/
 │       └── api/          # API routes
 │           ├── SpartansProxy.ts   # Spartans API proxy
 │           └── LuxdropProxy.ts    # Luxdrop API proxy
-├── lib/                  # Shared utilities
-│   ├── prisma.ts         # Prisma client
-│   └── auditLogger.ts    # Transaction audit logging
 ├── prisma/               # Database schema and migrations
 │   └── schema.prisma     # Prisma schema
 ├── .env.local            # Environment variables (gitignored)
@@ -190,7 +198,7 @@ sweetflips.gg-1/
 - `GET /api/LuxdropProxy` - Luxdrop leaderboard data (bi-weekly periods)
 
 ### Cron Jobs
-- `GET /api/cron/giveaway-counter-update` - Updates giveaway counter (runs daily at midnight)
+- `GET /api/cron/refresh-leaderboards` - Warms Spartans, Luxdrop, and CSGOWIN proxy routes (Vercel cron, every 5 minutes)
 
 ## Technical Details
 
@@ -207,6 +215,7 @@ sweetflips.gg-1/
 - Environment variables properly validated
 - API keys never exposed to client (except `NEXT_PUBLIC_*` vars)
 - Username masking in leaderboard responses
+- Spartans Smartico cookies and payload stay server-side in environment variables
 - Rate limiting removed (was using in-memory, not production-ready)
 
 ### Performance

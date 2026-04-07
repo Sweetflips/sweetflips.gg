@@ -10,12 +10,6 @@
     }
 }
 
-@layer components {
-}
-
-@layer utilities {
-}
-
 input[type="search"]::-webkit-search-cancel-button {
     @apply appearance-none;
 }
@@ -162,16 +156,6 @@ input[type="search"]::-webkit-search-cancel-button {
     background: radial-gradient(circle, #350c4a -150%, #130C1A 70%);
 }
 
-/* Container holding the leaderboard rows */
-.Leaderboard {
-    display: flex;
-    flex-direction: column;
-    margin: 20px auto;
-    max-width: 1250px;
-    width: 100%;
-    gap: 20px;
-}
-
 /* Styling for each leaderboard row */
 .Leaderboard__card {
     position: relative;
@@ -211,15 +195,6 @@ input[type="search"]::-webkit-search-cancel-button {
     transform: translateX(-50%);
 }
 
-.TopLeaderboard__number {
-    font-size: 2rem;
-    font-weight: bold;
-    color: white;
-    background: rgba(0, 224, 255, 0.5);
-    padding: 5px 15px;
-    border-radius: 50%;
-}
-
 .Leaderboard__card .sm\:grid {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
@@ -227,15 +202,4 @@ input[type="search"]::-webkit-search-cancel-button {
 
 .Leaderboard__card .sm\:block {
     display: block;
-}
-
-.Leaderboard__rank {
-    position: absolute;
-    top: -1rem;
-    left: 50%;
-    transform: translateX(-50%);
-    background: linear-gradient(to right, #FEA613, #9747FF);
-    color: white;
-    border-radius: 50%;
-    padding: 0.5rem;
 }

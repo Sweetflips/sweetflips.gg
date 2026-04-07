@@ -198,7 +198,6 @@ const SpartansLeaderboard: React.FC = () => {
             className="transform"
             width={272}
             height={408}
-            priority
           />
         </div>
         <div className="hide-on-ipad absolute right-0 top-[30px] hidden pr-4 sm:block">
@@ -208,7 +207,6 @@ const SpartansLeaderboard: React.FC = () => {
             className="transform"
             width={204}
             height={306}
-            priority
           />
         </div>
         <div className="absolute -left-1 top-[-20px] sm:block md:hidden">
@@ -218,7 +216,6 @@ const SpartansLeaderboard: React.FC = () => {
             className="h-[103px] w-[68.05px] transform"
             width={68.05}
             height={103}
-            priority
           />
         </div>
         <div className="absolute -right-5 top-[250px] pr-2 sm:block md:hidden">
@@ -228,7 +225,6 @@ const SpartansLeaderboard: React.FC = () => {
             className="h-[77.25px] w-[51.0375px] transform"
             width={51.0375}
             height={77.25}
-            priority
           />
         </div>
         <div className="absolute left-0 right-0 mx-auto mt-6 max-w-screen-lg px-4 text-center md:mt-10">
@@ -244,7 +240,6 @@ const SpartansLeaderboard: React.FC = () => {
               width={200}
               height={100}
               sizes="(max-width: 640px) 150px, (max-width: 768px) 200px, 250px"
-              priority
             />
             <b className="text-4xl text-white sm:text-2xl md:text-3xl lg:text-3xl">
               Leaderboard

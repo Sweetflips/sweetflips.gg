@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 import { Timer } from "@/app/ui/timer/Timer";
 import Loader from "@/components/common/Loader";
@@ -48,13 +49,13 @@ const rewardFormatter = new Intl.NumberFormat("en-US", {
 });
 
 const CoinIcon = ({ className = "inline-block h-4 w-4", size = 48 }: { className?: string; size?: number }) => (
-  <Image
+  <img
     src="/images/icon/csgowin_coin.webp"
     alt="Coins"
     width={size}
     height={size}
     className={`${className} flex-shrink-0`}
-    unoptimized
+    decoding="async"
   />
 );
 
@@ -155,7 +156,6 @@ const CsgowinLeaderboard = () => {
             className="transform"
             width={272}
             height={408}
-            priority
           />
         </div>
 
@@ -167,7 +167,6 @@ const CsgowinLeaderboard = () => {
             className="transform"
             width={204}
             height={204}
-            priority
           />
         </div>
 
@@ -229,7 +228,6 @@ const CsgowinLeaderboard = () => {
                     className="h-8 w-8"
                     width={32}
                     height={32}
-                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-image">
@@ -239,7 +237,6 @@ const CsgowinLeaderboard = () => {
                     className="h-24 w-24"
                     width={96}
                     height={96}
-                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-content">
@@ -266,7 +263,6 @@ const CsgowinLeaderboard = () => {
                     className="h-8 w-8"
                     width={32}
                     height={32}
-                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-image">
@@ -276,7 +272,6 @@ const CsgowinLeaderboard = () => {
                     className="h-24 w-24"
                     width={96}
                     height={96}
-                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-content">
@@ -303,7 +298,6 @@ const CsgowinLeaderboard = () => {
                     className="h-8 w-8"
                     width={32}
                     height={32}
-                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-image">
@@ -313,7 +307,6 @@ const CsgowinLeaderboard = () => {
                     className="h-24 w-24"
                     width={96}
                     height={96}
-                    priority
                   />
                 </div>
                 <div className="TopLeaderboard__card-content">

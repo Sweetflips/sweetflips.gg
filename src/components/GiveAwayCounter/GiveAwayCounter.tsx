@@ -1,8 +1,41 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import CountUp from "react-countup";
 import Link from "next/link";
+
+const LeaderboardLinkIcon = ({
+  href,
+  src,
+  alt,
+}: {
+  href: string;
+  src: string;
+  alt: string;
+}) => (
+  <Link href={href} className="group">
+    <div className="relative h-[50px] w-[50px]">
+      <img
+        src={src}
+        alt={alt}
+        width={50}
+        height={50}
+        className="relative z-10 h-[50px] w-[50px] object-contain transition-transform hover:scale-105"
+        decoding="async"
+      />
+      <img
+        src={src}
+        alt=""
+        width={50}
+        height={50}
+        aria-hidden="true"
+        className="absolute left-0 top-0 z-0 h-[50px] w-[50px] object-contain opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-40"
+        decoding="async"
+      />
+    </div>
+  </Link>
+);
 
 const GiveAwayCounter = () => {
   const [amount, setAmount] = useState<number | null>(null);
@@ -77,60 +110,21 @@ const GiveAwayCounter = () => {
               Leaderboards
             </p>
             <div className="flex items-center space-x-4">
-              <Link href="/spartans" className="group">
-                <div className="relative">
-                  <Image
-                    src="/images/logo/Spartans-icon.svg"
-                    alt="Spartans"
-                    width={50}
-                    height={50}
-                    className="relative z-10 object-contain transition-transform hover:scale-105"
-                  />
-                  <Image
-                    src="/images/logo/Spartans-icon.svg"
-                    alt="Spartans Glow"
-                    width={50}
-                    height={50}
-                    className="absolute top-0 left-0 z-0 object-contain opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-40"
-                  />
-                </div>
-              </Link>
-              <Link href="/luxdrop" className="group">
-                <div className="relative">
-                  <Image
-                    src="/images/icon/luxdrop_fav.png"
-                    alt="LuxDrop"
-                    width={50}
-                    height={50}
-                    className="relative z-10 object-contain transition-transform hover:scale-105"
-                  />
-                  <Image
-                    src="/images/icon/luxdrop_fav.png"
-                    alt="LuxDrop Glow"
-                    width={50}
-                    height={50}
-                    className="absolute top-0 left-0 z-0 object-contain opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-40"
-                  />
-                </div>
-              </Link>
-              <Link href="/csgowin" className="group">
-                <div className="relative">
-                  <Image
-                    src="/images/logo/csgowin_logo.webp"
-                    alt="CSGOWIN"
-                    width={50}
-                    height={50}
-                    className="relative z-10 object-contain transition-transform hover:scale-105"
-                  />
-                  <Image
-                    src="/images/logo/csgowin_logo.webp"
-                    alt="CSGOWIN Glow"
-                    width={50}
-                    height={50}
-                    className="absolute top-0 left-0 z-0 object-contain opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-40"
-                  />
-                </div>
-              </Link>
+              <LeaderboardLinkIcon
+                href="/spartans"
+                src="/images/logo/Spartans-icon.svg"
+                alt="Spartans"
+              />
+              <LeaderboardLinkIcon
+                href="/luxdrop"
+                src="/images/icon/luxdrop_fav.png"
+                alt="LuxDrop"
+              />
+              <LeaderboardLinkIcon
+                href="/csgowin"
+                src="/images/logo/csgowin_logo.webp"
+                alt="CSGOWIN"
+              />
             </div>
           </div>
         </div>
