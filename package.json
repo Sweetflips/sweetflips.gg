@@ -13,9 +13,10 @@
   "dependencies": {
     "@prisma/client": "^7.4",
     "@vercel/analytics": "^1.6.1",
-    "dotenv": "^16",
     "axios": "^1.13.4",
+    "dotenv": "^16",
     "https-proxy-agent": "^7.0.6",
+    "impit": "^0.13.0",
     "lucide-react": "^0.563.0",
     "luxon": "^3.7.2",
     "next": "^15",
@@ -25,11 +26,11 @@
     "react-dom": "^19"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3",
     "@types/luxon": "^3.7.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@eslint/eslintrc": "^3",
     "autoprefixer": "^10.4.24",
     "eslint": "^9",
     "eslint-config-next": "^15",

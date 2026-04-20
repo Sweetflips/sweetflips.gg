@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    outputFileTracingIncludes: {
+      "/api/SpartansProxy": ["./node_modules/impit*/**/*"],
+    },
     images: {
       remotePatterns: [],
       dangerouslyAllowSVG: true,

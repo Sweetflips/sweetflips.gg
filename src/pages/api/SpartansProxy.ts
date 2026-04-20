@@ -1,3 +1,4 @@
+import { Impit } from "impit";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 const SMARTICO_API_URL = "https://data-api3.aff.spartans.com/plywood?by=";
@@ -204,7 +205,17 @@ export default async function handler(
 
     const referer = `${SMARTICO_ORIGIN}/?label_id=${encodeURIComponent(labelId)}&noNav=true&hideHeader=false&hideControls=false&hideMeasures=true`;
 
-    const response = await fetch(SMARTICO_API_URL, {
+    const proxyHost = process.env.PROXY_HOST?.trim();
+    const proxyPort = process.env.PROXY_PORT?.trim();
+    const proxyUser = process.env.PROXY_USERNAME?.trim();
+    const proxyPass = process.env.PROXY_PASSWORD?.trim();
+    const proxyUrl =
+      proxyHost && proxyPort
+        ? `http://${proxyUser}:${proxyPass}@${proxyHost}:${proxyPort}`
+        : undefined;
+
+    const impit = new Impit({ browser: "chrome", proxyUrl });
+    const response = await impit.fetch(SMARTICO_API_URL, {
       method: "POST",
       headers: {
         Accept: "application/json, text/plain, */*",
@@ -212,8 +223,6 @@ export default async function handler(
         Cookie: cookieHeader!,
         Origin: SMARTICO_ORIGIN,
         Referer: referer,
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
         "x-smartico-active-label-id": labelId,
       },
       body: JSON.stringify(requestBody),
